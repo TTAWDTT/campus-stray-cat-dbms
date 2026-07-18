@@ -15,9 +15,14 @@ build/
 TestResults/
 *.nupkg
 packages/
+PublishProfiles/
+*.pubxml.user
+*.wpp.targets
 
 # Rider / JetBrains
 .idea/
+*.DotSettings.user
+_ReSharper.Caches/
 
 # VS Code
 .vscode/
@@ -32,6 +37,8 @@ packages/
 *.swp
 *.cache
 *.pid
+*.orig
+*.pidb
 
 # Local configuration and secrets
 appsettings.Development.json
@@ -66,4 +73,14 @@ OraInstall*/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Code coverage
+coverage/
+CoverageResults/
+*.coverage
+*.coveragexml
+coverlet/
+
+# Benchmark
+BenchmarkDotNet.Artifacts/
 

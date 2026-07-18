@@ -29,3 +29,9 @@
     └── CampusStrayCatSystem.Tests/  # 测试代码
 ```
 
+运行命令：
+
+```
+dotnet run --project src/CampusStrayCatSystem.Core/CampusStrayCatSystem.Core.csproj --launch-profile http
+```
+
