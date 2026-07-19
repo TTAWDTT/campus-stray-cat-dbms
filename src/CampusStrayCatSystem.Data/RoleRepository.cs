@@ -1,31 +1,14 @@
-using Dapper;
 using Microsoft.Extensions.Configuration;
-using Oracle.ManagedDataAccess.Client;
-using System.Collections.Generic;
-using System.Data;
-using System.Threading.Tasks;
 using CampusStrayCatSystem.Models;
 
 namespace CampusStrayCatSystem.Data
 {
-    public class RoleRepository : IRoleRepository
+    public class RoleRepository : BaseRepository<Role>, IRoleRepository
     {
-        private readonly string _connectionString;
-
-        public RoleRepository(IConfiguration configuration)
-        {
-            _connectionString = configuration.GetConnectionString("Oracle")
-                ?? throw new InvalidOperationException("Connection string 'Oracle' not found.");
-        }
-
-        private IDbConnection CreateConnection()
-        {
-            return new OracleConnection(_connectionString);
-        }
+        public RoleRepository(IConfiguration configuration) : base(configuration) { }
 
         public async Task<IEnumerable<Role>> GetAll()
         {
-            using var connection = CreateConnection();
             const string sql = @"
                 SELECT ROLE_ID AS RoleID,
                        ROLE_NAME AS RoleName,
@@ -34,12 +17,11 @@ namespace CampusStrayCatSystem.Data
                 FROM ROLES
                 ORDER BY CREATED_DATE DESC";
 
-            return await connection.QueryAsync<Role>(sql);
+            return await QueryAsync(sql);
         }
 
         public async Task<Role?> GetByIdRole(int id)
         {
-            using var connection = CreateConnection();
             const string sql = @"
                 SELECT ROLE_ID AS RoleID,
                        ROLE_NAME AS RoleName,
@@ -48,17 +30,16 @@ namespace CampusStrayCatSystem.Data
                 FROM ROLES
                 WHERE ROLE_ID = :RoleID";
 
-            return await connection.QueryFirstOrDefaultAsync<Role>(sql, new { RoleID = id });
+            return await QuerySingleAsync(sql, new { RoleID = id });
         }
 
         public async Task<int> CreateRole(Role role)
         {
-            using var connection = CreateConnection();
             const string sql = @"
                 INSERT INTO ROLES (ROLE_ID, ROLE_NAME, DESCRIPTION, PERMISSIONSCOPE)
                 VALUES (ROLES_SEQ.NEXTVAL, :RoleName, :Description, :PermissionScope)";
 
-            return await connection.ExecuteAsync(sql, new
+            return await ExecuteAsync(sql, new
             {
                 role.RoleName,
                 role.Description,
@@ -68,7 +49,6 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> UpdateRole(Role role)
         {
-            using var connection = CreateConnection();
             const string sql = @"
                 UPDATE ROLES
                 SET ROLE_NAME = :RoleName,
@@ -76,7 +56,7 @@ namespace CampusStrayCatSystem.Data
                     PERMISSIONSCOPE = :PermissionScope
                 WHERE ROLE_ID = :RoleID";
 
-            return await connection.ExecuteAsync(sql, new
+            return await ExecuteAsync(sql, new
             {
                 role.RoleName,
                 role.Description,
@@ -87,13 +67,12 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> DeleteRole(int id)
         {
-            using var connection = CreateConnection();
             const string sql = @"
                 UPDATE ROLES
                 SET IS_ACTIVE = 0
                 WHERE ROLE_ID = :RoleID";
 
-            return await connection.ExecuteAsync(sql, new { RoleID = id });
+            return await ExecuteAsync(sql, new { RoleID = id });
         }
     }
 }
