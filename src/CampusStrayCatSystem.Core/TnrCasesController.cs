@@ -84,7 +84,7 @@ namespace CampusStrayCatSystem.Core
             return NoContent();
         }
 
-        //更新TNR状态（自动生成状态流转日志，同一事务）
+        //更新TNR状态（同一事务）
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateTnrStatus(string id, [FromBody] UpdateStatusRequest request)
         {
