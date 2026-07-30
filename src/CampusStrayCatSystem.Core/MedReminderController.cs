@@ -12,6 +12,15 @@ namespace CampusStrayCatSystem.Core
     [ApiController]
     public class MedReminderController : ControllerBase
     {
+        private static readonly HashSet<string> AllowedReminderTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "VACCINE",
+            "DEWORM",
+            "STERILIZATION",
+            "RECHECK",
+            "OTHER"
+        };
+
         private readonly IMedReminderRepository _reminderRepository;
 
         public MedReminderController(IMedReminderRepository reminderRepository)
@@ -37,6 +46,11 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<MedReminder>>> GetByCatId(string catId)
         {
+            if (string.IsNullOrWhiteSpace(catId))
+            {
+                return BadRequest("猫咪 ID 不能为空。");
+            }
+
             var reminders = await _reminderRepository.GetByCatId(catId);
             return Ok(reminders);
         }
@@ -53,6 +67,22 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("提醒数据不能为空。");
             }
 
+            if (string.IsNullOrWhiteSpace(reminder.CatID))
+            {
+                return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(reminder.ReminderType) ||
+                !AllowedReminderTypes.Contains(reminder.ReminderType))
+            {
+                return BadRequest("提醒类型必须是 VACCINE、DEWORM、STERILIZATION、RECHECK 或 OTHER。");
+            }
+
+            if (reminder.ReminderTime == null)
+            {
+                return BadRequest("提醒时间不能为空。");
+            }
+
             await _reminderRepository.CreateReminder(reminder);
             return CreatedAtAction(nameof(GetById), new { reminderId = reminder.ReminderID }, reminder);
         }
@@ -64,6 +94,11 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("{reminderId}")]
         public async Task<ActionResult<MedReminder>> GetById(string reminderId)
         {
+            if (string.IsNullOrWhiteSpace(reminderId))
+            {
+                return BadRequest("提醒 ID 不能为空。");
+            }
+
             var reminder = await _reminderRepository.GetById(reminderId);
             return reminder == null ? NotFound($"未找到提醒 {reminderId}。") : Ok(reminder);
         }
@@ -75,8 +110,18 @@ namespace CampusStrayCatSystem.Core
         [HttpPut("{reminderId}/sent")]
         public async Task<IActionResult> MarkSent(string reminderId)
         {
+            if (string.IsNullOrWhiteSpace(reminderId))
+            {
+                return BadRequest("提醒 ID 不能为空。");
+            }
+
+            if (await _reminderRepository.GetById(reminderId) == null)
+            {
+                return NotFound($"未找到提醒 {reminderId}。");
+            }
+
             var rows = await _reminderRepository.MarkSent(reminderId);
-            return rows == 0 ? NotFound($"未找到提醒 {reminderId}。") : NoContent();
+            return NoContent();
         }
 
         /// <summary>
@@ -86,8 +131,18 @@ namespace CampusStrayCatSystem.Core
         [HttpPut("{reminderId}/complete")]
         public async Task<IActionResult> Complete(string reminderId)
         {
+            if (string.IsNullOrWhiteSpace(reminderId))
+            {
+                return BadRequest("提醒 ID 不能为空。");
+            }
+
+            if (await _reminderRepository.GetById(reminderId) == null)
+            {
+                return NotFound($"未找到提醒 {reminderId}。");
+            }
+
             var rows = await _reminderRepository.Complete(reminderId);
-            return rows == 0 ? NotFound($"未找到提醒 {reminderId}。") : NoContent();
+            return NoContent();
         }
     }
 }

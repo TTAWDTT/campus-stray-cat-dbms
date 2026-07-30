@@ -12,6 +12,23 @@ namespace CampusStrayCatSystem.Core
     [ApiController]
     public class EmergencyReportsController : ControllerBase
     {
+        private static readonly HashSet<string> AllowedUrgencyLevels = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+        };
+
+        private static readonly HashSet<string> AllowedProcessStatuses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "SUBMITTED",
+            "ASSIGNED",
+            "PROCESSING",
+            "RESOLVED",
+            "CLOSED"
+        };
+
         private readonly IEmergencyReportRepository _reportRepository;
 
         public EmergencyReportsController(IEmergencyReportRepository reportRepository)
@@ -37,6 +54,11 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("{reportId}")]
         public async Task<ActionResult<EmergencyReport>> GetById(string reportId)
         {
+            if (string.IsNullOrWhiteSpace(reportId))
+            {
+                return BadRequest("上报 ID 不能为空。");
+            }
+
             var report = await _reportRepository.GetById(reportId);
             return report == null ? NotFound($"未找到上报 {reportId}。") : Ok(report);
         }
@@ -53,6 +75,27 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("上报数据不能为空。");
             }
 
+            if (string.IsNullOrWhiteSpace(report.ReporterUserID))
+            {
+                return BadRequest("上报人 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(report.AreaID))
+            {
+                return BadRequest("区域 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(report.AnimalType))
+            {
+                return BadRequest("动物类型不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(report.UrgencyLevel) ||
+                !AllowedUrgencyLevels.Contains(report.UrgencyLevel))
+            {
+                return BadRequest("紧急等级必须是 LOW、MEDIUM、HIGH 或 CRITICAL。");
+            }
+
             await _reportRepository.Create(report);
             return CreatedAtAction(nameof(GetById), new { reportId = report.ReportID }, report);
         }
@@ -64,8 +107,23 @@ namespace CampusStrayCatSystem.Core
         [HttpPut("{reportId}/assign")]
         public async Task<IActionResult> AssignHandler(string reportId, [FromBody] string? handlerUserId)
         {
+            if (string.IsNullOrWhiteSpace(reportId))
+            {
+                return BadRequest("上报 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(handlerUserId))
+            {
+                return BadRequest("处理人 ID 不能为空。");
+            }
+
+            if (await _reportRepository.GetById(reportId) == null)
+            {
+                return NotFound($"未找到上报 {reportId}。");
+            }
+
             var rows = await _reportRepository.AssignHandler(reportId, handlerUserId);
-            return rows == 0 ? NotFound($"未找到上报 {reportId}。") : NoContent();
+            return NoContent();
         }
 
         /// <summary>
@@ -80,8 +138,24 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("状态更新数据不能为空。");
             }
 
+            if (string.IsNullOrWhiteSpace(reportId))
+            {
+                return BadRequest("上报 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(report.ProcessStatus) ||
+                !AllowedProcessStatuses.Contains(report.ProcessStatus))
+            {
+                return BadRequest("处理状态必须是 SUBMITTED、ASSIGNED、PROCESSING、RESOLVED 或 CLOSED。");
+            }
+
+            if (await _reportRepository.GetById(reportId) == null)
+            {
+                return NotFound($"未找到上报 {reportId}。");
+            }
+
             var rows = await _reportRepository.UpdateStatus(reportId, report.ProcessStatus, report.ProcessResult);
-            return rows == 0 ? NotFound($"未找到上报 {reportId}。") : NoContent();
+            return NoContent();
         }
     }
 }

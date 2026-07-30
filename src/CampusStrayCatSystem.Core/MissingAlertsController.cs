@@ -12,6 +12,13 @@ namespace CampusStrayCatSystem.Core
     [ApiController]
     public class MissingAlertsController : ControllerBase
     {
+        private static readonly HashSet<string> AllowedAlertStatuses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "PROCESSING",
+            "FOUND",
+            "CLOSED"
+        };
+
         private readonly IMissingAlertRepository _missingAlertRepository;
 
         public MissingAlertsController(IMissingAlertRepository missingAlertRepository)
@@ -37,6 +44,11 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<CatMissingAlert>>> GetByCatId(string catId)
         {
+            if (string.IsNullOrWhiteSpace(catId))
+            {
+                return BadRequest("猫咪 ID 不能为空。");
+            }
+
             var alerts = await _missingAlertRepository.GetByCatId(catId);
             return Ok(alerts);
         }
@@ -48,6 +60,11 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("{alertId}")]
         public async Task<ActionResult<CatMissingAlert>> GetById(string alertId)
         {
+            if (string.IsNullOrWhiteSpace(alertId))
+            {
+                return BadRequest("预警 ID 不能为空。");
+            }
+
             var alert = await _missingAlertRepository.GetById(alertId);
             return alert == null ? NotFound($"未找到预警 {alertId}。") : Ok(alert);
         }
@@ -62,6 +79,21 @@ namespace CampusStrayCatSystem.Core
             if (sighting == null)
             {
                 return BadRequest("目击记录不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(sighting.CatID))
+            {
+                return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(sighting.AreaID))
+            {
+                return BadRequest("区域 ID 不能为空。");
+            }
+
+            if (sighting.SightingTime == null)
+            {
+                return BadRequest("目击时间不能为空。");
             }
 
             await _missingAlertRepository.CreateSighting(sighting);
@@ -80,6 +112,16 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("预警数据不能为空。");
             }
 
+            if (string.IsNullOrWhiteSpace(alert.CatID))
+            {
+                return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            if (alert.ThresholdDays != null && alert.ThresholdDays <= 0)
+            {
+                return BadRequest("阈值天数必须大于 0。");
+            }
+
             await _missingAlertRepository.CreateAlert(alert);
             return CreatedAtAction(nameof(GetById), new { alertId = alert.AlertID }, alert);
         }
@@ -96,8 +138,29 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("状态更新数据不能为空。");
             }
 
+            if (string.IsNullOrWhiteSpace(alertId))
+            {
+                return BadRequest("预警 ID 不能为空。");
+            }
+
+            if (string.IsNullOrWhiteSpace(alert.AlertStatus) ||
+                !AllowedAlertStatuses.Contains(alert.AlertStatus))
+            {
+                return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
+            }
+
+            if (string.IsNullOrWhiteSpace(alert.HandlerUserID))
+            {
+                return BadRequest("处理人 ID 不能为空。");
+            }
+
+            if (await _missingAlertRepository.GetById(alertId) == null)
+            {
+                return NotFound($"未找到预警 {alertId}。");
+            }
+
             var rows = await _missingAlertRepository.UpdateStatus(alertId, alert.AlertStatus, alert.HandlerUserID, alert.Remark);
-            return rows == 0 ? NotFound($"未找到预警 {alertId}。") : NoContent();
+            return NoContent();
         }
     }
 }

@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Configuration;
 using CampusStrayCatSystem.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace CampusStrayCatSystem.Data
 {
