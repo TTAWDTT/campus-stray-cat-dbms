@@ -107,12 +107,5 @@ namespace CampusStrayCatSystem.Data
                 record.RecordID
             });
         }
-
-        public async Task<int> Delete(string id)
-        {
-            const string sql = @"DELETE FROM MED_HEALTHRECORDS WHERE RECORDID = :RecordID";
-
-            return await ExecuteAsync(sql, new { RecordID = id });
-        }
     }
 }
