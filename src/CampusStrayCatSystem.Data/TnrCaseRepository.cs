@@ -74,7 +74,6 @@ namespace CampusStrayCatSystem.Data
                 UPDATE TNR_CASES
                 SET CATID = :CatID,
                     RESPONSIBLEUSERID = :ResponsibleUserID,
-                    CURRENTSTATUS = :CurrentStatus,
                     HOSPITALNAME = :HospitalName,
                     CAPTURETIME = :CaptureTime,
                     SURGERYTIME = :SurgeryTime,
@@ -86,7 +85,6 @@ namespace CampusStrayCatSystem.Data
             {
                 tnrCase.CatID,
                 tnrCase.ResponsibleUserID,
-                tnrCase.CurrentStatus,
                 tnrCase.HospitalName,
                 tnrCase.CaptureTime,
                 tnrCase.SurgeryTime,

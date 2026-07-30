@@ -61,7 +61,7 @@ namespace CampusStrayCatSystem.Core
             return CreatedAtAction(nameof(GetTnrCase), new { id = tnrCase.CaseID }, tnrCase);
         }
 
-        //更新TNR案例基本信息
+        //更新TNR案例基本信息（状态只能通过专用状态接口修改）
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTnrCase(string id, [FromBody] TnrCase tnrCase)
         {
@@ -74,6 +74,15 @@ namespace CampusStrayCatSystem.Core
             var existing = await _tnrCaseRepository.GetById(id);
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的TNR案例，无法更新。");
+
+            if (!string.IsNullOrWhiteSpace(tnrCase.CurrentStatus) &&
+                !string.Equals(tnrCase.CurrentStatus, existing.CurrentStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("TNR 状态不能通过普通编辑接口修改，请使用专用状态接口。");
+            }
+
+            // 普通编辑不接受状态变更，避免绕过状态流转日志。
+            tnrCase.CurrentStatus = existing.CurrentStatus;
 
             // 业务校验
             var validationError = await ValidateTnrCase(tnrCase);
