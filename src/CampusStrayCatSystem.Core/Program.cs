@@ -11,6 +11,9 @@ builder.Services.AddSwaggerGen();
 
 // Dependency Injection - Repository
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IMedReminderRepository, MedReminderRepository>();
+builder.Services.AddScoped<IEmergencyReportRepository, EmergencyReportRepository>();
+builder.Services.AddScoped<IMissingAlertRepository, MissingAlertRepository>();
 
 var app = builder.Build();
 
