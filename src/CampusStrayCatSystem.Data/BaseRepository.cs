@@ -31,10 +31,26 @@ namespace CampusStrayCatSystem.Data
             using var connection = CreateConnection();
             return await connection.QueryFirstOrDefaultAsync<T>(sql, param);
         }
+
+        protected async Task<TResult?> QuerySingleAsync<TResult>(string sql, object? param = null)
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<TResult>(sql, param);
+        }
         protected async Task<int> ExecuteAsync(string sql, object? param = null)
         {
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(sql, param);
+        }
+
+        protected async Task<int> ExecuteAsync(IDbConnection connection, IDbTransaction transaction, string sql, object? param = null)
+        {
+            return await connection.ExecuteAsync(sql, param, transaction);
+        }
+
+        protected async Task<TResult?> QuerySingleAsync<TResult>(IDbConnection connection, string sql, object? param = null)
+        {
+            return await connection.QueryFirstOrDefaultAsync<TResult>(sql, param);
         }
     }
 }
