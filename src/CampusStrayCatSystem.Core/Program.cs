@@ -11,6 +11,7 @@ builder.Services.AddSwaggerGen();
 
 // Dependency Injection - Repository
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
 
 var app = builder.Build();
 
