@@ -9,6 +9,5 @@ namespace CampusStrayCatSystem.Data
         Task<MedHealthRecord?> GetById(string id);
         Task<int> Create(MedHealthRecord record);
         Task<int> Update(MedHealthRecord record);
-        Task<int> Delete(string id);
     }
 }

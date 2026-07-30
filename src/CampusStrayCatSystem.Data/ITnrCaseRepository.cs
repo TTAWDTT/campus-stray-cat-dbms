@@ -8,6 +8,6 @@ namespace CampusStrayCatSystem.Data
         Task<TnrCase?> GetById(string id);
         Task<int> Create(TnrCase tnrCase);
         Task<int> Update(TnrCase tnrCase);
-        Task<int> Delete(string id);
+        Task UpdateStatusWithLog(string caseId, string newStatus, string oldStatus, string? operatorId, string? remark);
     }
 }

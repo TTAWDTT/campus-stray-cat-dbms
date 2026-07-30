@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using CampusStrayCatSystem.Models;
+using System.Data;
 
 namespace CampusStrayCatSystem.Data
 {
@@ -95,11 +96,49 @@ namespace CampusStrayCatSystem.Data
             });
         }
 
-        public async Task<int> Delete(string id)
+        public async Task UpdateStatusWithLog(string caseId, string newStatus, string oldStatus, string? operatorId, string? remark)
         {
-            const string sql = @"DELETE FROM TNR_CASES WHERE CASEID = :CaseID";
+            using var connection = CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
 
-            return await ExecuteAsync(sql, new { CaseID = id });
+            try
+            {
+                // 更新 TNR_CASES 状态
+                const string updateSql = @"
+                    UPDATE TNR_CASES
+                    SET CURRENTSTATUS = :CurrentStatus
+                    WHERE CASEID = :CaseID";
+
+                await ExecuteAsync(connection, transaction, updateSql, new
+                {
+                    CurrentStatus = newStatus,
+                    CaseID = caseId
+                });
+
+                // 插入状态流转日志
+                var logId = Guid.NewGuid().ToString();
+                const string insertLogSql = @"
+                    INSERT INTO TNR_STATUSLOGS (LOGID, CASEID, FROMSTATUS, TOSTATUS, OPERATORID, OPTIME, REMARK)
+                    VALUES (:LogID, :CaseID, :FromStatus, :ToStatus, :OperatorID, SYSDATE, :Remark)";
+
+                await ExecuteAsync(connection, transaction, insertLogSql, new
+                {
+                    LogID = logId,
+                    CaseID = caseId,
+                    FromStatus = oldStatus,
+                    ToStatus = newStatus,
+                    OperatorID = operatorId,
+                    Remark = remark
+                });
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }
