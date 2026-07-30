@@ -12,6 +12,9 @@ builder.Services.AddSwaggerGen();
 // Dependency Injection - Repository
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
+builder.Services.AddScoped<IServicePointRepository, ServicePointRepository>();
+builder.Services.AddScoped<INestMaintenanceRecordRepository, NestMaintenanceRecordRepository>();
+builder.Services.AddScoped<ICatSightingRepository, CatSightingRepository>();
 
 var app = builder.Build();
 
