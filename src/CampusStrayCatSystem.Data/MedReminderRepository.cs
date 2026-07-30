@@ -1,11 +1,13 @@
 using CampusStrayCatSystem.Models;
+using Dapper;
 using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CampusStrayCatSystem.Data
 {
     /// <summary>
     /// 医疗提醒仓储实现。
-    /// 这里直接操作 MED_REMINDERS 表。
+    /// 查询使用视图，新增和状态流转调用 Oracle Package。
     /// </summary>
     public class MedReminderRepository : BaseRepository<MedReminder>, IMedReminderRepository
     {
@@ -24,8 +26,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM MED_REMINDERS
-                WHERE NVL(SENDSTATUS, 'PENDING') IN ('PENDING', 'SENT')
+                FROM V_MED_PENDING_REMINDERS
                 ORDER BY REMINDERTIME";
 
             return await QueryAsync(sql);
@@ -41,7 +42,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM MED_REMINDERS
+                FROM V_MED_REMINDERS
                 WHERE CATID = :CatID
                 ORDER BY REMINDERTIME DESC";
 
@@ -58,7 +59,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM MED_REMINDERS
+                FROM V_MED_REMINDERS
                 WHERE REMINDERID = :ReminderID";
 
             return await QuerySingleAsync(sql, new { ReminderID = reminderId });
@@ -66,59 +67,48 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> CreateReminder(MedReminder reminder)
         {
-            reminder.ReminderID = EnsureId(reminder.ReminderID);
-            reminder.SendStatus = NormalizeStatus(reminder.SendStatus, "PENDING");
+            var parameters = new DynamicParameters();
+            parameters.Add("P_RECORDID", reminder.RecordID, DbType.String);
+            parameters.Add("P_CATID", reminder.CatID, DbType.String);
+            parameters.Add("P_REMINDERTYPE", reminder.ReminderType, DbType.String);
+            parameters.Add("P_RECEIVERUSERID", reminder.ReceiverUserID, DbType.String);
+            parameters.Add("P_REMINDERTIME", reminder.ReminderTime, DbType.DateTime);
+            parameters.Add("O_REMINDERID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            const string sql = @"
-                INSERT INTO MED_REMINDERS (
-                    REMINDERID,
-                    RECORDID,
-                    CATID,
-                    REMINDERTYPE,
-                    RECEIVERUSERID,
-                    REMINDERTIME,
-                    SENDSTATUS
-                ) VALUES (
-                    :ReminderID,
-                    :RecordID,
-                    :CatID,
-                    :ReminderType,
-                    :ReceiverUserID,
-                    :ReminderTime,
-                    :SendStatus
-                )";
+            using var connection = CreateConnection();
+            var rows = await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.CREATE_REMINDER",
+                parameters,
+                commandType: CommandType.StoredProcedure);
 
-            return await ExecuteAsync(sql, reminder);
+            reminder.ReminderID = parameters.Get<string>("O_REMINDERID");
+            reminder.SendStatus = "PENDING";
+
+            return rows;
         }
 
         public async Task<int> MarkSent(string reminderId)
         {
-            const string sql = @"
-                UPDATE MED_REMINDERS
-                SET SENDSTATUS = 'SENT'
-                WHERE REMINDERID = :ReminderID";
+            var parameters = new DynamicParameters();
+            parameters.Add("P_REMINDERID", reminderId, DbType.String);
 
-            return await ExecuteAsync(sql, new { ReminderID = reminderId });
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.MARK_REMINDER_SENT",
+                parameters,
+                commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> Complete(string reminderId)
         {
-            const string sql = @"
-                UPDATE MED_REMINDERS
-                SET SENDSTATUS = 'COMPLETED'
-                WHERE REMINDERID = :ReminderID";
+            var parameters = new DynamicParameters();
+            parameters.Add("P_REMINDERID", reminderId, DbType.String);
 
-            return await ExecuteAsync(sql, new { ReminderID = reminderId });
-        }
-
-        private static string EnsureId(string? id)
-        {
-            return string.IsNullOrWhiteSpace(id) ? Guid.NewGuid().ToString("N") : id;
-        }
-
-        private static string NormalizeStatus(string? status, string fallback)
-        {
-            return string.IsNullOrWhiteSpace(status) ? fallback : status.Trim().ToUpperInvariant();
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.COMPLETE_REMINDER",
+                parameters,
+                commandType: CommandType.StoredProcedure);
         }
     }
 }

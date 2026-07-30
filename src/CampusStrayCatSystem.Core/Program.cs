@@ -11,13 +11,10 @@ builder.Services.AddSwaggerGen();
 
 // Dependency Injection - Repository
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-<<<<<<< HEAD
 builder.Services.AddScoped<IMedReminderRepository, MedReminderRepository>();
 builder.Services.AddScoped<IEmergencyReportRepository, EmergencyReportRepository>();
 builder.Services.AddScoped<IMissingAlertRepository, MissingAlertRepository>();
-=======
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
->>>>>>> origin/master
 
 var app = builder.Build();
 

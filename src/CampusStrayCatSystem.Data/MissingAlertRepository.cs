@@ -1,11 +1,13 @@
 using CampusStrayCatSystem.Models;
+using Dapper;
 using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CampusStrayCatSystem.Data
 {
     /// <summary>
     /// 失踪预警仓储实现。
-    /// 这里把“最后目击”和“预警”分成两个清晰动作，便于验收时逐步检查。
+    /// 查询使用视图，目击记录、预警创建和状态更新调用 Oracle Package。
     /// </summary>
     public class MissingAlertRepository : BaseRepository<CatMissingAlert>, IMissingAlertRepository
     {
@@ -26,7 +28,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM CAT_MISSINGALERTS
+                FROM V_MISSING_ALERTS
                 ORDER BY ALERTTIME DESC";
 
             return await QueryAsync(sql);
@@ -45,7 +47,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM CAT_MISSINGALERTS
+                FROM V_MISSING_ALERTS
                 WHERE CATID = :CatID
                 ORDER BY ALERTTIME DESC";
 
@@ -65,7 +67,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM CAT_MISSINGALERTS
+                FROM V_MISSING_ALERTS
                 WHERE ALERTID = :AlertID";
 
             return await QuerySingleAsync(sql, new { AlertID = alertId });
@@ -73,102 +75,65 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> CreateSighting(CatSighting sighting)
         {
-            sighting.SightingID = EnsureId(sighting.SightingID);
+            var parameters = new DynamicParameters();
+            parameters.Add("P_CATID", sighting.CatID, DbType.String);
+            parameters.Add("P_USERID", sighting.UserID, DbType.String);
+            parameters.Add("P_AREAID", sighting.AreaID, DbType.String);
+            parameters.Add("P_LONGITUDE", sighting.Longitude, DbType.Decimal);
+            parameters.Add("P_LATITUDE", sighting.Latitude, DbType.Decimal);
+            parameters.Add("P_PHOTOURL", sighting.PhotoURL, DbType.String);
+            parameters.Add("P_SIGHTINGTIME", sighting.SightingTime, DbType.DateTime);
+            parameters.Add("P_REMARK", sighting.Remark, DbType.String);
+            parameters.Add("O_SIGHTINGID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            const string sql = @"
-                INSERT INTO CAT_SIGHTINGS (
-                    SIGHTINGID,
-                    CATID,
-                    USERID,
-                    AREAID,
-                    LONGITUDE,
-                    LATITUDE,
-                    PHOTOURL,
-                    SIGHTINGTIME,
-                    REMARK
-                ) VALUES (
-                    :SightingID,
-                    :CatID,
-                    :UserID,
-                    :AreaID,
-                    :Longitude,
-                    :Latitude,
-                    :PhotoURL,
-                    :SightingTime,
-                    :Remark
-                )";
+            using var connection = CreateConnection();
+            var rows = await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.CREATE_SIGHTING",
+                parameters,
+                commandType: CommandType.StoredProcedure);
 
-            return await ExecuteAsync(sql, sighting);
+            sighting.SightingID = parameters.Get<string>("O_SIGHTINGID");
+
+            return rows;
         }
 
         public async Task<int> CreateAlert(CatMissingAlert alert)
         {
-            alert.AlertID = EnsureId(alert.AlertID);
-            alert.AlertStatus = NormalizeStatus(alert.AlertStatus, "PROCESSING");
-            alert.AlertTime ??= DateTime.Now;
+            var parameters = new DynamicParameters();
+            parameters.Add("P_CATID", alert.CatID, DbType.String);
+            parameters.Add("P_LASTSIGHTINGID", alert.LastSightingID, DbType.String);
+            parameters.Add("P_LASTSIGHTINGTIME", alert.LastSightingTime, DbType.DateTime);
+            parameters.Add("P_THRESHOLDDAYS", alert.ThresholdDays, DbType.Int32);
+            parameters.Add("P_HANDLERUSERID", alert.HandlerUserID, DbType.String);
+            parameters.Add("P_REMARK", alert.Remark, DbType.String);
+            parameters.Add("O_ALERTID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            const string sql = @"
-                INSERT INTO CAT_MISSINGALERTS (
-                    ALERTID,
-                    CATID,
-                    LASTSIGHTINGID,
-                    LASTSIGHTINGTIME,
-                    THRESHOLDDAYS,
-                    ALERTTIME,
-                    ALERTSTATUS,
-                    HANDLERUSERID,
-                    CLOSETIME,
-                    REMARK
-                ) VALUES (
-                    :AlertID,
-                    :CatID,
-                    :LastSightingID,
-                    :LastSightingTime,
-                    :ThresholdDays,
-                    :AlertTime,
-                    :AlertStatus,
-                    :HandlerUserID,
-                    :CloseTime,
-                    :Remark
-                )";
+            using var connection = CreateConnection();
+            var rows = await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.CREATE_MISSING_ALERT",
+                parameters,
+                commandType: CommandType.StoredProcedure);
 
-            return await ExecuteAsync(sql, alert);
+            alert.AlertID = parameters.Get<string>("O_ALERTID");
+            alert.AlertStatus = "PROCESSING";
+            alert.AlertTime = DateTime.Now;
+
+            return rows;
         }
 
         public async Task<int> UpdateStatus(string alertId, string alertStatus, string? handlerUserId, string? remark)
         {
-            string normalizedStatus = NormalizeStatus(alertStatus, "PROCESSING");
-            DateTime? closeTime = normalizedStatus is "FOUND" or "CLOSED" ? DateTime.Now : null;
+            var parameters = new DynamicParameters();
+            parameters.Add("P_ALERTID", alertId, DbType.String);
+            parameters.Add("P_ALERTSTATUS", alertStatus, DbType.String);
+            parameters.Add("P_HANDLERUSERID", handlerUserId, DbType.String);
+            parameters.Add("P_REMARK", remark, DbType.String);
 
-            const string sql = @"
-                UPDATE CAT_MISSINGALERTS
-                SET ALERTSTATUS = :AlertStatus,
-                    HANDLERUSERID = NVL(:HandlerUserID, HANDLERUSERID),
-                    REMARK = NVL(:Remark, REMARK),
-                    CLOSETIME = CASE
-                        WHEN :CloseTime IS NOT NULL THEN :CloseTime
-                        ELSE CLOSETIME
-                    END
-                WHERE ALERTID = :AlertID";
-
-            return await ExecuteAsync(sql, new
-            {
-                AlertID = alertId,
-                AlertStatus = normalizedStatus,
-                HandlerUserID = handlerUserId,
-                Remark = remark,
-                CloseTime = closeTime
-            });
-        }
-
-        private static string EnsureId(string? id)
-        {
-            return string.IsNullOrWhiteSpace(id) ? Guid.NewGuid().ToString("N") : id;
-        }
-
-        private static string NormalizeStatus(string? status, string fallback)
-        {
-            return string.IsNullOrWhiteSpace(status) ? fallback : status.Trim().ToUpperInvariant();
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.UPDATE_MISSING_STATUS",
+                parameters,
+                commandType: CommandType.StoredProcedure);
         }
     }
 }

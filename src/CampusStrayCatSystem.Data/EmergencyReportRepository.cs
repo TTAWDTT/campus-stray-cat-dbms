@@ -1,11 +1,13 @@
 using CampusStrayCatSystem.Models;
+using Dapper;
 using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CampusStrayCatSystem.Data
 {
     /// <summary>
     /// 紧急救助上报仓储实现。
-    /// 这里保留最常用的查询和更新动作，方便前端直接对接。
+    /// 查询使用视图，提交、分配和状态更新调用 Oracle Package。
     /// </summary>
     public class EmergencyReportRepository : BaseRepository<EmergencyReport>, IEmergencyReportRepository
     {
@@ -28,7 +30,7 @@ namespace CampusStrayCatSystem.Data
                        PROCESSSTATUS AS ProcessStatus,
                        HANDLERUSERID AS HandlerUserID,
                        PROCESSRESULT AS ProcessResult
-                FROM EMERGENCY_REPORTS
+                FROM V_EMERGENCY_REPORTS
                 ORDER BY REPORTTIME DESC";
 
             return await QueryAsync(sql);
@@ -49,7 +51,7 @@ namespace CampusStrayCatSystem.Data
                        PROCESSSTATUS AS ProcessStatus,
                        HANDLERUSERID AS HandlerUserID,
                        PROCESSRESULT AS ProcessResult
-                FROM EMERGENCY_REPORTS
+                FROM V_EMERGENCY_REPORTS
                 WHERE REPORTID = :ReportID";
 
             return await QuerySingleAsync(sql, new { ReportID = reportId });
@@ -57,82 +59,54 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> Create(EmergencyReport report)
         {
-            report.ReportID = EnsureId(report.ReportID);
-            report.ProcessStatus = NormalizeStatus(report.ProcessStatus, "SUBMITTED");
-            report.UrgencyLevel = NormalizeStatus(report.UrgencyLevel, "LOW");
-            report.ReportTime ??= DateTime.Now;
+            var parameters = new DynamicParameters();
+            parameters.Add("P_REPORTERUSERID", report.ReporterUserID, DbType.String);
+            parameters.Add("P_AREAID", report.AreaID, DbType.String);
+            parameters.Add("P_ANIMALTYPE", report.AnimalType, DbType.String);
+            parameters.Add("P_PHOTOURL", report.PhotoURL, DbType.String);
+            parameters.Add("P_LONGITUDE", report.Longitude, DbType.Decimal);
+            parameters.Add("P_LATITUDE", report.Latitude, DbType.Decimal);
+            parameters.Add("P_URGENCYLEVEL", report.UrgencyLevel, DbType.String);
+            parameters.Add("O_REPORTID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            const string sql = @"
-                INSERT INTO EMERGENCY_REPORTS (
-                    REPORTID,
-                    REPORTERUSERID,
-                    AREAID,
-                    ANIMALTYPE,
-                    PHOTOURL,
-                    LONGITUDE,
-                    LATITUDE,
-                    REPORTTIME,
-                    URGENCYLEVEL,
-                    PROCESSSTATUS,
-                    HANDLERUSERID,
-                    PROCESSRESULT
-                ) VALUES (
-                    :ReportID,
-                    :ReporterUserID,
-                    :AreaID,
-                    :AnimalType,
-                    :PhotoURL,
-                    :Longitude,
-                    :Latitude,
-                    :ReportTime,
-                    :UrgencyLevel,
-                    :ProcessStatus,
-                    :HandlerUserID,
-                    :ProcessResult
-                )";
+            using var connection = CreateConnection();
+            var rows = await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.SUBMIT_EMERGENCY_REPORT",
+                parameters,
+                commandType: CommandType.StoredProcedure);
 
-            return await ExecuteAsync(sql, report);
+            report.ReportID = parameters.Get<string>("O_REPORTID");
+            report.ReportTime = DateTime.Now;
+            report.ProcessStatus = "SUBMITTED";
+
+            return rows;
         }
 
         public async Task<int> AssignHandler(string reportId, string? handlerUserId)
         {
-            const string sql = @"
-                UPDATE EMERGENCY_REPORTS
-                SET HANDLERUSERID = :HandlerUserID,
-                    PROCESSSTATUS = 'ASSIGNED'
-                WHERE REPORTID = :ReportID";
+            var parameters = new DynamicParameters();
+            parameters.Add("P_REPORTID", reportId, DbType.String);
+            parameters.Add("P_HANDLERUSERID", handlerUserId, DbType.String);
 
-            return await ExecuteAsync(sql, new
-            {
-                ReportID = reportId,
-                HandlerUserID = handlerUserId
-            });
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.ASSIGN_EMERGENCY_REPORT",
+                parameters,
+                commandType: CommandType.StoredProcedure);
         }
 
         public async Task<int> UpdateStatus(string reportId, string status, string? processResult)
         {
-            const string sql = @"
-                UPDATE EMERGENCY_REPORTS
-                SET PROCESSSTATUS = :ProcessStatus,
-                    PROCESSRESULT = :ProcessResult
-                WHERE REPORTID = :ReportID";
+            var parameters = new DynamicParameters();
+            parameters.Add("P_REPORTID", reportId, DbType.String);
+            parameters.Add("P_PROCESSSTATUS", status, DbType.String);
+            parameters.Add("P_PROCESSRESULT", processResult, DbType.String);
 
-            return await ExecuteAsync(sql, new
-            {
-                ReportID = reportId,
-                ProcessStatus = NormalizeStatus(status, "SUBMITTED"),
-                ProcessResult = processResult
-            });
-        }
-
-        private static string EnsureId(string? id)
-        {
-            return string.IsNullOrWhiteSpace(id) ? Guid.NewGuid().ToString("N") : id;
-        }
-
-        private static string NormalizeStatus(string? status, string fallback)
-        {
-            return string.IsNullOrWhiteSpace(status) ? fallback : status.Trim().ToUpperInvariant();
+            using var connection = CreateConnection();
+            return await connection.ExecuteAsync(
+                "PKG_RESCUE_141516.UPDATE_EMERGENCY_STATUS",
+                parameters,
+                commandType: CommandType.StoredProcedure);
         }
     }
 }
