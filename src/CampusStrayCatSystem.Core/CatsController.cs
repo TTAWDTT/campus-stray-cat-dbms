@@ -20,8 +20,10 @@ namespace CampusStrayCatSystem.Core {
             mainAreaId = NormalizeOptional(mainAreaId);
             lifeStatus = NormalizeStatus(lifeStatus);
             archiveStatus = NormalizeStatus(archiveStatus);
-            if (lifeStatus != null && !IsValidLifeStatus(lifeStatus)) { return BadRequest(new { message = "生活状态只能是 ON_CAMPUS、MISSING、ADOPTED 或 DECEASED。" });}
-            if (archiveStatus != null && !IsValidArchiveStatus(archiveStatus)) { return BadRequest(new { message = "档案状态只能是 DRAFT、PUBLISHED 或 ARCHIVED。" });}
+            if (lifeStatus != null && !IsValidLifeStatus(lifeStatus)) {
+                return BadRequest(new { message = "生活状态只能是 ON_CAMPUS、MISSING、ADOPTED 或 DECEASED。" });}
+            if (archiveStatus != null && !IsValidArchiveStatus(archiveStatus)) {
+                return BadRequest(new { message = "档案状态只能是 DRAFT、PUBLISHED 或 ARCHIVED。" });}
 
             var cats = await _catRepository.GetAllAsync(mainAreaId, lifeStatus, archiveStatus);
             return Ok(cats);}
@@ -29,7 +31,8 @@ namespace CampusStrayCatSystem.Core {
         [HttpGet("{catId}")]
         public async Task<ActionResult<CatSummary>> GetCat(string catId) {
             var cat = await _catRepository.GetByIdAsync(catId);
-            if (cat == null) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+            if (cat == null) {
+                return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             return Ok(cat);}
 
@@ -37,7 +40,8 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost] public async Task<ActionResult<CatSummary>> CreateCat(CreateCatRequest request) {
             if (request.MainAreaId != null &&
-                await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) { return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
+                await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) {
+                return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
 
             var cat = new Cat {
                 CatId = Guid.NewGuid().ToString(),
@@ -53,7 +57,8 @@ namespace CampusStrayCatSystem.Core {
                 ArchiveStatus = CatStatusCodes.ArchiveDraft};
 
             var createdCat = await _catRepository.CreateAsync(cat);
-            if (createdCat == null) { return StatusCode(500, new { message = "猫咪档案创建失败，数据库操作已回滚。" });}
+            if (createdCat == null) {
+                return StatusCode(500, new { message = "猫咪档案创建失败，数据库操作已回滚。" });}
 
             return CreatedAtAction(nameof(GetCat), new { catId = cat.CatId }, createdCat);}
 
@@ -63,10 +68,12 @@ namespace CampusStrayCatSystem.Core {
         [HttpPut("{catId}")]
         public async Task<IActionResult> UpdateCat(string catId, UpdateCatRequest request) {
             var existingCat = await _catRepository.GetByIdAsync(catId);
-            if (existingCat == null) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+            if (existingCat == null) {
+                return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             if (request.MainAreaId != null &&
-                await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) { return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
+                await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) {
+                return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
 
             var cat = new Cat {
                 CatId = catId,
@@ -82,7 +89,8 @@ namespace CampusStrayCatSystem.Core {
                 ArchiveStatus = request.ArchiveStatus};
 
             var affectedRows = await _catRepository.UpdateAsync(cat);
-            if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+            if (affectedRows == 0) {
+                return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             return NoContent();}
 
@@ -90,7 +98,8 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{catId}")] public async Task<IActionResult> ArchiveCat(string catId) {
             var affectedRows = await _catRepository.ArchiveAsync(catId);
-            if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+            if (affectedRows == 0) {
+                return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             return NoContent();}
 

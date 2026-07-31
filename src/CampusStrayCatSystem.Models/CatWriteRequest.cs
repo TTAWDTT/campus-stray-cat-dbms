@@ -33,7 +33,8 @@ namespace CampusStrayCatSystem.Models {
 
         private static string? NormalizeTags(string? value) {
             var normalized = NormalizeOptional(value)?.Replace('，', ',');
-            if (normalized == null) { return null;}
+            if (normalized == null) {
+                return null;}
 
             var tags = normalized.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             return tags.Length == 0 ? null : string.Join(',', tags);}
