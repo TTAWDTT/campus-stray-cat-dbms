@@ -40,7 +40,7 @@ BEGIN
     VALUES ('area-rescue-demo', 'Library East Gate', 'Main Campus', 'GATE', 'MEDIUM');
 
     INSERT INTO CAT_CATS (CATID, CATNAME, GENDER, COLORPATTERN, MAINAREAID, LIFESTATUS, ARCHIVESTATUS)
-    VALUES ('cat-rescue-demo', 'Rescue Demo Cat', 'UNKNOWN', 'Orange white', 'area-rescue-demo', 'ACTIVE', 'NORMAL');
+    VALUES ('cat-rescue-demo', 'Rescue Demo Cat', 'UNKNOWN', 'Orange white', 'area-rescue-demo', 'ON_CAMPUS', 'PUBLISHED');
 
     INSERT INTO MED_HEALTHRECORDS (
         RECORDID,

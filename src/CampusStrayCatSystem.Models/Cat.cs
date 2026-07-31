@@ -1,6 +1,6 @@
 namespace CampusStrayCatSystem.Models {
     public class Cat {
-        public string CatId { get; set; } = string.Empty;
+        public string CatID { get; set; } = string.Empty;
         public string? CatName { get; set; }
         public string? Gender { get; set; }
         public string? Breed { get; set; }

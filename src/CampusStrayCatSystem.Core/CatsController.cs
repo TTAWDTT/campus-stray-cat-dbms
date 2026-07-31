@@ -18,8 +18,8 @@ namespace CampusStrayCatSystem.Core {
                                                                                   [FromQuery] string? lifeStatus = null,
                                                                                   [FromQuery] string? archiveStatus = null) {
             mainAreaId = NormalizeOptional(mainAreaId);
-            lifeStatus = NormalizeStatus(lifeStatus);
-            archiveStatus = NormalizeStatus(archiveStatus);
+            lifeStatus = CatStatusCodes.NormalizeLifeStatus(lifeStatus);
+            archiveStatus = CatStatusCodes.NormalizeArchiveStatus(archiveStatus);
             if (lifeStatus != null && !IsValidLifeStatus(lifeStatus)) {
                 return BadRequest(new { message = "生活状态只能是 ON_CAMPUS、MISSING、ADOPTED 或 DECEASED。" });}
             if (archiveStatus != null && !IsValidArchiveStatus(archiveStatus)) {
@@ -44,7 +44,7 @@ namespace CampusStrayCatSystem.Core {
                 return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
 
             var cat = new Cat {
-                CatId = Guid.NewGuid().ToString(),
+                CatID = Guid.NewGuid().ToString(),
                 CatName = request.CatName,
                 Gender = request.Gender,
                 Breed = request.Breed,
@@ -60,7 +60,7 @@ namespace CampusStrayCatSystem.Core {
             if (createdCat == null) {
                 return StatusCode(500, new { message = "猫咪档案创建失败，数据库操作已回滚。" });}
 
-            return CreatedAtAction(nameof(GetCat), new { catId = cat.CatId }, createdCat);}
+            return CreatedAtAction(nameof(GetCat), new { catId = cat.CatID }, createdCat);}
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -76,7 +76,7 @@ namespace CampusStrayCatSystem.Core {
                 return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
 
             var cat = new Cat {
-                CatId = catId,
+                CatID = catId,
                 CatName = request.CatName,
                 Gender = request.Gender,
                 Breed = request.Breed,
@@ -104,7 +104,6 @@ namespace CampusStrayCatSystem.Core {
             return NoContent();}
 
         private static string? NormalizeOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-        private static string? NormalizeStatus(string? value) => NormalizeOptional(value)?.ToUpperInvariant();
         private static bool IsValidLifeStatus(string value) => value is CatStatusCodes.LifeOnCampus or CatStatusCodes.LifeMissing or CatStatusCodes.LifeAdopted or CatStatusCodes.LifeDeceased;
         private static bool IsValidArchiveStatus(string value) => value is CatStatusCodes.ArchiveDraft or CatStatusCodes.ArchivePublished or CatStatusCodes.ArchiveArchived;
     }

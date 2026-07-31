@@ -5,11 +5,34 @@ using Microsoft.Extensions.Configuration;
 
 namespace CampusStrayCatSystem.Data {
     public class CatRepository : BaseRepository<CatSummary>, ICatRepository {
+        private const string NormalizedGenderSql = @"CASE UPPER(TRIM(c.GENDER))
+                WHEN '母' THEN 'FEMALE'
+                WHEN '雌' THEN 'FEMALE'
+                WHEN '公' THEN 'MALE'
+                WHEN '雄' THEN 'MALE'
+                WHEN '未知' THEN 'UNKNOWN'
+                ELSE UPPER(TRIM(c.GENDER))
+            END";
+        private const string NormalizedLifeStatusSql = @"CASE UPPER(TRIM(c.LIFESTATUS))
+                WHEN '在校' THEN 'ON_CAMPUS'
+                WHEN 'ACTIVE' THEN 'ON_CAMPUS'
+                WHEN '失踪' THEN 'MISSING'
+                WHEN '已领养' THEN 'ADOPTED'
+                WHEN '已死亡' THEN 'DECEASED'
+                ELSE UPPER(TRIM(c.LIFESTATUS))
+            END";
+        private const string NormalizedArchiveStatusSql = @"CASE UPPER(TRIM(c.ARCHIVESTATUS))
+                WHEN '草稿' THEN 'DRAFT'
+                WHEN '正常' THEN 'PUBLISHED'
+                WHEN 'NORMAL' THEN 'PUBLISHED'
+                WHEN '已归档' THEN 'ARCHIVED'
+                ELSE UPPER(TRIM(c.ARCHIVESTATUS))
+            END";
         private const string SelectClause = @"
-            SELECT c.CATID AS CatId, c.CATNAME AS CatName, c.GENDER AS Gender, c.BREED AS Breed,
+            SELECT c.CATID AS CatID, c.CATNAME AS CatName, " + NormalizedGenderSql + @" AS Gender, c.BREED AS Breed,
                    c.COLORPATTERN AS ColorPattern, c.STERILIZEDFLAG AS SterilizedFlag, c.EARTIPFLAG AS EarTipFlag,
-                   c.PERSONALITYTAGS AS PersonalityTags, c.MAINAREAID AS MainAreaId, c.LIFESTATUS AS LifeStatus,
-                   c.ARCHIVESTATUS AS ArchiveStatus, a.AREANAME AS MainAreaName, p.PHOTOURL AS PrimaryPhotoUrl
+                   c.PERSONALITYTAGS AS PersonalityTags, c.MAINAREAID AS MainAreaId, " + NormalizedLifeStatusSql + @" AS LifeStatus,
+                   " + NormalizedArchiveStatusSql + @" AS ArchiveStatus, a.AREANAME AS MainAreaName, p.PHOTOURL AS PrimaryPhotoUrl
             FROM CAT_CATS c
             LEFT JOIN MAP_CAMPUSAREAS a ON a.AREAID = c.MAINAREAID
             LEFT JOIN (
@@ -30,8 +53,8 @@ namespace CampusStrayCatSystem.Data {
         public CatRepository(IConfiguration configuration) : base(configuration) { }
 
         public async Task<bool> Exists(string catId) {
-            const string sql = "SELECT COUNT(1) FROM CAT_CATS WHERE CATID = :CatId";
-            var count = await QuerySingleAsync<int>(sql, new { CatId = catId });
+            const string sql = "SELECT COUNT(1) FROM CAT_CATS WHERE CATID = :CatID";
+            var count = await QuerySingleAsync<int>(sql, new { CatID = catId });
             return count > 0;}
 
         public async Task<IEnumerable<CatSummary>> GetAllAsync(string? mainAreaId = null,
@@ -46,13 +69,13 @@ namespace CampusStrayCatSystem.Data {
                 parameters.Add("MainAreaId", mainAreaId);}
 
             if (!string.IsNullOrWhiteSpace(lifeStatus)) {
-                conditions.Add("c.LIFESTATUS = :LifeStatus");
+                conditions.Add(NormalizedLifeStatusSql + " = :LifeStatus");
                 parameters.Add("LifeStatus", lifeStatus);}
 
             if (string.IsNullOrWhiteSpace(archiveStatus)) {
-                conditions.Add("(c.ARCHIVESTATUS IS NULL OR c.ARCHIVESTATUS <> :ArchivedStatus)");
+                conditions.Add("(" + NormalizedArchiveStatusSql + " IS NULL OR " + NormalizedArchiveStatusSql + " <> :ArchivedStatus)");
                 parameters.Add("ArchivedStatus", "ARCHIVED");} else {
-                conditions.Add("c.ARCHIVESTATUS = :ArchiveStatus");
+                conditions.Add(NormalizedArchiveStatusSql + " = :ArchiveStatus");
                 parameters.Add("ArchiveStatus", archiveStatus);}
 
             sql.Append(" WHERE ").Append(string.Join(" AND ", conditions));
@@ -62,9 +85,9 @@ namespace CampusStrayCatSystem.Data {
 
         public async Task<CatSummary?> GetByIdAsync(string catId) {
             const string sql = SelectClause + @"
-                WHERE c.CATID = :CatId";
+                WHERE c.CATID = :CatID";
 
-            return await QuerySingleAsync(sql, new { CatId = catId });}
+            return await QuerySingleAsync(sql, new { CatID = catId });}
 
         public async Task<CatSummary?> CreateAsync(Cat cat) {
             const string insertSql = @"
@@ -72,11 +95,11 @@ namespace CampusStrayCatSystem.Data {
                     CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG,
                     EARTIPFLAG, PERSONALITYTAGS, MAINAREAID, LIFESTATUS, ARCHIVESTATUS
                 ) VALUES (
-                    :CatId, :CatName, :Gender, :Breed, :ColorPattern, :SterilizedFlag,
+                    :CatID, :CatName, :Gender, :Breed, :ColorPattern, :SterilizedFlag,
                     :EarTipFlag, :PersonalityTags, :MainAreaId, :LifeStatus, :ArchiveStatus
                 )";
             const string selectSql = SelectClause + @"
-                WHERE c.CATID = :CatId";
+                WHERE c.CATID = :CatID";
 
             using var connection = CreateConnection();
             connection.Open();
@@ -84,7 +107,7 @@ namespace CampusStrayCatSystem.Data {
 
             try {
                 await connection.ExecuteAsync(insertSql, cat, transaction);
-                var createdCat = await connection.QueryFirstOrDefaultAsync<CatSummary>(selectSql, new { cat.CatId }, transaction);
+                var createdCat = await connection.QueryFirstOrDefaultAsync<CatSummary>(selectSql, new { cat.CatID }, transaction);
                 if (createdCat == null) {
                     transaction.Rollback();
                     return null;}
@@ -108,7 +131,7 @@ namespace CampusStrayCatSystem.Data {
                     MAINAREAID = :MainAreaId,
                     LIFESTATUS = :LifeStatus,
                     ARCHIVESTATUS = :ArchiveStatus
-                WHERE CATID = :CatId";
+                WHERE CATID = :CatID";
 
             return await ExecuteAsync(sql, cat);}
 
@@ -116,8 +139,8 @@ namespace CampusStrayCatSystem.Data {
             const string sql = @"
                 UPDATE CAT_CATS
                 SET ARCHIVESTATUS = :ArchiveStatus
-                WHERE CATID = :CatId";
+                WHERE CATID = :CatID";
 
-            return await ExecuteAsync(sql, new { ArchiveStatus = CatStatusCodes.ArchiveArchived, CatId = catId });}
+            return await ExecuteAsync(sql, new { ArchiveStatus = CatStatusCodes.ArchiveArchived, CatID = catId });}
     }
 }

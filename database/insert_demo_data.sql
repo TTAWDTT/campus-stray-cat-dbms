@@ -96,11 +96,11 @@ MERGE INTO CAT_CATS target
 USING (
     SELECT 'demo-cat-campus-001' AS CATID,
            '图图' AS CATNAME,
-           '母' AS GENDER,
+           'FEMALE' AS GENDER,
            '狸花' AS COLORPATTERN,
            'demo-area-library' AS MAINAREAID,
-           '在校' AS LIFESTATUS,
-           '正常' AS ARCHIVESTATUS
+           'ON_CAMPUS' AS LIFESTATUS,
+           'PUBLISHED' AS ARCHIVESTATUS
     FROM DUAL
 ) source
 ON (target.CATID = source.CATID)
@@ -237,4 +237,3 @@ VALUES
 COMMIT;
 
 PROMPT ===== Zhao Qing module demo data complete =====;
-

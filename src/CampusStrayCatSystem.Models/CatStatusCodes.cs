@@ -16,5 +16,27 @@ namespace CampusStrayCatSystem.Models {
         internal const string GenderPattern = "^(UNKNOWN|MALE|FEMALE)$";
         internal const string LifeStatusPattern = "^(ON_CAMPUS|MISSING|ADOPTED|DECEASED)$";
         internal const string ArchiveStatusPattern = "^(DRAFT|PUBLISHED|ARCHIVED)$";
+
+        public static string? NormalizeGender(string? value) => Normalize(value) switch {
+            "母" or "雌" => GenderFemale,
+            "公" or "雄" => GenderMale,
+            "未知" => GenderUnknown,
+            var normalized => normalized};
+
+        public static string? NormalizeLifeStatus(string? value) => Normalize(value) switch {
+            "在校" or "ACTIVE" => LifeOnCampus,
+            "失踪" => LifeMissing,
+            "已领养" => LifeAdopted,
+            "已死亡" => LifeDeceased,
+            var normalized => normalized};
+
+        public static string? NormalizeArchiveStatus(string? value) => Normalize(value) switch {
+            "草稿" => ArchiveDraft,
+            "正常" or "NORMAL" => ArchivePublished,
+            "已归档" => ArchiveArchived,
+            var normalized => normalized};
+
+        private static string? Normalize(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
     }
 }
