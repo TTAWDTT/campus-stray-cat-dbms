@@ -12,9 +12,17 @@ namespace CampusStrayCatSystem.Core {
             _catRepository = catRepository;
             _campusAreaRepository = campusAreaRepository;}
 
+        [ProducesResponseType<IEnumerable<CatSummary>>(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet] public async Task<ActionResult<IEnumerable<CatSummary>>> GetCats([FromQuery] string? mainAreaId = null,
                                                                                   [FromQuery] string? lifeStatus = null,
                                                                                   [FromQuery] string? archiveStatus = null) {
+            mainAreaId = NormalizeOptional(mainAreaId);
+            lifeStatus = NormalizeStatus(lifeStatus);
+            archiveStatus = NormalizeStatus(archiveStatus);
+            if (lifeStatus != null && !IsValidLifeStatus(lifeStatus)) { return BadRequest(new { message = "生活状态只能是 ON_CAMPUS、MISSING、ADOPTED 或 DECEASED。" });}
+            if (archiveStatus != null && !IsValidArchiveStatus(archiveStatus)) { return BadRequest(new { message = "档案状态只能是 DRAFT、PUBLISHED 或 ARCHIVED。" });}
+
             var cats = await _catRepository.GetAllAsync(mainAreaId, lifeStatus, archiveStatus);
             return Ok(cats);}
 
@@ -85,5 +93,10 @@ namespace CampusStrayCatSystem.Core {
             if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             return NoContent();}
+
+        private static string? NormalizeOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        private static string? NormalizeStatus(string? value) => NormalizeOptional(value)?.ToUpperInvariant();
+        private static bool IsValidLifeStatus(string value) => value is CatStatusCodes.LifeOnCampus or CatStatusCodes.LifeMissing or CatStatusCodes.LifeAdopted or CatStatusCodes.LifeDeceased;
+        private static bool IsValidArchiveStatus(string value) => value is CatStatusCodes.ArchiveDraft or CatStatusCodes.ArchivePublished or CatStatusCodes.ArchiveArchived;
     }
 }
