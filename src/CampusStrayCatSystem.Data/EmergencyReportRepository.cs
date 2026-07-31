@@ -30,7 +30,7 @@ namespace CampusStrayCatSystem.Data
                        PROCESSSTATUS AS ProcessStatus,
                        HANDLERUSERID AS HandlerUserID,
                        PROCESSRESULT AS ProcessResult
-                FROM V_EMERGENCY_REPORTS
+                FROM VW_EMERGENCY_REPORTS
                 ORDER BY REPORTTIME DESC";
 
             return await QueryAsync(sql);
@@ -51,7 +51,7 @@ namespace CampusStrayCatSystem.Data
                        PROCESSSTATUS AS ProcessStatus,
                        HANDLERUSERID AS HandlerUserID,
                        PROCESSRESULT AS ProcessResult
-                FROM V_EMERGENCY_REPORTS
+                FROM VW_EMERGENCY_REPORTS
                 WHERE REPORTID = :ReportID";
 
             return await QuerySingleAsync(sql, new { ReportID = reportId });
@@ -71,7 +71,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             var rows = await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.SUBMIT_EMERGENCY_REPORT",
+                "PKG_RESCUE_CARE.SUBMIT_EMERGENCY_REPORT",
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
@@ -90,7 +90,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.ASSIGN_EMERGENCY_REPORT",
+                "PKG_RESCUE_CARE.ASSIGN_EMERGENCY_REPORT",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
@@ -104,7 +104,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.UPDATE_EMERGENCY_STATUS",
+                "PKG_RESCUE_CARE.UPDATE_EMERGENCY_STATUS",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }

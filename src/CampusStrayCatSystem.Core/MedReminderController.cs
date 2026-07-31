@@ -14,10 +14,12 @@ namespace CampusStrayCatSystem.Core
     {
         private static readonly HashSet<string> AllowedReminderTypes = new(StringComparer.OrdinalIgnoreCase)
         {
-            "VACCINE",
-            "DEWORM",
-            "STERILIZATION",
-            "RECHECK",
+            "VACCINATION",
+            "CHECKUP",
+            "TREATMENT",
+            "SURGERY",
+            "DEWORMING",
+            "EMERGENCY",
             "OTHER"
         };
 
@@ -75,7 +77,7 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(reminder.ReminderType) ||
                 !AllowedReminderTypes.Contains(reminder.ReminderType))
             {
-                return BadRequest("提醒类型必须是 VACCINE、DEWORM、STERILIZATION、RECHECK 或 OTHER。");
+                return BadRequest($"提醒类型必须是 {string.Join("、", AllowedReminderTypes)}。");
             }
 
             if (reminder.ReminderTime == null)

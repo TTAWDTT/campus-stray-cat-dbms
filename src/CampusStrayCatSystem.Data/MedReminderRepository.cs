@@ -26,7 +26,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM V_MED_PENDING_REMINDERS
+                FROM VW_MED_PENDING_REMINDERS
                 ORDER BY REMINDERTIME";
 
             return await QueryAsync(sql);
@@ -42,7 +42,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM V_MED_REMINDERS
+                FROM VW_MED_REMINDERS
                 WHERE CATID = :CatID
                 ORDER BY REMINDERTIME DESC";
 
@@ -59,7 +59,7 @@ namespace CampusStrayCatSystem.Data
                        RECEIVERUSERID AS ReceiverUserID,
                        REMINDERTIME AS ReminderTime,
                        SENDSTATUS AS SendStatus
-                FROM V_MED_REMINDERS
+                FROM VW_MED_REMINDERS
                 WHERE REMINDERID = :ReminderID";
 
             return await QuerySingleAsync(sql, new { ReminderID = reminderId });
@@ -77,7 +77,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             var rows = await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.CREATE_REMINDER",
+                "PKG_RESCUE_CARE.CREATE_REMINDER",
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
@@ -94,7 +94,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.MARK_REMINDER_SENT",
+                "PKG_RESCUE_CARE.MARK_REMINDER_SENT",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
@@ -106,7 +106,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.COMPLETE_REMINDER",
+                "PKG_RESCUE_CARE.COMPLETE_REMINDER",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }

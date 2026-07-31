@@ -28,7 +28,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM V_MISSING_ALERTS
+                FROM VW_MISSING_ALERTS
                 ORDER BY ALERTTIME DESC";
 
             return await QueryAsync(sql);
@@ -47,7 +47,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM V_MISSING_ALERTS
+                FROM VW_MISSING_ALERTS
                 WHERE CATID = :CatID
                 ORDER BY ALERTTIME DESC";
 
@@ -67,7 +67,7 @@ namespace CampusStrayCatSystem.Data
                        HANDLERUSERID AS HandlerUserID,
                        CLOSETIME AS CloseTime,
                        REMARK AS Remark
-                FROM V_MISSING_ALERTS
+                FROM VW_MISSING_ALERTS
                 WHERE ALERTID = :AlertID";
 
             return await QuerySingleAsync(sql, new { AlertID = alertId });
@@ -88,7 +88,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             var rows = await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.CREATE_SIGHTING",
+                "PKG_RESCUE_CARE.CREATE_SIGHTING",
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
@@ -110,7 +110,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             var rows = await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.CREATE_MISSING_ALERT",
+                "PKG_RESCUE_CARE.CREATE_MISSING_ALERT",
                 parameters,
                 commandType: CommandType.StoredProcedure);
 
@@ -131,7 +131,7 @@ namespace CampusStrayCatSystem.Data
 
             using var connection = CreateConnection();
             return await connection.ExecuteAsync(
-                "PKG_RESCUE_141516.UPDATE_MISSING_STATUS",
+                "PKG_RESCUE_CARE.UPDATE_MISSING_STATUS",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
