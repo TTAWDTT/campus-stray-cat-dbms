@@ -65,7 +65,7 @@ namespace CampusStrayCatSystem.Core
             if (!HandoverStatuses.IsValid(status))
                 return BadRequest($"无效的交接状态 '{status}'。允许的状态: {string.Join(", ", HandoverStatuses.Allowed)}");
 
-            var handovers = await _handoverRepository.GetByStatus(status);
+            var handovers = await _handoverRepository.GetByStatus(status.ToUpperInvariant());
             return Ok(handovers ?? new List<VolHandover>());
         }
 
@@ -104,7 +104,15 @@ namespace CampusStrayCatSystem.Core
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可确认。");
 
-            await _handoverRepository.Confirm(id, existing.ToVolunteerID, existing.RelatedType, existing.RelatedID);
+            var confirmed = await _handoverRepository.Confirm(
+                id,
+                existing.FromVolunteerID,
+                existing.ToVolunteerID,
+                existing.RelatedType,
+                existing.RelatedID);
+            if (!confirmed)
+                return Conflict("交接状态或任务负责人已经变化，请刷新后重试。");
+
             return Ok(new { message = "交接已确认，关联的投喂任务负责人已更新。" });
         }
 
@@ -119,7 +127,10 @@ namespace CampusStrayCatSystem.Core
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可拒绝。");
 
-            await _handoverRepository.Reject(id);
+            var rejected = await _handoverRepository.Reject(id);
+            if (rejected != 1)
+                return Conflict("交接状态已经变化，请刷新后重试。");
+
             return Ok(new { message = "交接已拒绝。" });
         }
 
@@ -134,7 +145,10 @@ namespace CampusStrayCatSystem.Core
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可撤销。");
 
-            await _handoverRepository.Cancel(id);
+            var cancelled = await _handoverRepository.Cancel(id);
+            if (cancelled != 1)
+                return Conflict("交接状态已经变化，请刷新后重试。");
+
             return Ok(new { message = "交接已撤销。" });
         }
 
@@ -159,13 +173,18 @@ namespace CampusStrayCatSystem.Core
             if (string.Equals(handover.FromVolunteerID, handover.ToVolunteerID, StringComparison.OrdinalIgnoreCase))
                 return "发起方与接收方不能为同一志愿者。";
 
-            // 若关联投喂任务（RELATEDTYPE='SHIFT'），校验任务存在
-            if (string.Equals(handover.RelatedType, "SHIFT", StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(handover.RelatedID))
-            {
-                if (!await _shiftRepository.Exists(handover.RelatedID))
-                    return $"关联的投喂任务 ShiftID='{handover.RelatedID}' 不存在。";
-            }
+            if (!string.Equals(handover.RelatedType, "SHIFT", StringComparison.OrdinalIgnoreCase))
+                return "投喂交接的 RelatedType 必须是 SHIFT。";
+
+            if (string.IsNullOrWhiteSpace(handover.RelatedID))
+                return "投喂交接的 RelatedID 不能为空。";
+
+            var shift = await _shiftRepository.GetById(handover.RelatedID);
+            if (shift == null)
+                return $"关联的投喂任务 ShiftID='{handover.RelatedID}' 不存在。";
+
+            if (!string.Equals(shift.VolunteerID, handover.FromVolunteerID, StringComparison.OrdinalIgnoreCase))
+                return "只有当前任务负责人才能发起该投喂任务的交接。";
 
             return null; // 校验通过
         }
