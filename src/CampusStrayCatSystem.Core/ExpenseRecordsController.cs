@@ -76,6 +76,10 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
+            // 审核字段由服务器维护，创建接口不得绕过审核流程。
+            record.AuditUserID = null;
+            record.AuditStatus = AuditStatuses.Pending;
+            record.PublicTime = null;
             await _expenseRecordRepository.Create(record);
             return CreatedAtAction(nameof(GetById), new { id = record.FinanceID }, record);
         }
@@ -87,8 +91,9 @@ namespace CampusStrayCatSystem.Core
             if (request == null || string.IsNullOrWhiteSpace(request.AuditStatus))
                 return BadRequest("审核状态不能为空。");
 
-            if (!AuditStatuses.IsValid(request.AuditStatus))
-                return BadRequest($"无效的审核状态 '{request.AuditStatus}'。允许的状态: {string.Join(", ", AuditStatuses.Allowed)}");
+            var normalizedStatus = request.AuditStatus.ToUpperInvariant();
+            if (normalizedStatus is not (AuditStatuses.Approved or AuditStatuses.Rejected))
+                return BadRequest("审核状态只能是 APPROVED 或 REJECTED。");
 
             if (string.IsNullOrWhiteSpace(request.AuditUserID))
                 return BadRequest("审核人 AuditUserID 不能为空。");
@@ -105,7 +110,10 @@ namespace CampusStrayCatSystem.Core
             if (!await _referenceCheck.UserExists(request.AuditUserID))
                 return BadRequest($"审核人 UserID='{request.AuditUserID}' 不存在。");
 
-            await _expenseRecordRepository.Audit(id, request.AuditUserID, request.AuditStatus);
+            var updated = await _expenseRecordRepository.Audit(id, request.AuditUserID, normalizedStatus);
+            if (updated != 1)
+                return Conflict("支出记录的审核状态已经变化，请刷新后重试。");
+
             return Ok(new { message = "支出记录审核完成。" });
         }
 
@@ -122,13 +130,6 @@ namespace CampusStrayCatSystem.Core
             // 金额必须为正数
             if (!record.Amount.HasValue || record.Amount.Value <= 0)
                 return "金额 Amount 必须为正数。";
-
-            // 审核状态合法性（若指定）
-            if (!string.IsNullOrWhiteSpace(record.AuditStatus))
-            {
-                if (!AuditStatuses.IsValid(record.AuditStatus))
-                    return $"无效的审核状态 '{record.AuditStatus}'。允许的状态: {string.Join(", ", AuditStatuses.Allowed)}";
-            }
 
             return null; // 校验通过
         }

@@ -23,10 +23,10 @@ namespace CampusStrayCatSystem.Data
             return count > 0;
         }
 
-        // 判断猫咪 ID 在 CAT 表中是否存在
+        // 判断猫咪 ID 在 CAT_CATS 表中是否存在
         public async Task<bool> CatExists(string catId)
         {
-            const string sql = "SELECT COUNT(1) FROM CAT WHERE CATID = :CatID";
+            const string sql = "SELECT COUNT(1) FROM CAT_CATS WHERE CATID = :CatID";
             var count = await QuerySingleAsync<int>(sql, new { CatID = catId });
             return count > 0;
         }

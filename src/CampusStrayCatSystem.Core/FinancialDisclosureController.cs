@@ -39,7 +39,7 @@ namespace CampusStrayCatSystem.Core
             var totalExpense = await _expenseRecordRepository.GetTotalApprovedExpenseByProject(projectId);
 
             // 查询捐赠明细
-            var donations = await _donationRepository.GetByProject(projectId);
+            var donations = await _donationRepository.GetForDisclosureByProject(projectId);
 
             // 统计捐赠笔数
             var donationCount = await _donationRepository.GetDonationCountByProject(projectId);
@@ -61,7 +61,7 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("summary")]
         public async Task<ActionResult<IEnumerable<FinancialDisclosureDto>>> GetSummary()
         {
-            var projects = await _projectRepository.GetAll();
+            var projects = await _projectRepository.GetByStatus(ProjectStatuses.Active);
             var result = new List<FinancialDisclosureDto>();
 
             foreach (var project in projects)

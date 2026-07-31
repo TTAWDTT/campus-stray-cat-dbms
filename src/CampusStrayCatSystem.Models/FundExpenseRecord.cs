@@ -20,7 +20,9 @@ namespace CampusStrayCatSystem.Models
     {
         public string FinanceID { get; set; } = string.Empty;  // 支出记录ID（主键）
         public string ProjectID { get; set; } = string.Empty;  // 所属众筹项目 ID（外键 FUND_CROWDFUNDINGPROJECTS.PROJECTID）
+        public string? RecordType { get; set; }                // 财务记录类型
         public decimal? Amount { get; set; }                   // 支出金额（元）
+        public string? InvoiceUrl { get; set; }                // 发票或凭证地址
         public string? AuditUserID { get; set; }               // 审核人 ID（外键 SYS_USERS.USERID）
         public string? AuditStatus { get; set; }               // 审核状态
         public DateTime? PublicTime { get; set; }              // 公示时间
