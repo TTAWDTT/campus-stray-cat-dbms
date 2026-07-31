@@ -48,5 +48,34 @@ namespace CampusStrayCatSystem.Core {
             if (createdCat == null) { return StatusCode(500, new { message = "猫咪档案创建失败，数据库操作已回滚。" });}
 
             return CreatedAtAction(nameof(GetCat), new { catId = cat.CatId }, createdCat);}
+
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("{catId}")]
+        public async Task<IActionResult> UpdateCat(string catId, UpdateCatRequest request) {
+            var existingCat = await _catRepository.GetByIdAsync(catId);
+            if (existingCat == null) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+
+            if (request.MainAreaId != null &&
+                await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) { return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
+
+            var cat = new Cat {
+                CatId = catId,
+                CatName = request.CatName,
+                Gender = request.Gender,
+                Breed = request.Breed,
+                ColorPattern = request.ColorPattern,
+                SterilizedFlag = request.SterilizedFlag,
+                EarTipFlag = request.EarTipFlag,
+                PersonalityTags = request.PersonalityTags,
+                MainAreaId = request.MainAreaId,
+                LifeStatus = request.LifeStatus,
+                ArchiveStatus = request.ArchiveStatus};
+
+            var affectedRows = await _catRepository.UpdateAsync(cat);
+            if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+
+            return NoContent();}
     }
 }

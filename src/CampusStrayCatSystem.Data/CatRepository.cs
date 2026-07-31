@@ -94,5 +94,22 @@ namespace CampusStrayCatSystem.Data {
                 transaction.Rollback();
                 throw;}
         }
+
+        public async Task<int> UpdateAsync(Cat cat) {
+            const string sql = @"
+                UPDATE CAT_CATS
+                SET CATNAME = :CatName,
+                    GENDER = :Gender,
+                    BREED = :Breed,
+                    COLORPATTERN = :ColorPattern,
+                    STERILIZEDFLAG = :SterilizedFlag,
+                    EARTIPFLAG = :EarTipFlag,
+                    PERSONALITYTAGS = :PersonalityTags,
+                    MAINAREAID = :MainAreaId,
+                    LIFESTATUS = :LifeStatus,
+                    ARCHIVESTATUS = :ArchiveStatus
+                WHERE CATID = :CatId";
+
+            return await ExecuteAsync(sql, cat);}
     }
 }
