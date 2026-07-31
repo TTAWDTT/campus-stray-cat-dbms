@@ -21,6 +21,20 @@
 3. 按 `F5` 执行脚本。`Ctrl+Enter` 只会执行当前语句，不适合整份脚本。
 4. 重建时先打开并执行 `drop_tables.sql`，再执行 `create_tables.sql`。
 
+## SQL*Plus 编码
+
+数据库脚本使用 UTF-8 编码。Windows SQL*Plus 如果使用默认 GBK 客户端字符集，执行包含中文数据的脚本时可能出现 `ORA-01756`。执行脚本前请先设置：
+
+```powershell
+$env:NLS_LANG = "SIMPLIFIED CHINESE_CHINA.AL32UTF8"
+```
+
+在 `cmd.exe` 中使用：
+
+```bat
+set NLS_LANG=SIMPLIFIED CHINESE_CHINA.AL32UTF8
+```
+
 ## 备注
 
 - 如果你是用系统账号 `SYS` 或 `SYSTEM` 来建项目用户，先切到 `XEPDB1`。
