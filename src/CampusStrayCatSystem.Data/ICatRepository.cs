@@ -9,5 +9,6 @@ namespace CampusStrayCatSystem.Data {
         Task<CatSummary?> GetByIdAsync(string catId);
         Task<CatSummary?> CreateAsync(Cat cat);
         Task<int> UpdateAsync(Cat cat);
+        Task<int> ArchiveAsync(string catId);
     }
 }

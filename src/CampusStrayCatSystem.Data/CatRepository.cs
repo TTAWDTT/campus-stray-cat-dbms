@@ -111,5 +111,13 @@ namespace CampusStrayCatSystem.Data {
                 WHERE CATID = :CatId";
 
             return await ExecuteAsync(sql, cat);}
+
+        public async Task<int> ArchiveAsync(string catId) {
+            const string sql = @"
+                UPDATE CAT_CATS
+                SET ARCHIVESTATUS = :ArchiveStatus
+                WHERE CATID = :CatId";
+
+            return await ExecuteAsync(sql, new { ArchiveStatus = CatStatusCodes.ArchiveArchived, CatId = catId });}
     }
 }

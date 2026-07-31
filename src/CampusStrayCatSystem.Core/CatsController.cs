@@ -77,5 +77,13 @@ namespace CampusStrayCatSystem.Core {
             if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
 
             return NoContent();}
+
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{catId}")] public async Task<IActionResult> ArchiveCat(string catId) {
+            var affectedRows = await _catRepository.ArchiveAsync(catId);
+            if (affectedRows == 0) { return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}
+
+            return NoContent();}
     }
 }
