@@ -65,5 +65,34 @@ namespace CampusStrayCatSystem.Data {
                 WHERE c.CATID = :CatId";
 
             return await QuerySingleAsync(sql, new { CatId = catId });}
+
+        public async Task<CatSummary?> CreateAsync(Cat cat) {
+            const string insertSql = @"
+                INSERT INTO CAT_CATS (
+                    CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG,
+                    EARTIPFLAG, PERSONALITYTAGS, MAINAREAID, LIFESTATUS, ARCHIVESTATUS
+                ) VALUES (
+                    :CatId, :CatName, :Gender, :Breed, :ColorPattern, :SterilizedFlag,
+                    :EarTipFlag, :PersonalityTags, :MainAreaId, :LifeStatus, :ArchiveStatus
+                )";
+            const string selectSql = SelectClause + @"
+                WHERE c.CATID = :CatId";
+
+            using var connection = CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try {
+                await connection.ExecuteAsync(insertSql, cat, transaction);
+                var createdCat = await connection.QueryFirstOrDefaultAsync<CatSummary>(selectSql, new { cat.CatId }, transaction);
+                if (createdCat == null) {
+                    transaction.Rollback();
+                    return null;}
+
+                transaction.Commit();
+                return createdCat;} catch {
+                transaction.Rollback();
+                throw;}
+        }
     }
 }
