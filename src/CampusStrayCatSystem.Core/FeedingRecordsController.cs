@@ -81,8 +81,20 @@ namespace CampusStrayCatSystem.Core
                     return BadRequest($"无效的打卡状态 '{record.CheckInStatus}'。允许的状态: {string.Join(", ", CheckInStatuses.Allowed)}");
             }
 
+            if (record.Longitude is < -180 or > 180)
+                return BadRequest("经度 Longitude 必须在 -180 到 180 之间。");
+
+            if (record.Latitude is < -90 or > 90)
+                return BadRequest("纬度 Latitude 必须在 -90 到 90 之间。");
+
+            if (record.DistanceMeters < 0)
+                return BadRequest("距离 DistanceMeters 不能为负数。");
+
             // 事务性写入：记录投喂 + 标记任务完成
-            await _checkInRepository.CreateWithShiftCompleted(record);
+            var created = await _checkInRepository.CreateWithShiftCompleted(record);
+            if (!created)
+                return Conflict("该投喂任务已经完成、已有打卡记录或当前状态不允许打卡。");
+
             return CreatedAtAction(nameof(GetById), new { id = record.CheckInID }, record);
         }
     }

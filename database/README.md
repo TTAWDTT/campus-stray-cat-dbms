@@ -4,12 +4,15 @@
 
 - `create_tables.sql`: 创建 35 张表和外键
 - `drop_tables.sql`: 删除 35 张表，便于重建
+- `insert_demo_data.sql`: 写入可重复执行的区域、点位、猫窝维护和目击演示数据
+- `queries/test_queries.sql`: 验证区域层级、点位、维护记录和目击查询
 
 ## 推荐运行顺序
 
 1. 先连接到项目用户 `CAT_SYSTEM`，并确保当前容器是 `XEPDB1`。
 2. 如果需要重建数据库，先执行 `drop_tables.sql`。
 3. 再执行 `create_tables.sql`。
+4. 如需接口联调，执行 `insert_demo_data.sql`，再运行 `queries/test_queries.sql` 验证数据。
 
 ## SQL Developer
 

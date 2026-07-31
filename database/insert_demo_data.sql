@@ -1,2 +1,240 @@
--- 这是一个占位文件。
+SET DEFINE OFF;
+
+PROMPT ===== Inserting Zhao Qing module demo data =====;
+
+-- SYS_ROLES、SYS_USERS 和 CAT_CATS 仅作为目击及维护记录的外键前置数据。
+MERGE INTO SYS_ROLES target
+USING (
+    SELECT 'demo-role-volunteer' AS ROLEID,
+           '演示志愿者' AS ROLENAME,
+           '赵晴模块演示数据使用' AS DESCRIPTION,
+           'AREA,POINT,SIGHTING,MAINTENANCE' AS PERMISSIONSCOPE
+    FROM DUAL
+) source
+ON (target.ROLEID = source.ROLEID)
+WHEN MATCHED THEN UPDATE SET
+    target.ROLENAME = source.ROLENAME,
+    target.DESCRIPTION = source.DESCRIPTION,
+    target.PERMISSIONSCOPE = source.PERMISSIONSCOPE
+WHEN NOT MATCHED THEN INSERT
+    (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+VALUES
+    (source.ROLEID, source.ROLENAME, source.DESCRIPTION, source.PERMISSIONSCOPE);
+
+MERGE INTO SYS_USERS target
+USING (
+    SELECT 'demo-user-zhaoqing' AS USERID,
+           'demo-role-volunteer' AS ROLEID,
+           'zhaoqing_demo' AS USERNAME,
+           'DEMO_ONLY_NOT_A_REAL_HASH' AS PASSWORDHASH,
+           '赵晴模块演示用户' AS REALNAME,
+           '已认证' AS VERIFYSTATUS,
+           '正常' AS STATUS
+    FROM DUAL
+) source
+ON (target.USERID = source.USERID)
+WHEN MATCHED THEN UPDATE SET
+    target.ROLEID = source.ROLEID,
+    target.USERNAME = source.USERNAME,
+    target.PASSWORDHASH = source.PASSWORDHASH,
+    target.REALNAME = source.REALNAME,
+    target.VERIFYSTATUS = source.VERIFYSTATUS,
+    target.STATUS = source.STATUS
+WHEN NOT MATCHED THEN INSERT
+    (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, VERIFYSTATUS, STATUS)
+VALUES
+    (source.USERID, source.ROLEID, source.USERNAME, source.PASSWORDHASH,
+     source.REALNAME, source.VERIFYSTATUS, source.STATUS);
+
+MERGE INTO MAP_CAMPUSAREAS target
+USING (
+    SELECT 'demo-area-siping' AS AREAID,
+           '四平路校区' AS AREANAME,
+           '四平路校区' AS CAMPUSNAME,
+           CAST(NULL AS VARCHAR2(36)) AS PARENTAREAID,
+           '校区' AS AREATYPE,
+           '低' AS RISKLEVEL
+    FROM DUAL
+) source
+ON (target.AREAID = source.AREAID)
+WHEN MATCHED THEN UPDATE SET
+    target.AREANAME = source.AREANAME,
+    target.CAMPUSNAME = source.CAMPUSNAME,
+    target.PARENTAREAID = source.PARENTAREAID,
+    target.AREATYPE = source.AREATYPE,
+    target.RISKLEVEL = source.RISKLEVEL
+WHEN NOT MATCHED THEN INSERT
+    (AREAID, AREANAME, CAMPUSNAME, PARENTAREAID, AREATYPE, RISKLEVEL)
+VALUES
+    (source.AREAID, source.AREANAME, source.CAMPUSNAME,
+     source.PARENTAREAID, source.AREATYPE, source.RISKLEVEL);
+
+MERGE INTO MAP_CAMPUSAREAS target
+USING (
+    SELECT 'demo-area-library' AS AREAID,
+           '图书馆周边' AS AREANAME,
+           '四平路校区' AS CAMPUSNAME,
+           'demo-area-siping' AS PARENTAREAID,
+           '公共区域' AS AREATYPE,
+           '低' AS RISKLEVEL
+    FROM DUAL
+) source
+ON (target.AREAID = source.AREAID)
+WHEN MATCHED THEN UPDATE SET
+    target.AREANAME = source.AREANAME,
+    target.CAMPUSNAME = source.CAMPUSNAME,
+    target.PARENTAREAID = source.PARENTAREAID,
+    target.AREATYPE = source.AREATYPE,
+    target.RISKLEVEL = source.RISKLEVEL
+WHEN NOT MATCHED THEN INSERT
+    (AREAID, AREANAME, CAMPUSNAME, PARENTAREAID, AREATYPE, RISKLEVEL)
+VALUES
+    (source.AREAID, source.AREANAME, source.CAMPUSNAME,
+     source.PARENTAREAID, source.AREATYPE, source.RISKLEVEL);
+
+MERGE INTO CAT_CATS target
+USING (
+    SELECT 'demo-cat-campus-001' AS CATID,
+           '图图' AS CATNAME,
+           '母' AS GENDER,
+           '狸花' AS COLORPATTERN,
+           'demo-area-library' AS MAINAREAID,
+           '在校' AS LIFESTATUS,
+           '正常' AS ARCHIVESTATUS
+    FROM DUAL
+) source
+ON (target.CATID = source.CATID)
+WHEN MATCHED THEN UPDATE SET
+    target.CATNAME = source.CATNAME,
+    target.GENDER = source.GENDER,
+    target.COLORPATTERN = source.COLORPATTERN,
+    target.MAINAREAID = source.MAINAREAID,
+    target.LIFESTATUS = source.LIFESTATUS,
+    target.ARCHIVESTATUS = source.ARCHIVESTATUS
+WHEN NOT MATCHED THEN INSERT
+    (CATID, CATNAME, GENDER, COLORPATTERN, MAINAREAID, LIFESTATUS, ARCHIVESTATUS)
+VALUES
+    (source.CATID, source.CATNAME, source.GENDER, source.COLORPATTERN,
+     source.MAINAREAID, source.LIFESTATUS, source.ARCHIVESTATUS);
+
+MERGE INTO MAP_SERVICEPOINTS target
+USING (
+    SELECT 'demo-point-library-east' AS POINTID,
+           'demo-area-library' AS AREAID,
+           '图书馆东侧投喂点' AS POINTNAME,
+           '喂食点' AS POINTTYPE,
+           121.50650000 AS LONGITUDE,
+           31.28210000 AS LATITUDE,
+           '正常' AS FACILITYSTATUS,
+           TO_DATE('2026-07-20 08:00:00', 'YYYY-MM-DD HH24:MI:SS') AS DEPLOYTIME
+    FROM DUAL
+) source
+ON (target.POINTID = source.POINTID)
+WHEN MATCHED THEN UPDATE SET
+    target.AREAID = source.AREAID,
+    target.POINTNAME = source.POINTNAME,
+    target.POINTTYPE = source.POINTTYPE,
+    target.LONGITUDE = source.LONGITUDE,
+    target.LATITUDE = source.LATITUDE,
+    target.FACILITYSTATUS = source.FACILITYSTATUS,
+    target.DEPLOYTIME = source.DEPLOYTIME
+WHEN NOT MATCHED THEN INSERT
+    (POINTID, AREAID, POINTNAME, POINTTYPE, LONGITUDE, LATITUDE, FACILITYSTATUS, DEPLOYTIME)
+VALUES
+    (source.POINTID, source.AREAID, source.POINTNAME, source.POINTTYPE,
+     source.LONGITUDE, source.LATITUDE, source.FACILITYSTATUS, source.DEPLOYTIME);
+
+MERGE INTO MAP_SERVICEPOINTS target
+USING (
+    SELECT 'demo-point-library-nest' AS POINTID,
+           'demo-area-library' AS AREAID,
+           '图书馆北侧猫窝' AS POINTNAME,
+           '猫窝' AS POINTTYPE,
+           121.50630000 AS LONGITUDE,
+           31.28240000 AS LATITUDE,
+           '需定期巡查' AS FACILITYSTATUS,
+           TO_DATE('2026-07-20 08:30:00', 'YYYY-MM-DD HH24:MI:SS') AS DEPLOYTIME
+    FROM DUAL
+) source
+ON (target.POINTID = source.POINTID)
+WHEN MATCHED THEN UPDATE SET
+    target.AREAID = source.AREAID,
+    target.POINTNAME = source.POINTNAME,
+    target.POINTTYPE = source.POINTTYPE,
+    target.LONGITUDE = source.LONGITUDE,
+    target.LATITUDE = source.LATITUDE,
+    target.FACILITYSTATUS = source.FACILITYSTATUS,
+    target.DEPLOYTIME = source.DEPLOYTIME
+WHEN NOT MATCHED THEN INSERT
+    (POINTID, AREAID, POINTNAME, POINTTYPE, LONGITUDE, LATITUDE, FACILITYSTATUS, DEPLOYTIME)
+VALUES
+    (source.POINTID, source.AREAID, source.POINTNAME, source.POINTTYPE,
+     source.LONGITUDE, source.LATITUDE, source.FACILITYSTATUS, source.DEPLOYTIME);
+
+MERGE INTO NEST_MAINTENANCERECORDS target
+USING (
+    SELECT 'demo-maintenance-001' AS MAINTENANCEID,
+           'demo-point-library-nest' AS POINTID,
+           '保温箱' AS MATERIALTYPE,
+           TO_DATE('2026-07-21 09:00:00', 'YYYY-MM-DD HH24:MI:SS') AS CHECKTIME,
+           '晴' AS WEATHERCONDITION,
+           '轻微' AS DAMAGELEVEL,
+           '清理' AS ACTIONTYPE,
+           'demo-user-zhaoqing' AS OPERATORUSERID,
+           TO_DATE('2026-07-28 09:00:00', 'YYYY-MM-DD HH24:MI:SS') AS NEXTCHECKTIME,
+           '已更换垫材' AS REMARK
+    FROM DUAL
+) source
+ON (target.MAINTENANCEID = source.MAINTENANCEID)
+WHEN MATCHED THEN UPDATE SET
+    target.POINTID = source.POINTID,
+    target.MATERIALTYPE = source.MATERIALTYPE,
+    target.CHECKTIME = source.CHECKTIME,
+    target.WEATHERCONDITION = source.WEATHERCONDITION,
+    target.DAMAGELEVEL = source.DAMAGELEVEL,
+    target.ACTIONTYPE = source.ACTIONTYPE,
+    target.OPERATORUSERID = source.OPERATORUSERID,
+    target.NEXTCHECKTIME = source.NEXTCHECKTIME,
+    target.REMARK = source.REMARK
+WHEN NOT MATCHED THEN INSERT
+    (MAINTENANCEID, POINTID, MATERIALTYPE, CHECKTIME, WEATHERCONDITION,
+     DAMAGELEVEL, ACTIONTYPE, OPERATORUSERID, NEXTCHECKTIME, REMARK)
+VALUES
+    (source.MAINTENANCEID, source.POINTID, source.MATERIALTYPE, source.CHECKTIME,
+     source.WEATHERCONDITION, source.DAMAGELEVEL, source.ACTIONTYPE,
+     source.OPERATORUSERID, source.NEXTCHECKTIME, source.REMARK);
+
+MERGE INTO CAT_SIGHTINGS target
+USING (
+    SELECT 'demo-sighting-001' AS SIGHTINGID,
+           'demo-cat-campus-001' AS CATID,
+           'demo-user-zhaoqing' AS USERID,
+           'demo-area-library' AS AREAID,
+           121.50645000 AS LONGITUDE,
+           31.28220000 AS LATITUDE,
+           'https://example.invalid/demo-cat-sighting.jpg' AS PHOTOURL,
+           TO_DATE('2026-07-21 18:30:00', 'YYYY-MM-DD HH24:MI:SS') AS SIGHTINGTIME,
+           '精神状态正常，正在投喂点附近活动' AS REMARK
+    FROM DUAL
+) source
+ON (target.SIGHTINGID = source.SIGHTINGID)
+WHEN MATCHED THEN UPDATE SET
+    target.CATID = source.CATID,
+    target.USERID = source.USERID,
+    target.AREAID = source.AREAID,
+    target.LONGITUDE = source.LONGITUDE,
+    target.LATITUDE = source.LATITUDE,
+    target.PHOTOURL = source.PHOTOURL,
+    target.SIGHTINGTIME = source.SIGHTINGTIME,
+    target.REMARK = source.REMARK
+WHEN NOT MATCHED THEN INSERT
+    (SIGHTINGID, CATID, USERID, AREAID, LONGITUDE, LATITUDE, PHOTOURL, SIGHTINGTIME, REMARK)
+VALUES
+    (source.SIGHTINGID, source.CATID, source.USERID, source.AREAID,
+     source.LONGITUDE, source.LATITUDE, source.PHOTOURL,
+     source.SIGHTINGTIME, source.REMARK);
+
+COMMIT;
+
+PROMPT ===== Zhao Qing module demo data complete =====;
 

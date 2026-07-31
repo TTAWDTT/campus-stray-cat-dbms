@@ -14,7 +14,9 @@ namespace CampusStrayCatSystem.Data
             const string sql = @"
                 SELECT FINANCEID AS FinanceID,
                        PROJECTID AS ProjectID,
+                       RECORDTYPE AS RecordType,
                        AMOUNT AS Amount,
+                       INVOICEURL AS InvoiceUrl,
                        AUDITUSERID AS AuditUserID,
                        AUDITSTATUS AS AuditStatus,
                        PUBLICTIME AS PublicTime
@@ -30,7 +32,9 @@ namespace CampusStrayCatSystem.Data
             const string sql = @"
                 SELECT FINANCEID AS FinanceID,
                        PROJECTID AS ProjectID,
+                       RECORDTYPE AS RecordType,
                        AMOUNT AS Amount,
+                       INVOICEURL AS InvoiceUrl,
                        AUDITUSERID AS AuditUserID,
                        AUDITSTATUS AS AuditStatus,
                        PUBLICTIME AS PublicTime
@@ -46,7 +50,9 @@ namespace CampusStrayCatSystem.Data
             const string sql = @"
                 SELECT FINANCEID AS FinanceID,
                        PROJECTID AS ProjectID,
+                       RECORDTYPE AS RecordType,
                        AMOUNT AS Amount,
+                       INVOICEURL AS InvoiceUrl,
                        AUDITUSERID AS AuditUserID,
                        AUDITSTATUS AS AuditStatus,
                        PUBLICTIME AS PublicTime
@@ -63,7 +69,9 @@ namespace CampusStrayCatSystem.Data
             const string sql = @"
                 SELECT FINANCEID AS FinanceID,
                        PROJECTID AS ProjectID,
+                       RECORDTYPE AS RecordType,
                        AMOUNT AS Amount,
+                       INVOICEURL AS InvoiceUrl,
                        AUDITUSERID AS AuditUserID,
                        AUDITSTATUS AS AuditStatus,
                        PUBLICTIME AS PublicTime
@@ -83,23 +91,25 @@ namespace CampusStrayCatSystem.Data
         public async Task<int> Create(FundExpenseRecord record)
         {
             record.FinanceID = Guid.NewGuid().ToString();
+            record.AuditUserID = null;
+            record.AuditStatus = AuditStatuses.Pending;
+            record.PublicTime = null;
 
             const string sql = @"
-                INSERT INTO FUND_FINANCERECORDS (FINANCEID, PROJECTID, AMOUNT,
-                                                 AUDITUSERID, AUDITSTATUS, PUBLICTIME)
-                VALUES (:FinanceID, :ProjectID, :Amount,
-                        :AuditUserID, :AuditStatus, :PublicTime)";
+                INSERT INTO FUND_FINANCERECORDS (FINANCEID, PROJECTID, RECORDTYPE, AMOUNT,
+                                                 INVOICEURL, AUDITUSERID, AUDITSTATUS, PUBLICTIME)
+                VALUES (:FinanceID, :ProjectID, :RecordType, :Amount,
+                        :InvoiceUrl, :AuditUserID, :AuditStatus, :PublicTime)";
 
             return await ExecuteAsync(sql, new
             {
                 record.FinanceID,
                 record.ProjectID,
+                record.RecordType,
                 record.Amount,
+                record.InvoiceUrl,
                 record.AuditUserID,
-                // 若未指定审核状态，默认为待审核
-                AuditStatus = string.IsNullOrWhiteSpace(record.AuditStatus)
-                    ? AuditStatuses.Pending
-                    : record.AuditStatus,
+                record.AuditStatus,
                 record.PublicTime
             });
         }
@@ -111,14 +121,16 @@ namespace CampusStrayCatSystem.Data
                 UPDATE FUND_FINANCERECORDS
                 SET AUDITUSERID = :AuditUserID,
                     AUDITSTATUS = :AuditStatus,
-                    PUBLICTIME = CASE WHEN :AuditStatus = :Approved THEN SYSDATE ELSE PUBLICTIME END
-                WHERE FINANCEID = :FinanceID";
+                    PUBLICTIME = CASE WHEN :AuditStatus = :Approved THEN SYSDATE ELSE NULL END
+                WHERE FINANCEID = :FinanceID
+                  AND UPPER(AUDITSTATUS) = :Pending";
 
             return await ExecuteAsync(sql, new
             {
                 AuditUserID = auditUserId,
-                AuditStatus = auditStatus,
+                AuditStatus = auditStatus.ToUpperInvariant(),
                 Approved = AuditStatuses.Approved,
+                Pending = AuditStatuses.Pending,
                 FinanceID = financeId
             });
         }

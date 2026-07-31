@@ -118,7 +118,7 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的投喂任务，无法更新状态。");
 
-            await _shiftRepository.UpdateStatus(id, request.NewStatus);
+            await _shiftRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant());
             return Ok(new { message = "投喂任务状态更新成功。" });
         }
 
@@ -137,6 +137,15 @@ namespace CampusStrayCatSystem.Core
             {
                 if (!await _referenceCheck.ServicePointExists(shift.PointID))
                     return $"投喂点 PointID='{shift.PointID}' 不存在。";
+            }
+
+            if (!string.IsNullOrWhiteSpace(shift.BackupVolunteerID))
+            {
+                if (string.Equals(shift.VolunteerID, shift.BackupVolunteerID, StringComparison.OrdinalIgnoreCase))
+                    return "备用志愿者不能与负责志愿者相同。";
+
+                if (!await _referenceCheck.VolunteerExists(shift.BackupVolunteerID))
+                    return $"备用志愿者 VolunteerID='{shift.BackupVolunteerID}' 不存在。";
             }
 
             // 状态合法性

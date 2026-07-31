@@ -16,6 +16,10 @@ namespace CampusStrayCatSystem.Data
                 SELECT CHECKINID AS CheckInID,
                        SHIFTID AS ShiftID,
                        CHECKINTIME AS CheckInTime,
+                       LONGITUDE AS Longitude,
+                       LATITUDE AS Latitude,
+                       PHOTOURL AS PhotoUrl,
+                       DISTANCEMETERS AS DistanceMeters,
                        CHECKINSTATUS AS CheckInStatus
                 FROM VOL_CHECKINS
                 ORDER BY CHECKINTIME DESC NULLS LAST";
@@ -30,6 +34,10 @@ namespace CampusStrayCatSystem.Data
                 SELECT CHECKINID AS CheckInID,
                        SHIFTID AS ShiftID,
                        CHECKINTIME AS CheckInTime,
+                       LONGITUDE AS Longitude,
+                       LATITUDE AS Latitude,
+                       PHOTOURL AS PhotoUrl,
+                       DISTANCEMETERS AS DistanceMeters,
                        CHECKINSTATUS AS CheckInStatus
                 FROM VOL_CHECKINS
                 WHERE CHECKINID = :CheckInID";
@@ -44,6 +52,10 @@ namespace CampusStrayCatSystem.Data
                 SELECT CHECKINID AS CheckInID,
                        SHIFTID AS ShiftID,
                        CHECKINTIME AS CheckInTime,
+                       LONGITUDE AS Longitude,
+                       LATITUDE AS Latitude,
+                       PHOTOURL AS PhotoUrl,
+                       DISTANCEMETERS AS DistanceMeters,
                        CHECKINSTATUS AS CheckInStatus
                 FROM VOL_CHECKINS
                 WHERE SHIFTID = :ShiftID
@@ -59,6 +71,10 @@ namespace CampusStrayCatSystem.Data
                 SELECT c.CHECKINID AS CheckInID,
                        c.SHIFTID AS ShiftID,
                        c.CHECKINTIME AS CheckInTime,
+                       c.LONGITUDE AS Longitude,
+                       c.LATITUDE AS Latitude,
+                       c.PHOTOURL AS PhotoUrl,
+                       c.DISTANCEMETERS AS DistanceMeters,
                        c.CHECKINSTATUS AS CheckInStatus
                 FROM VOL_CHECKINS c
                 INNER JOIN VOL_SHIFTS s ON s.SHIFTID = c.SHIFTID
@@ -68,8 +84,8 @@ namespace CampusStrayCatSystem.Data
             return await QueryAsync(sql, new { VolunteerID = volunteerId });
         }
 
-        // 记录投喂完成情况（事务）：1) 插入打卡记录；2) 把对应任务状态更新为 COMPLETED。任一步失败则回滚。
-        public async Task CreateWithShiftCompleted(VolCheckIn checkIn)
+        // 记录投喂完成情况；仅未完成且没有打卡记录的任务可以执行一次。
+        public async Task<bool> CreateWithShiftCompleted(VolCheckIn checkIn)
         {
             using var connection = CreateConnection();
             connection.Open();
@@ -79,37 +95,54 @@ namespace CampusStrayCatSystem.Data
             {
                 // 生成打卡记录主键
                 checkIn.CheckInID = Guid.NewGuid().ToString();
+                checkIn.CheckInTime ??= DateTime.Now;
+                checkIn.CheckInStatus = string.IsNullOrWhiteSpace(checkIn.CheckInStatus)
+                    ? CheckInStatuses.CheckedIn
+                    : checkIn.CheckInStatus.ToUpperInvariant();
 
-                // 插入投喂打卡记录
-                const string insertSql = @"
-                    INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, CHECKINSTATUS)
-                    VALUES (:CheckInID, :ShiftID, :CheckInTime, :CheckInStatus)";
-
-                await ExecuteAsync(connection, transaction, insertSql, new
-                {
-                    checkIn.CheckInID,
-                    checkIn.ShiftID,
-                    // 若未显式传入签到时间，则默认取当前时间
-                    CheckInTime = checkIn.CheckInTime ?? DateTime.Now,
-                    // 若未指定状态，默认为已签到
-                    CheckInStatus = string.IsNullOrWhiteSpace(checkIn.CheckInStatus)
-                        ? CheckInStatuses.CheckedIn
-                        : checkIn.CheckInStatus
-                });
-
-                // 把对应投喂任务状态更新为“已完成”
+                // 条件更新同时锁定任务，防止重复或并发打卡。
                 const string updateShiftSql = @"
                     UPDATE VOL_SHIFTS
                     SET SHIFTSTATUS = :ShiftStatus
-                    WHERE SHIFTID = :ShiftID";
+                    WHERE SHIFTID = :ShiftID
+                      AND UPPER(NVL(SHIFTSTATUS, 'PLANNED')) IN ('PLANNED', 'ASSIGNED', 'IN_PROGRESS')
+                      AND NOT EXISTS (
+                          SELECT 1 FROM VOL_CHECKINS WHERE SHIFTID = :ShiftID
+                      )";
 
-                await ExecuteAsync(connection, transaction, updateShiftSql, new
+                var updatedShifts = await ExecuteAsync(connection, transaction, updateShiftSql, new
                 {
                     ShiftStatus = ShiftStatuses.Completed,
                     checkIn.ShiftID
                 });
 
+                if (updatedShifts != 1)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
+                // 插入投喂打卡记录
+                const string insertSql = @"
+                    INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE,
+                                              LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
+                    VALUES (:CheckInID, :ShiftID, :CheckInTime, :Longitude,
+                            :Latitude, :PhotoUrl, :DistanceMeters, :CheckInStatus)";
+
+                await ExecuteAsync(connection, transaction, insertSql, new
+                {
+                    checkIn.CheckInID,
+                    checkIn.ShiftID,
+                    checkIn.CheckInTime,
+                    checkIn.Longitude,
+                    checkIn.Latitude,
+                    checkIn.PhotoUrl,
+                    checkIn.DistanceMeters,
+                    checkIn.CheckInStatus
+                });
+
                 transaction.Commit();
+                return true;
             }
             catch
             {

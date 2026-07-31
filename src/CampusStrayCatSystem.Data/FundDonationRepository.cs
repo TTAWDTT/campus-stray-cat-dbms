@@ -17,6 +17,7 @@ namespace CampusStrayCatSystem.Data
                        PROJECTID AS ProjectID,
                        DONORUSERID AS DonorUserID,
                        AMOUNT AS Amount,
+                       PAYMETHOD AS PayMethod,
                        PAYTIME AS PayTime,
                        PUBLICFLAG AS PublicFlag
                 FROM FUND_DONATIONS
@@ -33,6 +34,7 @@ namespace CampusStrayCatSystem.Data
                        PROJECTID AS ProjectID,
                        DONORUSERID AS DonorUserID,
                        AMOUNT AS Amount,
+                       PAYMETHOD AS PayMethod,
                        PAYTIME AS PayTime,
                        PUBLICFLAG AS PublicFlag
                 FROM FUND_DONATIONS
@@ -49,8 +51,27 @@ namespace CampusStrayCatSystem.Data
                        PROJECTID AS ProjectID,
                        DONORUSERID AS DonorUserID,
                        AMOUNT AS Amount,
+                       PAYMETHOD AS PayMethod,
                        PAYTIME AS PayTime,
                        PUBLICFLAG AS PublicFlag
+                FROM FUND_DONATIONS
+                WHERE PROJECTID = :ProjectID
+                ORDER BY PAYTIME DESC NULLS LAST";
+
+            return await QueryAsync(sql, new { ProjectID = projectId });
+        }
+
+        // 财务公示保留匿名捐赠的金额，但不暴露捐赠人 ID。
+        public async Task<IEnumerable<FundDonation>> GetForDisclosureByProject(string projectId)
+        {
+            const string sql = @"
+                SELECT DONATIONID AS DonationID,
+                       PROJECTID AS ProjectID,
+                       CASE WHEN NVL(PUBLICFLAG, 0) = 1 THEN DONORUSERID ELSE NULL END AS DonorUserID,
+                       AMOUNT AS Amount,
+                       PAYMETHOD AS PayMethod,
+                       PAYTIME AS PayTime,
+                       NVL(PUBLICFLAG, 0) AS PublicFlag
                 FROM FUND_DONATIONS
                 WHERE PROJECTID = :ProjectID
                 ORDER BY PAYTIME DESC NULLS LAST";
@@ -66,6 +87,7 @@ namespace CampusStrayCatSystem.Data
                        PROJECTID AS ProjectID,
                        DONORUSERID AS DonorUserID,
                        AMOUNT AS Amount,
+                       PAYMETHOD AS PayMethod,
                        PAYTIME AS PayTime,
                        PUBLICFLAG AS PublicFlag
                 FROM FUND_DONATIONS
@@ -75,8 +97,8 @@ namespace CampusStrayCatSystem.Data
             return await QueryAsync(sql, new { DonorUserID = donorUserId });
         }
 
-        // 记录捐赠（事务）：1) 插入捐赠记录；2) 累加项目已筹金额。
-        public async Task CreateWithRaisedUpdate(FundDonation donation)
+        // 记录捐赠（事务）：锁定 ACTIVE 项目并累加金额，再插入捐赠记录。
+        public async Task<bool> CreateWithRaisedUpdate(FundDonation donation)
         {
             using var connection = CreateConnection();
             connection.Open();
@@ -85,13 +107,34 @@ namespace CampusStrayCatSystem.Data
             try
             {
                 donation.DonationID = Guid.NewGuid().ToString();
+                donation.PayTime ??= DateTime.Now;
+                donation.PublicFlag ??= 0;
+
+                // 通过带状态条件的 UPDATE 锁定项目，避免校验后项目已关闭仍接受捐赠。
+                const string updateRaisedSql = @"
+                    UPDATE FUND_CROWDFUNDINGPROJECTS
+                    SET RAISEDAMOUNT = NVL(RAISEDAMOUNT, 0) + :Amount
+                    WHERE PROJECTID = :ProjectID
+                      AND UPPER(PROJECTSTATUS) = 'ACTIVE'";
+
+                var updatedProjects = await ExecuteAsync(connection, transaction, updateRaisedSql, new
+                {
+                    Amount = donation.Amount,
+                    donation.ProjectID
+                });
+
+                if (updatedProjects != 1)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
 
                 // 插入捐赠记录
                 const string insertSql = @"
                     INSERT INTO FUND_DONATIONS (DONATIONID, PROJECTID, DONORUSERID, AMOUNT,
-                                                PAYTIME, PUBLICFLAG)
+                                                PAYMETHOD, PAYTIME, PUBLICFLAG)
                     VALUES (:DonationID, :ProjectID, :DonorUserID, :Amount,
-                            :PayTime, :PublicFlag)";
+                            :PayMethod, :PayTime, :PublicFlag)";
 
                 await ExecuteAsync(connection, transaction, insertSql, new
                 {
@@ -99,25 +142,13 @@ namespace CampusStrayCatSystem.Data
                     donation.ProjectID,
                     donation.DonorUserID,
                     donation.Amount,
-                    // 若未显式传入支付时间，则默认当前时间
-                    PayTime = donation.PayTime ?? DateTime.Now,
-                    // 默认公开（1）
-                    PublicFlag = donation.PublicFlag ?? 1
-                });
-
-                // 累加项目已筹金额（使用 RAISEDAMOUNT = RAISEDAMOUNT + :Amount）
-                const string updateRaisedSql = @"
-                    UPDATE FUND_CROWDFUNDINGPROJECTS
-                    SET RAISEDAMOUNT = NVL(RAISEDAMOUNT, 0) + :Amount
-                    WHERE PROJECTID = :ProjectID";
-
-                await ExecuteAsync(connection, transaction, updateRaisedSql, new
-                {
-                    Amount = donation.Amount ?? 0,
-                    donation.ProjectID
+                    donation.PayMethod,
+                    donation.PayTime,
+                    donation.PublicFlag
                 });
 
                 transaction.Commit();
+                return true;
             }
             catch
             {

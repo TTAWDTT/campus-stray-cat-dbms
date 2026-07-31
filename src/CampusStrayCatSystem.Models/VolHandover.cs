@@ -24,6 +24,7 @@ namespace CampusStrayCatSystem.Models
         public string HandoverID { get; set; } = string.Empty;            // 交接记录ID（主键）
         public string FromVolunteerID { get; set; } = string.Empty;       // 发起方志愿者 ID（外键 VOL_VOLUNTEERS.VOLUNTEERID）
         public string ToVolunteerID { get; set; } = string.Empty;         // 接收方志愿者 ID（外键 VOL_VOLUNTEERS.VOLUNTEERID）
+        public string? HandoverType { get; set; }                         // 交接类型
         public string? RelatedType { get; set; }                          // 关联对象类型（多态），目前固定为 "SHIFT" 关联投喂任务
         public string? RelatedID { get; set; }                            // 关联对象 ID（多态外键），如对应的 ShiftID
         public DateTime? ApplyTime { get; set; }                          // 交接发起时间

@@ -21,6 +21,10 @@ namespace CampusStrayCatSystem.Models
         public string CheckInID { get; set; } = string.Empty;       // 签到记录ID（主键）
         public string ShiftID { get; set; } = string.Empty;         // 关联的投喂任务 ID（外键 VOL_SHIFTS.SHIFTID）
         public DateTime? CheckInTime { get; set; }                  // 实际签到时间
+        public decimal? Longitude { get; set; }                     // 签到经度
+        public decimal? Latitude { get; set; }                      // 签到纬度
+        public string? PhotoUrl { get; set; }                       // 完成情况照片
+        public decimal? DistanceMeters { get; set; }                // 与投喂点的距离
         public string? CheckInStatus { get; set; }                  // 打卡状态
     }
 }

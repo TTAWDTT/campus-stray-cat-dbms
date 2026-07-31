@@ -12,7 +12,7 @@ namespace CampusStrayCatSystem.Data
         Task<IEnumerable<VolHandover>> GetByStatus(string status);                                     // 按状态筛选交接记录（用于"交接状态可查询"）。
         Task<IEnumerable<VolHandover>> GetByRelated(string relatedType, string relatedId);             // 按关联对象查询交接记录（如查询某投喂任务的所有交接历史）。
         Task<int> Create(VolHandover handover);                                                        // 提交交接
-        Task Confirm(string handoverId, string toVolunteerId, string? relatedType, string? relatedId); // 确认交接
+        Task<bool> Confirm(string handoverId, string fromVolunteerId, string toVolunteerId, string? relatedType, string? relatedId); // 原子确认交接
         Task<int> Reject(string handoverId);                                                           // 拒绝交接
         Task<int> Cancel(string handoverId);                                                           // 撤销交接
     }

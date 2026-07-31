@@ -73,6 +73,10 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
+            project.RaisedAmount = 0;
+            project.ProjectStatus = string.IsNullOrWhiteSpace(project.ProjectStatus)
+                ? ProjectStatuses.Active
+                : project.ProjectStatus.ToUpperInvariant();
             await _projectRepository.Create(project);
             return CreatedAtAction(nameof(GetById), new { id = project.ProjectID }, project);
         }
@@ -90,6 +94,9 @@ namespace CampusStrayCatSystem.Core
             var existing = await _projectRepository.GetById(id);
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的众筹项目，无法更新。");
+
+            if (string.IsNullOrWhiteSpace(project.Title))
+                return BadRequest("项目标题 Title 不能为空。");
 
             var validationError = await ValidateProject(project);
             if (validationError != null)
@@ -113,7 +120,7 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的众筹项目，无法更新状态。");
 
-            await _projectRepository.UpdateStatus(id, request.NewStatus);
+            await _projectRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant());
             return Ok(new { message = "众筹项目状态更新成功。" });
         }
 
@@ -130,10 +137,6 @@ namespace CampusStrayCatSystem.Core
             // 目标金额不能为负
             if (project.TargetAmount.HasValue && project.TargetAmount.Value < 0)
                 return "目标金额 TargetAmount 不能为负数。";
-
-            // 已筹金额不能为负
-            if (project.RaisedAmount.HasValue && project.RaisedAmount.Value < 0)
-                return "已筹金额 RaisedAmount 不能为负数。";
 
             // 状态合法性
             if (!string.IsNullOrWhiteSpace(project.ProjectStatus))

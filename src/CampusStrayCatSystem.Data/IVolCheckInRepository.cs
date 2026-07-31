@@ -9,6 +9,6 @@ namespace CampusStrayCatSystem.Data
         Task<VolCheckIn?> GetById(string checkInId);                      // 按打卡 ID 获取单条投喂记录
         Task<IEnumerable<VolCheckIn>> GetByShift(string shiftId);         // 按投喂任务 ID 查询该任务的投喂历史记录
         Task<IEnumerable<VolCheckIn>> GetByVolunteer(string volunteerId); // 按志愿者 ID 查询其所有投喂记录（通过 VOL_SHIFTS 关联）
-        Task CreateWithShiftCompleted(VolCheckIn checkIn);                // 记录一次投喂完成情况（新增打卡），并在同一事务中把对应投喂任务状态更新为 COMPLETED
+        Task<bool> CreateWithShiftCompleted(VolCheckIn checkIn);          // 记录投喂并完成任务；任务已完成或状态不允许时返回 false
     }
 }

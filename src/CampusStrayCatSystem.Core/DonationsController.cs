@@ -74,7 +74,11 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest(validationError);
 
             // 事务性写入：捐赠记录 + 累加已筹金额
-            await _donationRepository.CreateWithRaisedUpdate(donation);
+            donation.PublicFlag ??= 0;
+            var created = await _donationRepository.CreateWithRaisedUpdate(donation);
+            if (!created)
+                return Conflict("项目状态已经变化，仅 ACTIVE 状态的项目可接受捐赠。");
+
             return CreatedAtAction(nameof(GetById), new { id = donation.DonationID }, donation);
         }
 
@@ -103,6 +107,9 @@ namespace CampusStrayCatSystem.Core
             // 金额必须为正数
             if (!donation.Amount.HasValue || donation.Amount.Value <= 0)
                 return "捐赠金额 Amount 必须为正数。";
+
+            if (donation.PublicFlag.HasValue && donation.PublicFlag is not (0 or 1))
+                return "公开标记 PublicFlag 只能是 0（匿名）或 1（公开）。";
 
             return null; // 校验通过
         }

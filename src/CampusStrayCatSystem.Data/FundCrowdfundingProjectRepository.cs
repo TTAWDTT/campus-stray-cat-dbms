@@ -57,10 +57,10 @@ namespace CampusStrayCatSystem.Data
                        ENDTIME AS EndTime,
                        PROJECTSTATUS AS ProjectStatus
                 FROM FUND_CROWDFUNDINGPROJECTS
-                WHERE PROJECTSTATUS = :ProjectStatus
+                WHERE UPPER(PROJECTSTATUS) = :ProjectStatus
                 ORDER BY STARTTIME DESC NULLS LAST";
 
-            return await QueryAsync(sql, new { ProjectStatus = status });
+            return await QueryAsync(sql, new { ProjectStatus = status.ToUpperInvariant() });
         }
 
         // 按猫咪查询众筹项目。
@@ -87,6 +87,10 @@ namespace CampusStrayCatSystem.Data
         {
             // 主键使用 GUID 生成
             project.ProjectID = Guid.NewGuid().ToString();
+            project.RaisedAmount = 0;
+            project.ProjectStatus = string.IsNullOrWhiteSpace(project.ProjectStatus)
+                ? ProjectStatuses.Active
+                : project.ProjectStatus.ToUpperInvariant();
 
             const string sql = @"
                 INSERT INTO FUND_CROWDFUNDINGPROJECTS (PROJECTID, CATID, TITLE, TARGETAMOUNT,
@@ -100,15 +104,14 @@ namespace CampusStrayCatSystem.Data
                 project.CatID,
                 project.Title,
                 project.TargetAmount,
-                // 新建项目已筹金额默认 0
-                RaisedAmount = project.RaisedAmount ?? 0,
+                project.RaisedAmount,
                 project.StartTime,
                 project.EndTime,
                 project.ProjectStatus
             });
         }
 
-        // 更新众筹项目基本信息。
+        // 更新众筹项目基本信息。已筹金额和状态只能由专用业务接口维护。
         public async Task<int> Update(FundCrowdfundingProject project)
         {
             const string sql = @"
@@ -116,10 +119,8 @@ namespace CampusStrayCatSystem.Data
                 SET CATID = :CatID,
                     TITLE = :Title,
                     TARGETAMOUNT = :TargetAmount,
-                    RAISEDAMOUNT = :RaisedAmount,
                     STARTTIME = :StartTime,
-                    ENDTIME = :EndTime,
-                    PROJECTSTATUS = :ProjectStatus
+                    ENDTIME = :EndTime
                 WHERE PROJECTID = :ProjectID";
 
             return await ExecuteAsync(sql, new
@@ -127,10 +128,8 @@ namespace CampusStrayCatSystem.Data
                 project.CatID,
                 project.Title,
                 project.TargetAmount,
-                project.RaisedAmount,
                 project.StartTime,
                 project.EndTime,
-                project.ProjectStatus,
                 project.ProjectID
             });
         }
@@ -145,7 +144,7 @@ namespace CampusStrayCatSystem.Data
 
             return await ExecuteAsync(sql, new
             {
-                ProjectStatus = status,
+                ProjectStatus = status.ToUpperInvariant(),
                 ProjectID = projectId
             });
         }

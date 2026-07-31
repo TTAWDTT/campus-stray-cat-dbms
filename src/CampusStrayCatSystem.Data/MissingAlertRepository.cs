@@ -81,7 +81,7 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_AREAID", sighting.AreaID, DbType.String);
             parameters.Add("P_LONGITUDE", sighting.Longitude, DbType.Decimal);
             parameters.Add("P_LATITUDE", sighting.Latitude, DbType.Decimal);
-            parameters.Add("P_PHOTOURL", sighting.PhotoURL, DbType.String);
+            parameters.Add("P_PHOTOURL", sighting.PhotoUrl, DbType.String);
             parameters.Add("P_SIGHTINGTIME", sighting.SightingTime, DbType.DateTime);
             parameters.Add("P_REMARK", sighting.Remark, DbType.String);
             parameters.Add("O_SIGHTINGID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);

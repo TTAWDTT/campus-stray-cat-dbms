@@ -23,6 +23,7 @@ namespace CampusStrayCatSystem.Models
         public string ShiftID { get; set; } = string.Empty;     // 任务ID（主键）
         public string VolunteerID { get; set; } = string.Empty; // 负责的志愿者 ID（外键 VOL_VOLUNTEERS.VOLUNTEERID）
         public string? PointID { get; set; }                    // 投喂地点 ID（外键 MAP_SERVICEPOINTS.POINTID）
+        public string? BackupVolunteerID { get; set; }          // 备用志愿者 ID
         public DateTime? PlanStartTime { get; set; }            // 计划开始时间
         public DateTime? PlanEndTime { get; set; }              // 计划结束时间
         public string? ShiftStatus { get; set; }                // 任务状态

@@ -20,6 +20,9 @@ builder.Services.AddScoped<IMedHealthRecordRepository, MedHealthRecordRepository
 builder.Services.AddScoped<ICatRepository, CatRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
+builder.Services.AddScoped<IServicePointRepository, ServicePointRepository>();
+builder.Services.AddScoped<INestMaintenanceRecordRepository, NestMaintenanceRecordRepository>();
+builder.Services.AddScoped<ICatSightingRepository, CatSightingRepository>();
 
 // 功能点20：投喂记录与交接记录
 builder.Services.AddScoped<IReferenceCheckRepository, ReferenceCheckRepository>();

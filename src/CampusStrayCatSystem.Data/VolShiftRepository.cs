@@ -15,6 +15,7 @@ namespace CampusStrayCatSystem.Data
                 SELECT SHIFTID AS ShiftID,
                        VOLUNTEERID AS VolunteerID,
                        POINTID AS PointID,
+                       BACKUPVOLUNTEERID AS BackupVolunteerID,
                        PLANSTARTTIME AS PlanStartTime,
                        PLANENDTIME AS PlanEndTime,
                        SHIFTSTATUS AS ShiftStatus
@@ -31,6 +32,7 @@ namespace CampusStrayCatSystem.Data
                 SELECT SHIFTID AS ShiftID,
                        VOLUNTEERID AS VolunteerID,
                        POINTID AS PointID,
+                       BACKUPVOLUNTEERID AS BackupVolunteerID,
                        PLANSTARTTIME AS PlanStartTime,
                        PLANENDTIME AS PlanEndTime,
                        SHIFTSTATUS AS ShiftStatus
@@ -47,6 +49,7 @@ namespace CampusStrayCatSystem.Data
                 SELECT SHIFTID AS ShiftID,
                        VOLUNTEERID AS VolunteerID,
                        POINTID AS PointID,
+                       BACKUPVOLUNTEERID AS BackupVolunteerID,
                        PLANSTARTTIME AS PlanStartTime,
                        PLANENDTIME AS PlanEndTime,
                        SHIFTSTATUS AS ShiftStatus
@@ -64,6 +67,7 @@ namespace CampusStrayCatSystem.Data
                 SELECT SHIFTID AS ShiftID,
                        VOLUNTEERID AS VolunteerID,
                        POINTID AS PointID,
+                       BACKUPVOLUNTEERID AS BackupVolunteerID,
                        PLANSTARTTIME AS PlanStartTime,
                        PLANENDTIME AS PlanEndTime,
                        SHIFTSTATUS AS ShiftStatus
@@ -81,25 +85,29 @@ namespace CampusStrayCatSystem.Data
                 SELECT SHIFTID AS ShiftID,
                        VOLUNTEERID AS VolunteerID,
                        POINTID AS PointID,
+                       BACKUPVOLUNTEERID AS BackupVolunteerID,
                        PLANSTARTTIME AS PlanStartTime,
                        PLANENDTIME AS PlanEndTime,
                        SHIFTSTATUS AS ShiftStatus
                 FROM VOL_SHIFTS
-                WHERE SHIFTSTATUS = :ShiftStatus
+                WHERE UPPER(SHIFTSTATUS) = :ShiftStatus
                 ORDER BY PLANSTARTTIME DESC NULLS LAST";
 
-            return await QueryAsync(sql, new { ShiftStatus = status });
+            return await QueryAsync(sql, new { ShiftStatus = status.ToUpperInvariant() });
         }
 
         // 创建新的投喂任务
         public async Task<int> Create(VolShift shift)
         {
             shift.ShiftID = Guid.NewGuid().ToString();
+            shift.ShiftStatus = string.IsNullOrWhiteSpace(shift.ShiftStatus)
+                ? ShiftStatuses.Planned
+                : shift.ShiftStatus.ToUpperInvariant();
 
             const string sql = @"
-                INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID,
+                INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, BACKUPVOLUNTEERID,
                                         PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
-                VALUES (:ShiftID, :VolunteerID, :PointID,
+                VALUES (:ShiftID, :VolunteerID, :PointID, :BackupVolunteerID,
                         :PlanStartTime, :PlanEndTime, :ShiftStatus)";
 
             return await ExecuteAsync(sql, new
@@ -107,6 +115,7 @@ namespace CampusStrayCatSystem.Data
                 shift.ShiftID,
                 shift.VolunteerID,
                 shift.PointID,
+                shift.BackupVolunteerID,
                 shift.PlanStartTime,
                 shift.PlanEndTime,
                 shift.ShiftStatus
@@ -120,18 +129,18 @@ namespace CampusStrayCatSystem.Data
                 UPDATE VOL_SHIFTS
                 SET VOLUNTEERID = :VolunteerID,
                     POINTID = :PointID,
+                    BACKUPVOLUNTEERID = :BackupVolunteerID,
                     PLANSTARTTIME = :PlanStartTime,
-                    PLANENDTIME = :PlanEndTime,
-                    SHIFTSTATUS = :ShiftStatus
+                    PLANENDTIME = :PlanEndTime
                 WHERE SHIFTID = :ShiftID";
 
             return await ExecuteAsync(sql, new
             {
                 shift.VolunteerID,
                 shift.PointID,
+                shift.BackupVolunteerID,
                 shift.PlanStartTime,
                 shift.PlanEndTime,
-                shift.ShiftStatus,
                 shift.ShiftID
             });
         }
@@ -146,7 +155,7 @@ namespace CampusStrayCatSystem.Data
 
             return await ExecuteAsync(sql, new
             {
-                ShiftStatus = status,
+                ShiftStatus = status.ToUpperInvariant(),
                 ShiftID = shiftId
             });
         }

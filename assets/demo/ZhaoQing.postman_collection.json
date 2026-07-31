@@ -1,0 +1,419 @@
+{
+  "info": {
+    "_postman_id": "9fa3cd0d-5857-42b3-95f0-c75bad4adc61",
+    "name": "Campus Stray Cat - 赵晴模块",
+    "description": "校园区域、服务点、猫窝维护和目击记录接口的顺序化冒烟及回归测试。请先执行 database/insert_demo_data.sql。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5047" },
+    { "key": "areaId", "value": "" },
+    { "key": "pointId", "value": "" },
+    { "key": "maintenanceId", "value": "" },
+    { "key": "sightingId", "value": "" },
+    { "key": "catId", "value": "demo-cat-campus-001" },
+    { "key": "userId", "value": "demo-user-zhaoqing" }
+  ],
+  "item": [
+    {
+      "name": "01 健康检查",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('数据库连接正常', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 查询区域层级",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/campus-areas/hierarchy"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('返回区域数组', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 新增测试区域",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"areaName\": \"Postman 测试区域\",\n  \"campusName\": \"四平路校区\",\n  \"areaType\": \"测试区域\",\n  \"riskLevel\": \"低\"\n}"
+        },
+        "url": "{{baseUrl}}/api/campus-areas"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('区域创建成功', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('areaId', pm.response.json().areaID);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 更新测试区域",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"areaName\": \"Postman 测试区域（已更新）\",\n  \"campusName\": \"四平路校区\",\n  \"areaType\": \"测试区域\",\n  \"riskLevel\": \"中\"\n}"
+        },
+        "url": "{{baseUrl}}/api/campus-areas/{{areaId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('区域更新成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 新增服务点",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"Postman 测试猫窝\",\n  \"pointType\": \"猫窝\",\n  \"longitude\": 121.5064,\n  \"latitude\": 31.2822,\n  \"facilityStatus\": \"正常\",\n  \"deployTime\": \"2026-07-21T08:00:00Z\"\n}"
+        },
+        "url": "{{baseUrl}}/api/service-points"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('服务点创建成功', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('pointId', pm.response.json().pointID);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 按区域查询服务点",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/service-points?areaId={{areaId}}&pointType=猫窝"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('查询到测试服务点', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 更新服务点",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"Postman 测试猫窝\",\n  \"pointType\": \"猫窝\",\n  \"longitude\": 121.5064,\n  \"latitude\": 31.2822,\n  \"facilityStatus\": \"需巡查\",\n  \"deployTime\": \"2026-07-21T08:00:00Z\"\n}"
+        },
+        "url": "{{baseUrl}}/api/service-points/{{pointId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('服务点更新成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 新增猫窝维护记录",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pointID\": \"{{pointId}}\",\n  \"materialType\": \"保温箱\",\n  \"checkTime\": \"2026-07-22T09:00:00Z\",\n  \"weatherCondition\": \"晴\",\n  \"damageLevel\": \"轻微\",\n  \"actionType\": \"维修\",\n  \"operatorUserID\": \"{{userId}}\",\n  \"nextCheckTime\": \"2026-07-29T09:00:00Z\",\n  \"remark\": \"Postman 自动化测试\"\n}"
+        },
+        "url": "{{baseUrl}}/api/nest-maintenance-records"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('维护记录创建成功', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('maintenanceId', pm.response.json().maintenanceID);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 查询猫窝维护历史",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/nest-maintenance-records?pointId={{pointId}}&damageLevel=轻微"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('查询到维护记录', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 更新猫窝维护记录",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pointID\": \"{{pointId}}\",\n  \"materialType\": \"保温箱\",\n  \"checkTime\": \"2026-07-22T09:00:00Z\",\n  \"weatherCondition\": \"晴\",\n  \"damageLevel\": \"正常\",\n  \"actionType\": \"维修\",\n  \"operatorUserID\": \"{{userId}}\",\n  \"nextCheckTime\": \"2026-07-29T09:00:00Z\",\n  \"remark\": \"维修完成\"\n}"
+        },
+        "url": "{{baseUrl}}/api/nest-maintenance-records/{{maintenanceId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('维护记录更新成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 新增目击记录",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"userID\": \"{{userId}}\",\n  \"areaID\": \"{{areaId}}\",\n  \"longitude\": 121.5064,\n  \"latitude\": 31.2822,\n  \"photoUrl\": \"https://example.invalid/postman-sighting.jpg\",\n  \"sightingTime\": \"2026-07-22T18:30:00Z\",\n  \"remark\": \"Postman 自动化测试目击记录\"\n}"
+        },
+        "url": "{{baseUrl}}/api/cat-sightings"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('目击记录创建成功', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('sightingId', pm.response.json().sightingID);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 按猫咪和区域查询目击记录",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cat-sightings?catId={{catId}}&areaId={{areaId}}&from=2026-07-01T00:00:00Z&to=2026-08-01T00:00:00Z"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('查询到目击记录', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().length).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 更新目击记录",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"userID\": \"{{userId}}\",\n  \"areaID\": \"{{areaId}}\",\n  \"longitude\": 121.5064,\n  \"latitude\": 31.2822,\n  \"sightingTime\": \"2026-07-22T18:30:00Z\",\n  \"remark\": \"已确认猫咪状态正常\"\n}"
+        },
+        "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('目击记录更新成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 查询猫咪最近目击",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cat-sightings/recent/by-cat/{{catId}}?limit=10"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('返回最近目击列表', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 拒绝非法坐标",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"userID\": \"{{userId}}\",\n  \"areaID\": \"{{areaId}}\",\n  \"longitude\": 200,\n  \"latitude\": 31.2822\n}"
+        },
+        "url": "{{baseUrl}}/api/cat-sightings"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('非法坐标返回 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 删除测试目击记录",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('目击记录删除成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 删除测试维护记录",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/nest-maintenance-records/{{maintenanceId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('维护记录删除成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 删除测试服务点",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/service-points/{{pointId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('服务点删除成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 删除测试区域",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/campus-areas/{{areaId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('区域删除成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
