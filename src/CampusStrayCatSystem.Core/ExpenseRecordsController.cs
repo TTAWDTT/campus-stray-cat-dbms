@@ -1,0 +1,143 @@
+using Microsoft.AspNetCore.Mvc;
+using CampusStrayCatSystem.Models;
+using CampusStrayCatSystem.Data;
+
+namespace CampusStrayCatSystem.Core
+{
+    // 支出记录控制器，对应数据库表 FUND_FINANCERECORDS
+    // 提供支出的记录、查询、审核功能，支出需审核通过后才计入财务公示
+    [Route("api/expense-records")]
+    [ApiController]
+    public class ExpenseRecordsController : ControllerBase
+    {
+        private readonly IFundExpenseRecordRepository _expenseRecordRepository;
+        private readonly IFundCrowdfundingProjectRepository _projectRepository;
+        private readonly IReferenceCheckRepository _referenceCheck;
+
+        public ExpenseRecordsController(
+            IFundExpenseRecordRepository expenseRecordRepository,
+            IFundCrowdfundingProjectRepository projectRepository,
+            IReferenceCheckRepository referenceCheck)
+        {
+            _expenseRecordRepository = expenseRecordRepository;
+            _projectRepository = projectRepository;
+            _referenceCheck = referenceCheck;
+        }
+
+        // 获取所有支出记录
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<FundExpenseRecord>>> GetAll()
+        {
+            var records = await _expenseRecordRepository.GetAll();
+            return Ok(records ?? new List<FundExpenseRecord>());
+        }
+
+        // 按支出 ID 获取单条支出记录
+        [HttpGet("{id}")]
+        public async Task<ActionResult<FundExpenseRecord>> GetById(string id)
+        {
+            var record = await _expenseRecordRepository.GetById(id);
+            if (record == null)
+                return NotFound($"未找到 ID 为 {id} 的支出记录。");
+
+            return Ok(record);
+        }
+
+        // 按项目查询支出记录
+        [HttpGet("by-project/{projectId}")]
+        public async Task<ActionResult<IEnumerable<FundExpenseRecord>>> GetByProject(string projectId)
+        {
+            if (!await _projectRepository.Exists(projectId))
+                return NotFound($"未找到 ID 为 {projectId} 的众筹项目。");
+
+            var records = await _expenseRecordRepository.GetByProject(projectId);
+            return Ok(records ?? new List<FundExpenseRecord>());
+        }
+
+        // 按项目查询已审核通过的支出记录（用于财务公示）
+        [HttpGet("by-project/{projectId}/approved-expenses")]
+        public async Task<ActionResult<IEnumerable<FundExpenseRecord>>> GetApprovedExpenses(string projectId)
+        {
+            if (!await _projectRepository.Exists(projectId))
+                return NotFound($"未找到 ID 为 {projectId} 的众筹项目。");
+
+            var records = await _expenseRecordRepository.GetApprovedExpensesByProject(projectId);
+            return Ok(records ?? new List<FundExpenseRecord>());
+        }
+
+        // 记录支出：新增一条支出记录（默认待审核状态）
+        [HttpPost]
+        public async Task<ActionResult<FundExpenseRecord>> Create([FromBody] FundExpenseRecord record)
+        {
+            if (record == null)
+                return BadRequest("支出记录数据为空，无法创建。");
+
+            var validationError = await ValidateExpenseRecord(record);
+            if (validationError != null)
+                return BadRequest(validationError);
+
+            await _expenseRecordRepository.Create(record);
+            return CreatedAtAction(nameof(GetById), new { id = record.FinanceID }, record);
+        }
+
+        // 审核支出记录：管理员审核支出，更新审核状态和审核人，审核通过后会记录公示时间
+        [HttpPut("{id}/audit")]
+        public async Task<IActionResult> Audit(string id, [FromBody] AuditExpenseRecordRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.AuditStatus))
+                return BadRequest("审核状态不能为空。");
+
+            if (!AuditStatuses.IsValid(request.AuditStatus))
+                return BadRequest($"无效的审核状态 '{request.AuditStatus}'。允许的状态: {string.Join(", ", AuditStatuses.Allowed)}");
+
+            if (string.IsNullOrWhiteSpace(request.AuditUserID))
+                return BadRequest("审核人 AuditUserID 不能为空。");
+
+            var existing = await _expenseRecordRepository.GetById(id);
+            if (existing == null)
+                return NotFound($"未找到 ID 为 {id} 的支出记录，无法审核。");
+
+            // 只有待审核状态的记录才能被审核
+            if (!string.Equals(existing.AuditStatus, AuditStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+                return BadRequest($"当前审核状态为 '{existing.AuditStatus}'，仅 '{AuditStatuses.Pending}' 状态的记录可审核。");
+
+            // 校验审核人存在
+            if (!await _referenceCheck.UserExists(request.AuditUserID))
+                return BadRequest($"审核人 UserID='{request.AuditUserID}' 不存在。");
+
+            await _expenseRecordRepository.Audit(id, request.AuditUserID, request.AuditStatus);
+            return Ok(new { message = "支出记录审核完成。" });
+        }
+
+        // 业务校验：项目存在、金额为正、审核状态合法
+        private async Task<string?> ValidateExpenseRecord(FundExpenseRecord record)
+        {
+            // 项目必填且存在
+            if (string.IsNullOrWhiteSpace(record.ProjectID))
+                return "ProjectID 不能为空。";
+
+            if (!await _projectRepository.Exists(record.ProjectID))
+                return $"众筹项目 ProjectID='{record.ProjectID}' 不存在。";
+
+            // 金额必须为正数
+            if (!record.Amount.HasValue || record.Amount.Value <= 0)
+                return "金额 Amount 必须为正数。";
+
+            // 审核状态合法性（若指定）
+            if (!string.IsNullOrWhiteSpace(record.AuditStatus))
+            {
+                if (!AuditStatuses.IsValid(record.AuditStatus))
+                    return $"无效的审核状态 '{record.AuditStatus}'。允许的状态: {string.Join(", ", AuditStatuses.Allowed)}";
+            }
+
+            return null; // 校验通过
+        }
+    }
+
+    // 审核支出记录的请求体
+    public class AuditExpenseRecordRequest
+    {
+        public string AuditUserID { get; set; } = string.Empty;  // 审核人 ID
+        public string AuditStatus { get; set; } = string.Empty;  // 审核状态（APPROVED/REJECTED）
+    }
+}
