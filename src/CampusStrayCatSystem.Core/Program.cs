@@ -1,3 +1,4 @@
+using CampusStrayCatSystem.Core;
 using CampusStrayCatSystem.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +8,7 @@ builder.Services.AddControllers();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options => options.SchemaFilter<Utf8ByteLengthSchemaFilter>());
 
 // Dependency Injection - Repository
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
