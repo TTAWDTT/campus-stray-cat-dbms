@@ -108,10 +108,17 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的TNR案例，无法更新状态。");
 
+            var operatorId = string.IsNullOrWhiteSpace(request.OperatorID)
+                ? null
+                : request.OperatorID.Trim();
+
+            if (operatorId != null && !await _userRepository.Exists(operatorId))
+                return BadRequest($"操作人 UserID='{operatorId}' 不存在。");
+
             var oldStatus = existing.CurrentStatus;
 
             // 在同一事务中更新状态并生成日志
-            await _tnrCaseRepository.UpdateStatusWithLog(id, request.NewStatus, oldStatus ?? "", request.OperatorID, request.Remark);
+            await _tnrCaseRepository.UpdateStatusWithLog(id, request.NewStatus, oldStatus ?? "", operatorId, request.Remark);
 
             return Ok(new { oldStatus, newStatus = request.NewStatus, message = "状态更新成功，已生成流转日志。" });
         }
