@@ -7,9 +7,9 @@ namespace CampusStrayCatSystem.Data
     public interface IRoleRepository
     {
         Task<IEnumerable<Role>> GetAll();
-        Task<Role?> GetByIdRole(int id);
+        Task<Role?> GetByIdRole(string id);
         Task<int> CreateRole(Role role);
         Task<int> UpdateRole(Role role);
-        Task<int> DeleteRole(int id);
+        Task<int> DeleteRole(string id);
     }
 }
