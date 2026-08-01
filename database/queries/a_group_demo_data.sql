@@ -1,0 +1,42 @@
+MERGE INTO SYS_ROLES target
+USING (
+    SELECT 'role-admin-a-group' AS ROLEID,
+           'ADMIN' AS ROLENAME,
+           'A组用户权限模块管理员' AS DESCRIPTION,
+           'USER_MANAGE,ROLE_MANAGE,BLACKLIST_MANAGE' AS PERMISSIONSCOPE
+    FROM DUAL
+) source
+ON (target.ROLEID = source.ROLEID)
+WHEN MATCHED THEN UPDATE SET
+    target.ROLENAME = source.ROLENAME,
+    target.DESCRIPTION = source.DESCRIPTION,
+    target.PERMISSIONSCOPE = source.PERMISSIONSCOPE
+WHEN NOT MATCHED THEN INSERT
+    (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+VALUES
+    (source.ROLEID, source.ROLENAME, source.DESCRIPTION, source.PERMISSIONSCOPE);
+
+MERGE INTO SYS_USERS target
+USING (
+    SELECT 'user-admin-a-group' AS USERID,
+           'role-admin-a-group' AS ROLEID,
+           'a_group_admin' AS USERNAME,
+           'AQAAAAIAAYagAAAAEK2sAajzhA7dIlvCJAM656FKcRbzwy2Z1xwCA450N5PVrC2Evn53/GfU1TgnQIQ2Ig==' AS PASSWORDHASH,
+           'A组管理员' AS REALNAME,
+           'VERIFIED' AS VERIFYSTATUS,
+           'ACTIVE' AS STATUS
+    FROM DUAL
+) source
+ON (target.USERID = source.USERID)
+WHEN MATCHED THEN UPDATE SET
+    target.ROLEID = source.ROLEID,
+    target.USERNAME = source.USERNAME,
+    target.PASSWORDHASH = source.PASSWORDHASH,
+    target.REALNAME = source.REALNAME,
+    target.VERIFYSTATUS = source.VERIFYSTATUS,
+    target.STATUS = source.STATUS
+WHEN NOT MATCHED THEN INSERT
+    (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, VERIFYSTATUS, STATUS)
+VALUES
+    (source.USERID, source.ROLEID, source.USERNAME, source.PASSWORDHASH,
+     source.REALNAME, source.VERIFYSTATUS, source.STATUS);

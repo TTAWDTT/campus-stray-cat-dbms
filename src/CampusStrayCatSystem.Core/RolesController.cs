@@ -32,7 +32,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Role>> GetRole(int id)
+        public async Task<ActionResult<Role>> GetRole(string id)
         {
             var role = await _roleRepository.GetByIdRole(id);
 
@@ -57,7 +57,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
+        public async Task<IActionResult> UpdateRole(string id, [FromBody] Role role)
         {
             if (role == null)
             {
@@ -80,7 +80,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRole(int id)
+        public async Task<IActionResult> DeleteRole(string id)
         {
             var existing = await _roleRepository.GetByIdRole(id);
             if (existing == null)
