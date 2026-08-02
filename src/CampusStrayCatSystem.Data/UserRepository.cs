@@ -5,70 +5,46 @@ namespace CampusStrayCatSystem.Data
 {
     public class UserRepository : BaseRepository<User>, IUserRepository
     {
+        // 与 database/queries/a_group_advanced.sql 中的 VW_USER_ROLE_PROFILE 对齐。
+        private const string UserRoleProfileSelect = @"
+                SELECT USERID AS UserID,
+                       ROLEID AS RoleID,
+                       USERNAME AS Username,
+                       PASSWORDHASH AS PasswordHash,
+                       REALNAME AS RealName,
+                       STUDENTNO AS StudentNo,
+                       PHONE AS Phone,
+                       VERIFYSTATUS AS VerifyStatus,
+                       STATUS AS Status,
+                       ROLENAME AS RoleName,
+                       PERMISSIONSCOPE AS PermissionScope
+                FROM VW_USER_ROLE_PROFILE";
+
         public UserRepository(IConfiguration configuration) : base(configuration) { }
 
         public async Task<User?> GetById(string userId)
         {
-            const string sql = @"
-                SELECT u.USERID AS UserID,
-                       u.ROLEID AS RoleID,
-                       u.USERNAME AS Username,
-                       u.PASSWORDHASH AS PasswordHash,
-                       u.REALNAME AS RealName,
-                       u.STUDENTNO AS StudentNo,
-                       u.PHONE AS Phone,
-                       u.VERIFYSTATUS AS VerifyStatus,
-                       u.STATUS AS Status,
-                       r.ROLENAME AS RoleName,
-                       r.PERMISSIONSCOPE AS PermissionScope
-                FROM SYS_USERS u
-                JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
-                WHERE u.USERID = :UserID";
+            const string sql = UserRoleProfileSelect + @"
+                WHERE USERID = :UserID";
 
             return await QuerySingleAsync(sql, new { UserID = userId });
         }
 
         public async Task<User?> GetByUsername(string username)
         {
-            const string sql = @"
-                SELECT u.USERID AS UserID,
-                       u.ROLEID AS RoleID,
-                       u.USERNAME AS Username,
-                       u.PASSWORDHASH AS PasswordHash,
-                       u.REALNAME AS RealName,
-                       u.STUDENTNO AS StudentNo,
-                       u.PHONE AS Phone,
-                       u.VERIFYSTATUS AS VerifyStatus,
-                       u.STATUS AS Status,
-                       r.ROLENAME AS RoleName,
-                       r.PERMISSIONSCOPE AS PermissionScope
-                FROM SYS_USERS u
-                JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
-                WHERE UPPER(u.USERNAME) = UPPER(:Username)";
+            const string sql = UserRoleProfileSelect + @"
+                WHERE UPPER(USERNAME) = UPPER(:Username)";
 
             return await QuerySingleAsync(sql, new { Username = username });
         }
 
         public async Task<IEnumerable<User>> GetAll(string? username, string? status, string? roleId)
         {
-            const string sql = @"
-                SELECT u.USERID AS UserID,
-                       u.ROLEID AS RoleID,
-                       u.USERNAME AS Username,
-                       u.PASSWORDHASH AS PasswordHash,
-                       u.REALNAME AS RealName,
-                       u.STUDENTNO AS StudentNo,
-                       u.PHONE AS Phone,
-                       u.VERIFYSTATUS AS VerifyStatus,
-                       u.STATUS AS Status,
-                       r.ROLENAME AS RoleName,
-                       r.PERMISSIONSCOPE AS PermissionScope
-                FROM SYS_USERS u
-                JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
-                WHERE (:Username IS NULL OR UPPER(u.USERNAME) LIKE '%' || UPPER(:Username) || '%')
-                  AND (:Status IS NULL OR UPPER(u.STATUS) = UPPER(:Status))
-                  AND (:RoleID IS NULL OR u.ROLEID = :RoleID)
-                ORDER BY u.USERNAME";
+            const string sql = UserRoleProfileSelect + @"
+                WHERE (:Username IS NULL OR UPPER(USERNAME) LIKE '%' || UPPER(:Username) || '%')
+                  AND (:Status IS NULL OR STATUS = :Status)
+                  AND (:RoleID IS NULL OR ROLEID = :RoleID)
+                ORDER BY USERNAME";
 
             return await QueryAsync(sql, new { Username = username, Status = status, RoleID = roleId });
         }
