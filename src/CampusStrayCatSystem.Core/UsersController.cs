@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -31,14 +32,38 @@ namespace CampusStrayCatSystem.Core
             [FromQuery] string? status = null,
             [FromQuery] string? roleId = null)
         {
-            var users = await _userRepository.GetAll(NormalizeOptional(username), NormalizeOptional(status), NormalizeOptional(roleId));
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalizedStatus = NormalizeStatus(status);
+                if (normalizedStatus == null)
+                {
+                    return BadRequest(new { message = "status 仅支持 ACTIVE 或 DISABLED。" });
+                }
+
+                status = normalizedStatus;
+            }
+
+            if (!string.IsNullOrWhiteSpace(roleId) && string.IsNullOrWhiteSpace(roleId.Trim()))
+            {
+                return BadRequest(new { message = "roleId 不能为空字符串。" });
+            }
+
+            var users = await _userRepository.GetAll(
+                NormalizeOptional(username),
+                NormalizeOptional(status),
+                NormalizeOptional(roleId));
             return Ok(users.Select(ToProfile));
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserProfileResponse>> GetUser(string id)
         {
-            var user = await _userRepository.GetById(id);
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest(new { message = "用户 ID 不能为空。" });
+            }
+
+            var user = await _userRepository.GetById(id.Trim());
             if (user == null)
             {
                 return NotFound(new { message = $"未找到 ID 为 {id} 的用户。" });
@@ -55,31 +80,55 @@ namespace CampusStrayCatSystem.Core
                 return Forbid();
             }
 
-            if (await _userRepository.UsernameExists(request.Username.Trim()))
+            if (request == null)
             {
-                return Conflict(new { message = $"用户名 {request.Username} 已存在。" });
+                return BadRequest(new { message = "请求体不能为空。" });
             }
 
-            var role = await _roleRepository.GetByIdRole(request.RoleID);
+            var username = request.Username?.Trim();
+            var roleId = request.RoleID?.Trim();
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(roleId) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return BadRequest(new { message = "Username、Password、RoleID 均为必填。" });
+            }
+
+            var status = NormalizeStatus(request.Status) ?? UserStatusCodes.Active;
+            if (!UserVerifyStatusCodes.IsKnown(request.VerifyStatus))
+            {
+                return BadRequest(new { message = "VerifyStatus 仅支持 VERIFIED、UNVERIFIED 或空。" });
+            }
+
+            if (await _userRepository.UsernameExists(username))
+            {
+                return Conflict(new { message = $"用户名 {username} 已存在。" });
+            }
+
+            var role = await _roleRepository.GetByIdRole(roleId);
             if (role == null)
             {
-                return BadRequest(new { message = $"未找到 ID 为 {request.RoleID} 的角色。" });
+                return BadRequest(new { message = $"未找到 ID 为 {roleId} 的角色。" });
             }
 
+            // UserID / PasswordHash 由服务端生成，忽略客户端可能夹带的同类字段。
             var user = new User
             {
                 UserID = Guid.NewGuid().ToString(),
-                RoleID = request.RoleID.Trim(),
-                Username = request.Username.Trim(),
+                RoleID = roleId,
+                Username = username,
                 RealName = NormalizeOptional(request.RealName),
                 StudentNo = NormalizeOptional(request.StudentNo),
                 Phone = NormalizeOptional(request.Phone),
-                VerifyStatus = NormalizeOptional(request.VerifyStatus),
-                Status = NormalizeStatus(request.Status) ?? "ACTIVE"
+                VerifyStatus = NormalizeOptional(request.VerifyStatus) ?? UserVerifyStatusCodes.Unverified,
+                Status = status
             };
             user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
-            await _userRepository.Create(user);
+            var affected = await _userRepository.Create(user);
+            if (affected <= 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "新增用户失败。" });
+            }
+
             var created = await _userRepository.GetById(user.UserID);
             return CreatedAtAction(nameof(GetUser), new { id = user.UserID }, ToProfile(created ?? user));
         }
@@ -92,26 +141,63 @@ namespace CampusStrayCatSystem.Core
                 return Forbid();
             }
 
-            var existing = await _userRepository.GetById(id);
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest(new { message = "用户 ID 不能为空。" });
+            }
+
+            if (request == null)
+            {
+                return BadRequest(new { message = "请求体不能为空。" });
+            }
+
+            var existing = await _userRepository.GetById(id.Trim());
             if (existing == null)
             {
                 return NotFound(new { message = $"未找到 ID 为 {id} 的用户。" });
             }
 
-            var role = await _roleRepository.GetByIdRole(request.RoleID);
-            if (role == null)
+            var roleId = request.RoleID?.Trim();
+            if (string.IsNullOrWhiteSpace(roleId))
             {
-                return BadRequest(new { message = $"未找到 ID 为 {request.RoleID} 的角色。" });
+                return BadRequest(new { message = "RoleID 不能为空。" });
             }
 
-            existing.RoleID = request.RoleID.Trim();
+            if (!UserVerifyStatusCodes.IsKnown(request.VerifyStatus))
+            {
+                return BadRequest(new { message = "VerifyStatus 仅支持 VERIFIED、UNVERIFIED 或空。" });
+            }
+
+            var role = await _roleRepository.GetByIdRole(roleId);
+            if (role == null)
+            {
+                return BadRequest(new { message = $"未找到 ID 为 {roleId} 的角色。" });
+            }
+
+            // 保护 Username / PasswordHash / UserID：本接口不接受改写。
+            existing.RoleID = roleId;
             existing.RealName = NormalizeOptional(request.RealName);
             existing.StudentNo = NormalizeOptional(request.StudentNo);
             existing.Phone = NormalizeOptional(request.Phone);
-            existing.VerifyStatus = NormalizeOptional(request.VerifyStatus);
-            existing.Status = NormalizeStatus(request.Status) ?? existing.Status;
+            existing.VerifyStatus = NormalizeOptional(request.VerifyStatus) ?? existing.VerifyStatus;
 
-            await _userRepository.Update(existing);
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                var status = NormalizeStatus(request.Status);
+                if (status == null)
+                {
+                    return BadRequest(new { message = "Status 仅支持 ACTIVE 或 DISABLED。" });
+                }
+
+                existing.Status = status;
+            }
+
+            var affected = await _userRepository.Update(existing);
+            if (affected <= 0)
+            {
+                return Conflict(new { message = "用户更新未生效，请刷新后重试。" });
+            }
+
             return NoContent();
         }
 
@@ -123,7 +209,17 @@ namespace CampusStrayCatSystem.Core
                 return Forbid();
             }
 
-            if (!await _userRepository.Exists(id))
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest(new { message = "用户 ID 不能为空。" });
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.Status))
+            {
+                return BadRequest(new { message = "Status 不能为空。" });
+            }
+
+            if (!await _userRepository.Exists(id.Trim()))
             {
                 return NotFound(new { message = $"未找到 ID 为 {id} 的用户。" });
             }
@@ -131,25 +227,29 @@ namespace CampusStrayCatSystem.Core
             var normalizedStatus = NormalizeStatus(request.Status);
             if (normalizedStatus == null)
             {
-                return BadRequest(new { message = "状态只能是 ACTIVE、DISABLED、ENABLED 或 正常/停用。" });
+                return BadRequest(new { message = "Status 仅支持 ACTIVE 或 DISABLED。" });
             }
 
-            await _userRepository.UpdateStatus(id, normalizedStatus);
+            var affected = await _userRepository.UpdateStatus(id.Trim(), normalizedStatus);
+            if (affected <= 0)
+            {
+                return Conflict(new { message = "用户状态更新未生效，请刷新后重试。" });
+            }
+
             return NoContent();
         }
 
         private bool HasAdminAccess()
         {
-            var roleName = User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value ?? string.Empty;
+            var roleName = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
             var permissionScope = User.FindFirst("permissionScope")?.Value ?? string.Empty;
 
-            return roleName.Contains("ADMIN", StringComparison.OrdinalIgnoreCase) ||
-                   roleName.Contains("管理员", StringComparison.OrdinalIgnoreCase) ||
-                   permissionScope.Contains("USER_MANAGE", StringComparison.OrdinalIgnoreCase) ||
-                   permissionScope.Contains("ROLE_MANAGE", StringComparison.OrdinalIgnoreCase);
+            return roleName.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
+                   permissionScope.Contains("USER_MANAGE", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string? NormalizeOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        private static string? NormalizeOptional(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
         private static string? NormalizeStatus(string? status)
         {
@@ -159,15 +259,7 @@ namespace CampusStrayCatSystem.Core
             }
 
             var normalized = status.Trim().ToUpperInvariant();
-            return normalized switch
-            {
-                "ACTIVE" => "ACTIVE",
-                "ENABLED" => "ENABLED",
-                "DISABLED" => "DISABLED",
-                "正常" => "正常",
-                "停用" => "DISABLED",
-                _ => null
-            };
+            return UserStatusCodes.IsKnown(normalized) ? normalized : null;
         }
 
         private static UserProfileResponse ToProfile(User user) => new()
