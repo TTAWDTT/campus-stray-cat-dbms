@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "e34224d8-9a36-4201-98d6-5dad42f4977f",
-    "name": "Campus Stray Cat - 徐千顺猫咪照片模块",
+    "name": "Campus Stray Cat - B组猫咪照片模块",
     "description": "猫咪照片上传、查询、静态文件、主图切换、特征读取和删除回归测试。请先执行 database/insert_demo_data.sql，并从仓库根目录运行或在 Postman 中重新选择 logo.png。",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

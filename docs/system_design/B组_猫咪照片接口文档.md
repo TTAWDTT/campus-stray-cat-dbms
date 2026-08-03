@@ -1,8 +1,8 @@
-# 徐千顺负责模块 API 说明
+# B组猫咪照片模块 API 说明
 
 ## 模块范围
 
-徐千顺负责猫咪档案、猫咪照片与识别特征记录。本文件记录猫咪照片模块的公开接口契约；照片特征生成、相似度匹配和分页不在本阶段范围内。
+B组负责猫咪档案、猫咪照片与识别特征记录。本文件记录猫咪照片模块的公开接口契约；照片特征生成、相似度匹配和分页不在本阶段范围内。
 
 猫咪照片基础路径：`/api/cats/{catId}/photos`
 
@@ -135,5 +135,5 @@
 1. 配置本地 Oracle 连接字符串并执行 `database/queries/cat_photos_oracle_programming.sql`。
 2. 执行演示数据和 `database/queries/cat_photos_acceptance.sql`。
 3. 运行 `dotnet run --project src/CampusStrayCatSystem.Core/CampusStrayCatSystem.Core.csproj --launch-profile http`。
-4. 打开 `http://localhost:5047/swagger`，或导入 `assets/demo/XuQianshunCatPhotos.postman_collection.json`。
+4. 打开 `http://localhost:5047/swagger`，或导入 `docs/system_design/B组_猫咪照片Postman集合.json`。
 5. 使用仓库根目录的 `logo.png` 作为 JPEG/PNG 上传校验之外的 PNG 联调样例。
