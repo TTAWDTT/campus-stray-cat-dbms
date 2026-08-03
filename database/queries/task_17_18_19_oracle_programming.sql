@@ -199,19 +199,26 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
         VALUES (v_checkin_id, p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
 
-        UPDATE VOL_VOLUNTEERS
-        SET SERVICESCORE = NVL(SERVICESCORE, 0) + 1
-        WHERE VOLUNTEERID = v_volunteer_id;
+        IF p_checkin_status = 'CHECKED_IN' THEN
+            UPDATE VOL_VOLUNTEERS
+            SET SERVICESCORE = NVL(SERVICESCORE, 0) + 1
+            WHERE VOLUNTEERID = v_volunteer_id;
 
-        INSERT INTO VOL_CREDITLOGS (CREDITLOGID, VOLUNTEERID, SOURCETYPE, SOURCEID, SCORECHANGE, CREDITLEVELAFTER, CREATETIME, REMARK)
-        VALUES ('CRED-' || DBMS_RANDOM.STRING('X', 8), v_volunteer_id, 'CHECKIN', v_checkin_id, 1, v_credit_level, p_checkin_time, '排班签到自动增加服务积分');
+            INSERT INTO VOL_CREDITLOGS (CREDITLOGID, VOLUNTEERID, SOURCETYPE, SOURCEID, SCORECHANGE, CREDITLEVELAFTER, CREATETIME, REMARK)
+            VALUES ('CRED-' || DBMS_RANDOM.STRING('X', 8), v_volunteer_id, 'CHECKIN', v_checkin_id, 1, NVL(v_credit_level, 'L1'), p_checkin_time, '排班签到自动增加服务积分');
+        END IF;
     END check_in_shift;
 
-    -- 为志愿者增加积分变更记录。
+    -- 为志愿者增加积分变更记录，并同步更新志愿者的累计服务分数。
     PROCEDURE add_credit_log(p_volunteer_id IN VARCHAR2, p_source_type IN VARCHAR2, p_source_id IN VARCHAR2, p_score_change IN NUMBER, p_credit_level_after IN VARCHAR2, p_create_time IN DATE DEFAULT SYSDATE, p_remark IN VARCHAR2 DEFAULT NULL) IS
     BEGIN
         INSERT INTO VOL_CREDITLOGS (CREDITLOGID, VOLUNTEERID, SOURCETYPE, SOURCEID, SCORECHANGE, CREDITLEVELAFTER, CREATETIME, REMARK)
         VALUES ('CRED-' || DBMS_RANDOM.STRING('X', 8), p_volunteer_id, p_source_type, p_source_id, p_score_change, p_credit_level_after, p_create_time, p_remark);
+
+        -- 更新累计积分（若不存在则忽略）
+        UPDATE VOL_VOLUNTEERS
+        SET SERVICESCORE = NVL(SERVICESCORE, 0) + NVL(p_score_change, 0)
+        WHERE VOLUNTEERID = p_volunteer_id;
     END add_credit_log;
 END PKG_VOLUNTEER_MGMT;
 /

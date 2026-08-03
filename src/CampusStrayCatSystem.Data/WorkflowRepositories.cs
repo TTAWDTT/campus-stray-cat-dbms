@@ -84,8 +84,8 @@ namespace CampusStrayCatSystem.Data
             {
                 ApplicationId = applicationId,
                 request.VisitType,
-                VisitTime = request.VisitTime ?? DateTime.Now,
                 request.VisitorUserId,
+                VisitTime = request.VisitTime ?? DateTime.Now,
                 request.Conclusion,
                 request.PassFlag
             });
@@ -158,9 +158,9 @@ namespace CampusStrayCatSystem.Data
             {
                 request.VolunteerId,
                 request.PointId,
-                request.BackupVolunteerId,
                 request.PlanStartTime,
                 request.PlanEndTime,
+                request.BackupVolunteerId,
                 request.ShiftStatus
             });
         }
