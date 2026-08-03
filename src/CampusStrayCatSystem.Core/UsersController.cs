@@ -32,10 +32,11 @@ namespace CampusStrayCatSystem.Core
             [FromQuery] string? status = null,
             [FromQuery] string? roleId = null)
         {
-            // 用户列表含学号、手机号等敏感字段，仅管理员可查询。
-            if (!HasAdminAccessFromClaims())
+            // 用户列表含学号、手机号等敏感字段，仅管理员可查询；并复核库内状态与权限。
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null)
             {
-                return Forbid();
+                return denied;
             }
 
             if (!string.IsNullOrWhiteSpace(status))
@@ -71,14 +72,17 @@ namespace CampusStrayCatSystem.Core
 
             var targetId = id.Trim();
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var isAdmin = HasAdminAccessFromClaims();
             var isSelf = !string.IsNullOrWhiteSpace(currentUserId) &&
                          currentUserId.Equals(targetId, StringComparison.OrdinalIgnoreCase);
 
-            // 非管理员只能查看自己的资料，避免泄露其他用户学号、手机号等信息。
-            if (!isAdmin && !isSelf)
+            // 非本人必须具备当前有效的管理员权限（以数据库为准，而非仅 JWT Claim）。
+            if (!isSelf)
             {
-                return Forbid();
+                var denied = await EnsureAdminAccessAsync();
+                if (denied != null)
+                {
+                    return denied;
+                }
             }
 
             var user = await _userRepository.GetById(targetId);
@@ -93,9 +97,10 @@ namespace CampusStrayCatSystem.Core
         [HttpPost]
         public async Task<ActionResult<UserProfileResponse>> CreateUser([FromBody] CreateUserRequest request)
         {
-            if (!HasAdminAccess())
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null)
             {
-                return Forbid();
+                return denied;
             }
 
             if (request == null)
@@ -154,9 +159,10 @@ namespace CampusStrayCatSystem.Core
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequest request)
         {
-            if (!HasAdminAccess())
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null)
             {
-                return Forbid();
+                return denied;
             }
 
             if (string.IsNullOrWhiteSpace(id))
@@ -222,9 +228,10 @@ namespace CampusStrayCatSystem.Core
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateUserStatus(string id, [FromBody] UpdateUserStatusRequest request)
         {
-            if (!HasAdminAccess())
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null)
             {
-                return Forbid();
+                return denied;
             }
 
             if (string.IsNullOrWhiteSpace(id))
@@ -257,15 +264,33 @@ namespace CampusStrayCatSystem.Core
             return NoContent();
         }
 
-        private bool HasAdminAccess() => HasAdminAccessFromClaims();
-
-        private bool HasAdminAccessFromClaims()
+        /// <summary>
+        /// 以数据库中的当前状态与角色为准复核管理员权限，避免停用或改权后旧 JWT 继续执行管理操作。
+        /// </summary>
+        private async Task<ActionResult?> EnsureAdminAccessAsync()
         {
-            var roleName = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-            var permissionScope = User.FindFirst("permissionScope")?.Value ?? string.Empty;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized(new { message = "登录状态无效，请重新登录。" });
+            }
 
-            return roleName.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
-                   permissionScope.Contains("USER_MANAGE", StringComparison.OrdinalIgnoreCase);
+            var user = await _userRepository.GetById(userId);
+            if (user == null || !UserStatusCodes.IsActive(user.Status))
+            {
+                return Unauthorized(new { message = "当前登录状态已失效。" });
+            }
+
+            var roleName = user.RoleName ?? string.Empty;
+            var permissionScope = user.PermissionScope ?? string.Empty;
+            var isAdmin = roleName.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
+                          permissionScope.Contains("USER_MANAGE", StringComparison.OrdinalIgnoreCase);
+            if (!isAdmin)
+            {
+                return Forbid();
+            }
+
+            return null;
         }
 
         private static string? NormalizeOptional(string? value) =>
