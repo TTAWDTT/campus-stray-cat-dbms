@@ -132,8 +132,8 @@
 
 ## 本地联调
 
-1. 配置本地 Oracle 连接字符串并执行照片模块的 Oracle 升级脚本。
-2. 执行演示数据和照片验收 SQL。
+1. 配置本地 Oracle 连接字符串并执行 `database/queries/cat_photos_oracle_programming.sql`。
+2. 执行演示数据和 `database/queries/cat_photos_acceptance.sql`。
 3. 运行 `dotnet run --project src/CampusStrayCatSystem.Core/CampusStrayCatSystem.Core.csproj --launch-profile http`。
-4. 打开 `http://localhost:5047/swagger`，或导入照片模块 Postman 集合。
+4. 打开 `http://localhost:5047/swagger`，或导入 `assets/demo/XuQianshunCatPhotos.postman_collection.json`。
 5. 使用仓库根目录的 `logo.png` 作为 JPEG/PNG 上传校验之外的 PNG 联调样例。

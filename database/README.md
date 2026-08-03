@@ -6,6 +6,7 @@
 - `drop_tables.sql`: 删除 35 张表，便于重建
 - `insert_demo_data.sql`: 写入可重复执行的区域、点位、猫窝维护和目击演示数据
 - `queries/cat_photos_oracle_programming.sql`: 为现有数据库幂等增加猫咪唯一主图约束
+- `queries/cat_photos_acceptance.sql`: 验证唯一主图、特征 JSON 和照片引用约束并清理测试数据
 - `queries/test_queries.sql`: 验证区域层级、点位、维护记录和目击查询
 
 ## 推荐运行顺序
@@ -16,6 +17,8 @@
 4. 如需接口联调，执行 `insert_demo_data.sql`，再运行 `queries/test_queries.sql` 验证数据。
 
 已有数据库不需要重建即可执行 `queries/cat_photos_oracle_programming.sql`。脚本检测到同一猫咪存在多张主图时会中止，需先人工核对并修正重复数据。
+
+猫咪照片模块验收时先执行约束脚本，再执行 `queries/cat_photos_acceptance.sql`。验收脚本使用 `test-photo-*` 临时 ID，成功或失败退出时都不会提交半成品测试事务。
 
 ## SQL Developer
 
