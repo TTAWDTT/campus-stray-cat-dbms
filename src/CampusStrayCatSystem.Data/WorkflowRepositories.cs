@@ -20,7 +20,7 @@ namespace CampusStrayCatSystem.Data
         Task<IEnumerable<VolunteerActivityDto>> GetActivityAsync();
         Task<int> RegisterVolunteerAsync(VolunteerRegisterRequest request);
         Task<int> CreateShiftAsync(VolunteerShiftCreateRequest request);
-        Task<int> CheckInShiftAsync(string shiftId, VolunteerCheckInRequest request);
+        Task<int> CheckInShiftAsync(string shiftId, VolunteerCheckInRequest request, string operatorUserId);
         Task<int> AddCreditLogAsync(VolunteerCreditLogCreateRequest request);
     }
 
@@ -78,7 +78,7 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> CreateVisitAsync(string applicationId, AdoptionVisitCreateRequest request)
         {
-            const string sql = @"BEGIN PKG_ADOPTION_WORKFLOW.create_visit(:ApplicationId, :VisitType, :VisitTime, :VisitorUserId, :Conclusion, :PassFlag); END;";
+            const string sql = @"BEGIN PKG_ADOPTION_WORKFLOW.create_visit(:ApplicationId, :VisitType, :VisitorUserId, :VisitTime, :Conclusion, :PassFlag); END;";
 
             return await ExecuteAsync(sql, new
             {
@@ -152,7 +152,7 @@ namespace CampusStrayCatSystem.Data
 
         public async Task<int> CreateShiftAsync(VolunteerShiftCreateRequest request)
         {
-            const string sql = @"BEGIN PKG_VOLUNTEER_MGMT.create_shift(:VolunteerId, :PointId, :BackupVolunteerId, :PlanStartTime, :PlanEndTime, :ShiftStatus); END;";
+            const string sql = @"BEGIN PKG_VOLUNTEER_MGMT.create_shift(:VolunteerId, :PointId, :PlanStartTime, :PlanEndTime, :BackupVolunteerId, :ShiftStatus); END;";
 
             return await ExecuteAsync(sql, new
             {
@@ -165,13 +165,14 @@ namespace CampusStrayCatSystem.Data
             });
         }
 
-        public async Task<int> CheckInShiftAsync(string shiftId, VolunteerCheckInRequest request)
+        public async Task<int> CheckInShiftAsync(string shiftId, VolunteerCheckInRequest request, string operatorUserId)
         {
-            const string sql = @"BEGIN PKG_VOLUNTEER_MGMT.check_in_shift(:ShiftId, :CheckInTime, :Longitude, :Latitude, :PhotoUrl, :DistanceMeters, :CheckInStatus); END;";
+            const string sql = @"BEGIN PKG_VOLUNTEER_MGMT.check_in_shift(:ShiftId, :OperatorUserId, :CheckInTime, :Longitude, :Latitude, :PhotoUrl, :DistanceMeters, :CheckInStatus); END;";
 
             return await ExecuteAsync(sql, new
             {
                 ShiftId = shiftId,
+                OperatorUserId = operatorUserId,
                 CheckInTime = request.CheckInTime ?? DateTime.Now,
                 request.Longitude,
                 request.Latitude,

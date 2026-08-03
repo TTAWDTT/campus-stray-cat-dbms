@@ -75,7 +75,7 @@ LEFT JOIN VOL_SHIFTS s ON s.VOLUNTEERID = vol.VOLUNTEERID;
 CREATE OR REPLACE PACKAGE PKG_ADOPTION_WORKFLOW AS
     PROCEDURE submit_application(p_cat_id IN VARCHAR2, p_applicant_user_id IN VARCHAR2, p_status IN VARCHAR2 DEFAULT 'PENDING');
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL);
-    PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_visitor_user_id IN VARCHAR2, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0);
+    PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visitor_user_id IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0);
 END PKG_ADOPTION_WORKFLOW;
 /
 
@@ -88,10 +88,23 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
 
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL) IS
         v_applicant_user_id VARCHAR2(36);
+        v_current_status VARCHAR2(30);
         v_blacklisted NUMBER := 0;
     BEGIN
+        IF p_status NOT IN ('APPROVED', 'REJECTED') THEN
+            raise_application_error(-20031, '审核状态只能是 APPROVED 或 REJECTED');
+        END IF;
+
         -- 检查申请人是否在黑名单中（状态为 ACTIVE 表示仍在黑名单）
-        SELECT APPLICANTUSERID INTO v_applicant_user_id FROM ADOPT_APPLICATIONS WHERE APPLICATIONID = p_application_id;
+        SELECT APPLICANTUSERID, CURRENTSTATUS
+        INTO v_applicant_user_id, v_current_status
+        FROM ADOPT_APPLICATIONS
+        WHERE APPLICATIONID = p_application_id;
+
+        IF v_current_status <> 'PENDING' THEN
+            raise_application_error(-20032, '只有 PENDING 状态的申请可以审核');
+        END IF;
+
         SELECT COUNT(1) INTO v_blacklisted FROM USER_BLACKLIST ub WHERE ub.USERID = v_applicant_user_id AND ub.BLACKLISTSTATUS = 'ACTIVE';
 
         IF v_blacklisted > 0 THEN
@@ -112,8 +125,21 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
         END IF;
     END review_application;
 
-    PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_visitor_user_id IN VARCHAR2, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0) IS
+    PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visitor_user_id IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0) IS
+        v_current_status VARCHAR2(30);
     BEGIN
+        IF p_passflag NOT IN (0, 1) THEN
+            raise_application_error(-20033, '回访通过标记只能是 0 或 1');
+        END IF;
+
+        SELECT CURRENTSTATUS INTO v_current_status
+        FROM ADOPT_APPLICATIONS
+        WHERE APPLICATIONID = p_application_id;
+
+        IF v_current_status <> 'APPROVED' THEN
+            raise_application_error(-20034, '只有已通过的领养申请可以回访');
+        END IF;
+
         INSERT INTO ADOPT_VISITS (VISITID, APPLICATIONID, VISITTYPE, VISITTIME, VISITORUSERID, CONCLUSION, PASSFLAG)
         VALUES ('VIS-' || DBMS_RANDOM.STRING('X', 8), p_application_id, p_visit_type, p_visit_time, p_visitor_user_id, p_conclusion, p_passflag);
     END create_visit;
@@ -122,8 +148,8 @@ END PKG_ADOPTION_WORKFLOW;
 
 CREATE OR REPLACE PACKAGE PKG_VOLUNTEER_MGMT AS
     PROCEDURE register_volunteer(p_user_id IN VARCHAR2, p_join_date IN DATE DEFAULT SYSDATE, p_service_score IN NUMBER DEFAULT 0, p_credit_level IN VARCHAR2 DEFAULT 'L1', p_active_status IN VARCHAR2 DEFAULT 'ACTIVE', p_graduation_year IN VARCHAR2 DEFAULT NULL);
-    PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED');
-    PROCEDURE check_in_shift(p_shift_id IN VARCHAR2, p_checkin_time IN DATE DEFAULT SYSDATE, p_longitude IN NUMBER DEFAULT NULL, p_latitude IN NUMBER DEFAULT NULL, p_photo_url IN VARCHAR2 DEFAULT NULL, p_distance_meters IN NUMBER DEFAULT NULL, p_checkin_status IN VARCHAR2 DEFAULT 'CHECKED_IN');
+    PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED');
+    PROCEDURE check_in_shift(p_shift_id IN VARCHAR2, p_operator_user_id IN VARCHAR2, p_checkin_time IN DATE DEFAULT SYSDATE, p_longitude IN NUMBER DEFAULT NULL, p_latitude IN NUMBER DEFAULT NULL, p_photo_url IN VARCHAR2 DEFAULT NULL, p_distance_meters IN NUMBER DEFAULT NULL, p_checkin_status IN VARCHAR2 DEFAULT 'CHECKED_IN');
     PROCEDURE add_credit_log(p_volunteer_id IN VARCHAR2, p_source_type IN VARCHAR2, p_source_id IN VARCHAR2, p_score_change IN NUMBER, p_credit_level_after IN VARCHAR2, p_create_time IN DATE DEFAULT SYSDATE, p_remark IN VARCHAR2 DEFAULT NULL);
 END PKG_VOLUNTEER_MGMT;
 /
@@ -135,16 +161,50 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         VALUES ('VOL-' || DBMS_RANDOM.STRING('X', 8), p_user_id, p_join_date, p_service_score, p_credit_level, p_active_status, p_graduation_year);
     END register_volunteer;
 
-    PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED') IS
+    PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED') IS
     BEGIN
         INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, BACKUPVOLUNTEERID, PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
         VALUES ('SHIFT-' || DBMS_RANDOM.STRING('X', 8), p_volunteer_id, p_point_id, p_backup_volunteer_id, p_plan_start_time, p_plan_end_time, p_shift_status);
     END create_shift;
 
-    PROCEDURE check_in_shift(p_shift_id IN VARCHAR2, p_checkin_time IN DATE DEFAULT SYSDATE, p_longitude IN NUMBER DEFAULT NULL, p_latitude IN NUMBER DEFAULT NULL, p_photo_url IN VARCHAR2 DEFAULT NULL, p_distance_meters IN NUMBER DEFAULT NULL, p_checkin_status IN VARCHAR2 DEFAULT 'CHECKED_IN') IS
+    PROCEDURE check_in_shift(p_shift_id IN VARCHAR2, p_operator_user_id IN VARCHAR2, p_checkin_time IN DATE DEFAULT SYSDATE, p_longitude IN NUMBER DEFAULT NULL, p_latitude IN NUMBER DEFAULT NULL, p_photo_url IN VARCHAR2 DEFAULT NULL, p_distance_meters IN NUMBER DEFAULT NULL, p_checkin_status IN VARCHAR2 DEFAULT 'CHECKED_IN') IS
+        v_volunteer_id VARCHAR2(36);
+        v_credit_level VARCHAR2(20);
+        v_checkin_id VARCHAR2(36);
+        v_existing NUMBER := 0;
     BEGIN
+        BEGIN
+            SELECT v.VOLUNTEERID, v.CREDITLEVEL
+            INTO v_volunteer_id, v_credit_level
+            FROM VOL_SHIFTS s
+            INNER JOIN VOL_VOLUNTEERS v ON v.VOLUNTEERID = s.VOLUNTEERID
+            WHERE s.SHIFTID = p_shift_id
+              AND v.USERID = p_operator_user_id
+              AND v.ACTIVESTATUS = 'ACTIVE';
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                raise_application_error(-20041, '只能为本人有效排班签到');
+        END;
+
+        SELECT COUNT(1) INTO v_existing
+        FROM VOL_CHECKINS
+        WHERE SHIFTID = p_shift_id
+          AND CHECKINSTATUS = 'CHECKED_IN';
+
+        IF v_existing > 0 THEN
+            raise_application_error(-20042, '该排班已经签到，不能重复签到');
+        END IF;
+
+        v_checkin_id := 'CHK-' || DBMS_RANDOM.STRING('X', 8);
         INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
-        VALUES ('CHK-' || DBMS_RANDOM.STRING('X', 8), p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
+        VALUES (v_checkin_id, p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
+
+        UPDATE VOL_VOLUNTEERS
+        SET SERVICESCORE = NVL(SERVICESCORE, 0) + 1
+        WHERE VOLUNTEERID = v_volunteer_id;
+
+        INSERT INTO VOL_CREDITLOGS (CREDITLOGID, VOLUNTEERID, SOURCETYPE, SOURCEID, SCORECHANGE, CREDITLEVELAFTER, CREATETIME, REMARK)
+        VALUES ('CRED-' || DBMS_RANDOM.STRING('X', 8), v_volunteer_id, 'CHECKIN', v_checkin_id, 1, v_credit_level, p_checkin_time, '排班签到自动增加服务积分');
     END check_in_shift;
 
     -- 为志愿者增加积分变更记录。

@@ -49,8 +49,8 @@ HTTP Method：POST
 | 名称 | 类型 | 必填 | 描述 |
 | --- | --- | --- | --- |
 | catId | string | 是 | 猫咪编号 |
-| applicantUserId | string | 是 | 申请人编号 |
-| status | string | 否 | 申请状态，默认 `PENDING` |
+| applicantUserId | string | 否 | 服务端从当前登录用户获取，客户端传入值会被忽略 |
+| status | string | 否 | 服务端固定为 `PENDING` |
 
 响应体：
 
@@ -76,8 +76,8 @@ HTTP Method：POST
 
 | 名称 | 类型 | 必填 | 描述 |
 | --- | --- | --- | --- |
-| reviewerUserId | string | 是 | 审核人编号 |
-| status | string | 是 | 审核后状态 |
+| reviewerUserId | string | 否 | 服务端从当前登录用户获取 |
+| status | string | 是 | 只能是 `APPROVED` 或 `REJECTED` |
 | agreementNo | string | 否 | 协议编号 |
 | confirmTime | DateTime | 否 | 确认时间 |
 
@@ -107,7 +107,7 @@ HTTP Method：POST
 | --- | --- | --- | --- |
 | visitType | string | 是 | 回访类型 |
 | visitTime | DateTime | 否 | 回访时间 |
-| visitorUserId | string | 是 | 回访人编号 |
+| visitorUserId | string | 否 | 服务端从当前登录用户获取 |
 | conclusion | string | 否 | 回访结论 |
 | passFlag | int | 否 | 是否通过，默认 `0` |
 
@@ -215,6 +215,8 @@ HTTP Method：POST
 | 状态码 | 描述 | 响应体 |
 | --- | --- | --- |
 | 200 | 签到成功 | `""` |
+
+签到成功后，系统会自动增加 1 分服务积分并写入 `VOL_CREDITLOGS`，同一排班不能重复签到。
 
 ### 10. 新增积分变更记录
 
