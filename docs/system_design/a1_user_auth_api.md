@@ -23,8 +23,8 @@
 | GET | `/api/auth/me` | 获取当前登录用户及角色信息 |
 | GET | `/api/auth/check` | 校验当前登录状态 |
 | POST | `/api/auth/logout` | 退出登录（客户端清除 Token） |
-| GET | `/api/users` | 用户列表，支持 username/status/roleId 筛选 |
-| GET | `/api/users/{id}` | 查询单个用户 |
+| GET | `/api/users` | 用户列表（仅管理员），支持 username/status/roleId 筛选 |
+| GET | `/api/users/{id}` | 查询单个用户（管理员可查任意；普通用户仅本人） |
 | POST | `/api/users` | 新增用户（管理员） |
 | PUT | `/api/users/{id}` | 编辑用户基础信息（管理员） |
 | PATCH | `/api/users/{id}/status` | 启用或停用用户（管理员） |
@@ -173,7 +173,7 @@
 
 基础路径：`/api/users`
 
-本模块全部接口需登录。新增、编辑、启停仅管理员（`RoleName=ADMIN` 或 `PermissionScope` 含 `USER_MANAGE`）可调用；普通用户调用管理接口返回 403。
+本模块全部接口需登录。用户列表、查看他人详情、新增、编辑、启停仅管理员可调用，且每次管理操作都会按数据库复核：账户须为 `ACTIVE`，且当前 `RoleName=ADMIN` 或 `PermissionScope` 含 `USER_MANAGE`（避免旧 JWT 在停用/改权后继续越权）。普通用户仅可查看自己的资料；调用管理接口返回 401/403。
 
 ### 请求：查询用户列表
 
@@ -345,6 +345,11 @@
 | 409 | 更新未生效 | 状态更新未生效 |
 
 ---
+
+## 安全约定
+
+- `Auth:JwtSecret` 不得提交到仓库；通过环境变量 `Auth__JwtSecret` / `AUTH_JWT_SECRET` 或未入库的 `appsettings.Development.json` 配置。缺失时应用拒绝启动。
+- 新增用户时若显式传入非法 `Status`，返回 400（不再静默改为 ACTIVE）。
 
 ## 本地联调
 
