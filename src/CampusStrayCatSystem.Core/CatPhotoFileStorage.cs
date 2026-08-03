@@ -22,7 +22,8 @@ namespace CampusStrayCatSystem.Core {
                                                             long length,
                                                             Stream content,
                                                             CancellationToken cancellationToken = default) {
-            if (!IsSafeIdentifier(catID) || !IsSafeIdentifier(photoID)) {
+            if (!CatPhotoValidation.IsSafePathIdentifier(catID) ||
+                !CatPhotoValidation.IsSafePathIdentifier(photoID)) {
                 return new CatPhotoFileSaveResult { Status = CatPhotoFileSaveStatus.InvalidIdentifier };}
             if (length <= 0) {
                 return new CatPhotoFileSaveResult { Status = CatPhotoFileSaveStatus.EmptyFile };}
@@ -162,13 +163,5 @@ namespace CampusStrayCatSystem.Core {
                    header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4e && header[3] == 0x47 &&
                    header[4] == 0x0d && header[5] == 0x0a && header[6] == 0x1a && header[7] == 0x0a;}
 
-        private static bool IsSafeIdentifier(string value) {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 36) {
-                return false;}
-
-            return value.All(character =>
-                character is >= 'a' and <= 'z' or
-                             >= 'A' and <= 'Z' or
-                             >= '0' and <= '9' or '-' or '_');}
     }
 }

@@ -1,5 +1,6 @@
 using CampusStrayCatSystem.Core;
 using CampusStrayCatSystem.Data;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.AddScoped<ITnrCaseRepository, TnrCaseRepository>();
 builder.Services.AddScoped<ITnrStatusLogRepository, TnrStatusLogRepository>();
 builder.Services.AddScoped<IMedHealthRecordRepository, MedHealthRecordRepository>();
 builder.Services.AddScoped<ICatRepository, CatRepository>();
+builder.Services.AddScoped<ICatPhotoRepository, CatPhotoRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
 builder.Services.AddScoped<IServicePointRepository, ServicePointRepository>();
@@ -36,6 +38,8 @@ builder.Services.AddScoped<IFundCrowdfundingProjectRepository, FundCrowdfundingP
 builder.Services.AddScoped<IFundDonationRepository, FundDonationRepository>();
 builder.Services.AddScoped<IFundExpenseRecordRepository, FundExpenseRecordRepository>();
 builder.Services.AddScoped<IRptStatisticsSnapshotRepository, RptStatisticsSnapshotRepository>();
+builder.Services.AddSingleton<ICatPhotoFileStorage, CatPhotoFileStorage>();
+builder.Services.AddScoped<CatPhotoService>();
 
 var app = builder.Build();
 
@@ -44,6 +48,9 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();}
 
+var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(webRootPath);
+app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(webRootPath) });
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
