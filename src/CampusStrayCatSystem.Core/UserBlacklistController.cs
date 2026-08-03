@@ -50,12 +50,24 @@ namespace CampusStrayCatSystem.Core.Controllers
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
                 // 获取数据
-                var items = await _blacklistRepository.GetAllAsync(userId, status, keyword, page, pageSize);
-                var totalCount = await _blacklistRepository.GetTotalCountAsync(userId, status, keyword);
+                var items = await _blacklistRepository.GetAllAsync(userId, status, page, pageSize);
+                var totalCount = await _blacklistRepository.GetTotalCountAsync(userId, status);
 
                 var result = new PagedResult<BlacklistResponseDto>
                 {
-                    Items = items.ToList(),
+                    Items = items.Select(item => new BlacklistResponseDto
+                    {
+                        BlacklistId = item.BlacklistID,
+                        UserId = item.UserID,
+                        ReasonType = item.ReasonType,
+                        ReasonDetail = item.ReasonDetail,
+                        ApplicationId = item.ApplicationID,
+                        CreatedBy = item.CreateUserID,
+                        CreatedAt = item.CreateTime,
+                        Status = item.BlacklistStatus,
+                        ReleaseTime = item.ReleaseTime,
+                        ReleasedBy = item.ReleasedBy
+                    }).ToList(),
                     TotalCount = totalCount,
                     Page = page,
                     PageSize = pageSize,
@@ -119,7 +131,7 @@ namespace CampusStrayCatSystem.Core.Controllers
             try
             {
                 // 检查用户是否存在
-                var user = await _userRepository.GetByIdAsync(dto.UserId);
+                var user = await _userRepository.GetById(dto.UserId);
                 if (user == null)
                 {
                     return NotFound(new { message = "用户不存在" });
@@ -135,10 +147,20 @@ namespace CampusStrayCatSystem.Core.Controllers
                 // 获取当前操作人ID（从JWT中获取）
                 var operatorId = User.FindFirst("UserId")?.Value ?? "system";
 
-                // 加入黑名单
-                await _blacklistRepository.AddAsync(dto, operatorId);
+                var newRecord = new UserBlacklist{
+                    BlacklistID = Guid.NewGuid().ToString(),
+                    UserID = dto.UserId,
+                    ReasonType = dto.ReasonType,
+                    ReasonDetail = dto.ReasonDetail,
+                    ApplicationID = dto.ApplicationId,
+                    CreateUserID = operatorId,
+                    CreateTime = DateTime.Now,
+                    BlacklistStatus = "Active"
+                };
+                
+                await _blacklistRepository.AddAsync(newRecord);
 
-                return CreatedAtAction(nameof(GetById), new { id = dto.UserId }, new
+                return CreatedAtAction(nameof(GetById), new { id = newRecord.BlacklistID }, new
                 {
                     message = $"用户 '{user.Username}' 已加入黑名单",
                     userId = dto.UserId
@@ -173,7 +195,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 检查是否已解除
-                if (record.Status == "Released")
+                if (record.BlacklistStatus == "Released")
                 {
                     return Conflict(new { message = "该黑名单记录已被解除" });
                 }
@@ -210,7 +232,7 @@ namespace CampusStrayCatSystem.Core.Controllers
             try
             {
                 // 检查用户是否存在
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await _userRepository.GetById(userId);
                 if (user == null)
                 {
                     return NotFound(new { message = "用户不存在" });
@@ -260,7 +282,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                         }
 
                         // 检查是否已解除
-                        if (record.Status == "Released")
+                        if (record.BlacklistStatus == "Released")
                         {
                             failList.Add($"{blacklistId} (已解除)");
                             continue;
