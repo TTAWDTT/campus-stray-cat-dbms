@@ -84,3 +84,6 @@ coverlet/
 # Benchmark
 BenchmarkDotNet.Artifacts/
 
+# Runtime cat photo files
+src/CampusStrayCatSystem.Core/wwwroot/uploads/
+src/CampusStrayCatSystem.Core/.cat-photo-trash/
