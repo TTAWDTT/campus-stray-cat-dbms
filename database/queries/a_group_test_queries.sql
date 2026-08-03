@@ -65,3 +65,215 @@ WHERE USERID = 'user-normal-a-group';
 SELECT USERID, USERNAME, ROLENAME
 FROM VW_ACTIVE_USER_SUMMARIES
 ORDER BY USERNAME;
+
+-- =====================================================
+-- 以下为成员2: 角色权限与用户黑名单测试脚本
+-- =====================================================
+
+SET SERVEROUTPUT ON;
+
+-- =====================================================
+-- 测试10: 查询所有角色
+-- =====================================================
+PROMPT === 测试10: 查询所有角色 ===
+SELECT ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE, ISACTIVE
+FROM SYS_ROLES
+WHERE ROLEID LIKE 'role-%-a-group'
+ORDER BY ROLENAME;
+
+-- =====================================================
+-- 测试11: 查询A组所有用户
+-- =====================================================
+PROMPT === 测试11: 查询A组所有用户 ===
+SELECT USERID, USERNAME, REALNAME, ROLEID, STATUS
+FROM SYS_USERS
+WHERE USERID LIKE 'user-%-a-group'
+ORDER BY USERNAME;
+
+-- =====================================================
+-- 测试12: 查询用户及其角色信息
+-- =====================================================
+PROMPT === 测试12: 查询用户及其角色信息 ===
+SELECT u.USERNAME, u.REALNAME, r.ROLENAME, r.PERMISSIONSCOPE, u.STATUS
+FROM SYS_USERS u
+JOIN SYS_ROLES r ON u.ROLEID = r.ROLEID
+WHERE u.USERID LIKE 'user-%-a-group'
+ORDER BY u.USERNAME;
+
+-- =====================================================
+-- 测试13: 测试分配角色存储过程
+-- =====================================================
+PROMPT === 测试13: 测试 SP_ASSIGN_USER_ROLE ===
+
+-- 分配前查看当前角色
+PROMPT --- 分配前: user-normal-a-group 当前角色 ---
+SELECT USERID, USERNAME, ROLEID FROM SYS_USERS WHERE USERID = 'user-normal-a-group';
+
+DECLARE
+    v_Result VARCHAR2(500);
+BEGIN
+    SP_ASSIGN_USER_ROLE(
+        p_UserID => 'user-normal-a-group',
+        p_NewRoleID => 'role-volunteer-a-group',
+        p_OperatorID => 'user-admin-a-group',
+        p_Result => v_Result
+    );
+    DBMS_OUTPUT.PUT_LINE('SP_ASSIGN_USER_ROLE 执行结果: ' || v_Result);
+END;
+/
+
+-- 分配后验证
+PROMPT --- 分配后: user-normal-a-group 角色已更新 ---
+SELECT USERID, USERNAME, ROLEID FROM SYS_USERS WHERE USERID = 'user-normal-a-group';
+
+-- =====================================================
+-- 测试14: 测试加入黑名单存储过程
+-- =====================================================
+PROMPT === 测试14: 测试 SP_ADD_USER_BLACKLIST ===
+
+-- 加入前查看黑名单
+PROMPT --- 加入前: 查看当前黑名单 ---
+SELECT BLACKLISTID, USERID, REASONTYPE, STATUS FROM USER_BLACKLIST WHERE USERID = 'user-volunteer-a-group';
+
+DECLARE
+    v_Result VARCHAR2(500);
+BEGIN
+    SP_ADD_USER_BLACKLIST(
+        p_UserID => 'user-volunteer-a-group',
+        p_ReasonType => '测试拉黑',
+        p_ReasonDetail => '测试存储过程功能-新加入黑名单',
+        p_ApplicationID => NULL,
+        p_CreatedBy => 'user-admin-a-group',
+        p_Result => v_Result
+    );
+    DBMS_OUTPUT.PUT_LINE('SP_ADD_USER_BLACKLIST 执行结果: ' || v_Result);
+END;
+/
+
+-- 加入后验证
+PROMPT --- 加入后: 查看黑名单 ---
+SELECT BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, STATUS, CREATEDAT
+FROM USER_BLACKLIST
+WHERE USERID = 'user-volunteer-a-group'
+ORDER BY CREATEDAT DESC;
+
+-- =====================================================
+-- 测试15: 测试重复拉黑（预期失败）
+-- =====================================================
+PROMPT === 测试15: 测试重复拉黑（预期失败） ===
+DECLARE
+    v_Result VARCHAR2(500);
+BEGIN
+    SP_ADD_USER_BLACKLIST(
+        p_UserID => 'user-normal-a-group',
+        p_ReasonType => '重复拉黑测试',
+        p_ReasonDetail => '这个应该失败，因为用户已在黑名单中',
+        p_ApplicationID => NULL,
+        p_CreatedBy => 'user-admin-a-group',
+        p_Result => v_Result
+    );
+    DBMS_OUTPUT.PUT_LINE('重复拉黑结果（预期失败）: ' || v_Result);
+END;
+/
+
+-- =====================================================
+-- 测试16: 查询有效黑名单视图
+-- =====================================================
+PROMPT === 测试16: 查询 VW_ACTIVE_BLACKLIST_USERS ===
+SELECT BLACKLISTID, USERID, USERNAME, REALNAME, REASONTYPE, STATUS
+FROM VW_ACTIVE_BLACKLIST_USERS
+ORDER BY CREATEDAT DESC;
+
+-- =====================================================
+-- 测试17: 测试解除黑名单存储过程
+-- =====================================================
+PROMPT === 测试17: 测试 SP_RELEASE_USER_BLACKLIST ===
+
+DECLARE
+    v_Result VARCHAR2(500);
+    v_BlacklistID VARCHAR2(36);
+BEGIN
+    -- 获取第一条有效黑名单记录
+    SELECT BLACKLISTID INTO v_BlacklistID 
+    FROM USER_BLACKLIST 
+    WHERE STATUS = 'Active' AND ROWNUM = 1;
+    
+    SP_RELEASE_USER_BLACKLIST(
+        p_BlacklistID => v_BlacklistID,
+        p_ReleasedBy => 'user-admin-a-group',
+        p_Result => v_Result
+    );
+    DBMS_OUTPUT.PUT_LINE('SP_RELEASE_USER_BLACKLIST 执行结果: ' || v_Result);
+    DBMS_OUTPUT.PUT_LINE('解除的黑名单ID: ' || v_BlacklistID);
+END;
+/
+
+-- 验证解除
+PROMPT --- 解除后: 查看已解除记录 ---
+SELECT BLACKLISTID, USERID, STATUS, RELEASETIME, RELEASEDBY
+FROM USER_BLACKLIST
+WHERE STATUS = 'Released'
+ORDER BY RELEASETIME DESC;
+
+-- =====================================================
+-- 测试18: 查询用户黑名单状态（供领养模块调用）
+-- =====================================================
+PROMPT === 测试18: 查询用户黑名单状态 ===
+
+-- 在黑名单中的用户
+PROMPT --- user-normal-a-group 的黑名单状态 ---
+SELECT 
+    USERID,
+    CASE 
+        WHEN EXISTS (SELECT 1 FROM USER_BLACKLIST WHERE USERID = 'user-normal-a-group' AND STATUS = 'Active')
+        THEN '在黑名单中'
+        ELSE '不在黑名单中'
+    END AS BLACKLIST_STATUS
+FROM DUAL;
+
+-- 不在黑名单中的用户
+PROMPT --- user-admin-a-group 的黑名单状态 ---
+SELECT 
+    USERID,
+    CASE 
+        WHEN EXISTS (SELECT 1 FROM USER_BLACKLIST WHERE USERID = 'user-admin-a-group' AND STATUS = 'Active')
+        THEN '在黑名单中'
+        ELSE '不在黑名单中'
+    END AS BLACKLIST_STATUS
+FROM DUAL;
+
+-- =====================================================
+-- 测试19: 查询审计日志
+-- =====================================================
+PROMPT === 测试19: 查询审计日志 ===
+SELECT AUDITID, TABLENAME, RECORDID, ACTIONTYPE, OPERATORID, OPERATIONTIME
+FROM LOG_AUDITTRAILS
+WHERE TABLENAME IN ('SYS_USERS', 'USER_BLACKLIST')
+  AND OPERATORID LIKE 'user-%-a-group'
+ORDER BY OPERATIONTIME DESC
+FETCH FIRST 10 ROWS ONLY;
+
+-- =====================================================
+-- 测试20: 综合验证 - 用户权限检查
+-- =====================================================
+PROMPT === 测试20: 综合验证 - 用户权限检查 ===
+SELECT 
+    u.USERNAME,
+    u.REALNAME,
+    r.ROLENAME,
+    r.PERMISSIONSCOPE,
+    u.STATUS AS USER_STATUS,
+    CASE 
+        WHEN b.STATUS = 'Active' THEN '黑名单有效'
+        WHEN b.STATUS = 'Released' THEN '黑名单已解除'
+        ELSE '不在黑名单'
+    END AS BLACKLIST_STATUS
+FROM SYS_USERS u
+LEFT JOIN SYS_ROLES r ON u.ROLEID = r.ROLEID
+LEFT JOIN USER_BLACKLIST b ON u.USERID = b.USERID AND b.STATUS = 'Active'
+WHERE u.USERID LIKE 'user-%-a-group'
+ORDER BY u.USERNAME;
+
+PROMPT ==========================================
+PROMPT 成员2 所有测试脚本执行完成！
+PROMPT ==========================================

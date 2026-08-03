@@ -102,3 +102,132 @@ VALUES
 
 PROMPT A-group member1 demo users ready. Login password: Passw0rd!
 /
+
+-- =====================================================
+-- 以下为成员2: 用户黑名单演示数据
+-- =====================================================
+
+SET DEFINE OFF;
+
+-- =====================================================
+-- 1. 有效黑名单记录（user-normal-a-group 违规领养）
+-- =====================================================
+MERGE INTO USER_BLACKLIST target
+USING (
+    SELECT 
+        'bl-001-a-group' AS BLACKLISTID,
+        'user-normal-a-group' AS USERID,
+        '违规领养' AS REASONTYPE,
+        '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL,
+        NULL AS APPLICATIONID,
+        'user-admin-a-group' AS CREATEDBY,
+        SYSTIMESTAMP AS CREATEDAT,
+        'Active' AS STATUS,
+        NULL AS RELEASETIME,
+        NULL AS RELEASEDBY
+    FROM DUAL
+) source
+ON (target.BLACKLISTID = source.BLACKLISTID)
+WHEN MATCHED THEN UPDATE SET
+    target.USERID = source.USERID,
+    target.REASONTYPE = source.REASONTYPE,
+    target.REASONDETAIL = source.REASONDETAIL,
+    target.APPLICATIONID = source.APPLICATIONID,
+    target.CREATEDBY = source.CREATEDBY,
+    target.CREATEDAT = source.CREATEDAT,
+    target.STATUS = source.STATUS,
+    target.RELEASETIME = source.RELEASETIME,
+    target.RELEASEDBY = source.RELEASEDBY
+WHEN NOT MATCHED THEN INSERT
+    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
+     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
+VALUES
+    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
+     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
+
+-- =====================================================
+-- 2. 有效黑名单记录（user-disabled-a-group 恶意行为）
+-- =====================================================
+MERGE INTO USER_BLACKLIST target
+USING (
+    SELECT 
+        'bl-002-a-group' AS BLACKLISTID,
+        'user-disabled-a-group' AS USERID,
+        '恶意行为' AS REASONTYPE,
+        '在校园内恶意伤害流浪猫' AS REASONDETAIL,
+        NULL AS APPLICATIONID,
+        'user-admin-a-group' AS CREATEDBY,
+        SYSTIMESTAMP - 5 AS CREATEDAT,
+        'Active' AS STATUS,
+        NULL AS RELEASETIME,
+        NULL AS RELEASEDBY
+    FROM DUAL
+) source
+ON (target.BLACKLISTID = source.BLACKLISTID)
+WHEN MATCHED THEN UPDATE SET
+    target.USERID = source.USERID,
+    target.REASONTYPE = source.REASONTYPE,
+    target.REASONDETAIL = source.REASONDETAIL,
+    target.APPLICATIONID = source.APPLICATIONID,
+    target.CREATEDBY = source.CREATEDBY,
+    target.CREATEDAT = source.CREATEDAT,
+    target.STATUS = source.STATUS,
+    target.RELEASETIME = source.RELEASETIME,
+    target.RELEASEDBY = source.RELEASEDBY
+WHEN NOT MATCHED THEN INSERT
+    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
+     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
+VALUES
+    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
+     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
+
+-- =====================================================
+-- 3. 已解除黑名单记录（user-volunteer-a-group 虚假信息，已解除）
+-- =====================================================
+MERGE INTO USER_BLACKLIST target
+USING (
+    SELECT 
+        'bl-003-a-group' AS BLACKLISTID,
+        'user-volunteer-a-group' AS USERID,
+        '虚假信息' AS REASONTYPE,
+        '提供虚假领养申请信息' AS REASONDETAIL,
+        NULL AS APPLICATIONID,
+        'user-admin-a-group' AS CREATEDBY,
+        SYSTIMESTAMP - 30 AS CREATEDAT,
+        'Released' AS STATUS,
+        SYSTIMESTAMP - 15 AS RELEASETIME,
+        'user-admin-a-group' AS RELEASEDBY
+    FROM DUAL
+) source
+ON (target.BLACKLISTID = source.BLACKLISTID)
+WHEN MATCHED THEN UPDATE SET
+    target.USERID = source.USERID,
+    target.REASONTYPE = source.REASONTYPE,
+    target.REASONDETAIL = source.REASONDETAIL,
+    target.APPLICATIONID = source.APPLICATIONID,
+    target.CREATEDBY = source.CREATEDBY,
+    target.CREATEDAT = source.CREATEDAT,
+    target.STATUS = source.STATUS,
+    target.RELEASETIME = source.RELEASETIME,
+    target.RELEASEDBY = source.RELEASEDBY
+WHEN NOT MATCHED THEN INSERT
+    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
+     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
+VALUES
+    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
+     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
+
+-- =====================================================
+-- 4. 验证黑名单数据
+-- =====================================================
+PROMPT ==========================================
+PROMPT 成员2黑名单演示数据插入完成！
+PROMPT ==========================================
+
+PROMPT --- 黑名单记录 ---
+SELECT BLACKLISTID, USERID, REASONTYPE, STATUS, CREATEDAT
+FROM USER_BLACKLIST
+WHERE BLACKLISTID LIKE 'bl-%-a-group'
+ORDER BY CREATEDAT DESC;
+
+PROMPT A-group member2 blacklist demo data ready.
