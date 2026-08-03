@@ -1,12 +1,14 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CampusStrayCatSystem.Core
 {
     // 公开领养流程接口，直接把请求转给数据库包。
     [Route("api/adoption-workflow")]
     [ApiController]
+    [Authorize]
     public class AdoptionWorkflowController : ControllerBase
     {
         private readonly IAdoptionWorkflowRepository _repository;
@@ -54,6 +56,7 @@ namespace CampusStrayCatSystem.Core
     // 公开志愿者流程接口，直接把请求转给数据库包。
     [Route("api/volunteer-workflow")]
     [ApiController]
+    [Authorize]
     public class VolunteerWorkflowController : ControllerBase
     {
         private readonly IVolunteerWorkflowRepository _repository;

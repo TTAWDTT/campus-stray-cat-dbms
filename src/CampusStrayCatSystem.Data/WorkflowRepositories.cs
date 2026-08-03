@@ -52,11 +52,12 @@ namespace CampusStrayCatSystem.Data
         {
             const string sql = @"BEGIN PKG_ADOPTION_WORKFLOW.submit_application(:CatId, :ApplicantUserId, :Status); END;";
 
+            // 强制后端将新申请设为 PENDING，忽略客户端传入的 Status 字段以防止绕过审核流程。
             return await ExecuteAsync(sql, new
             {
                 request.CatId,
                 request.ApplicantUserId,
-                request.Status
+                Status = "PENDING"
             });
         }
 
@@ -64,11 +65,12 @@ namespace CampusStrayCatSystem.Data
         {
             const string sql = @"BEGIN PKG_ADOPTION_WORKFLOW.review_application(:ApplicationId, :ReviewerUserId, :Status, :AgreementNo, :ConfirmTime); END;";
 
+            // 注意：Oracle 按位置绑定时参数顺序敏感，确保 ReviewerUserId 在 Status 之前传入。
             return await ExecuteAsync(sql, new
             {
                 ApplicationId = applicationId,
-                request.Status,
-                request.ReviewerUserId,
+                ReviewerUserId = request.ReviewerUserId,
+                Status = request.Status,
                 request.AgreementNo,
                 ConfirmTime = request.ConfirmTime ?? DateTime.Now
             });
