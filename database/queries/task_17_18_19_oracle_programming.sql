@@ -20,7 +20,7 @@ BEGIN
 END;
 /
 
--- 任务 17：领养申请待审核视图，方便后端直接读取待办数据。
+CREATE OR REPLACE VIEW VW_PENDING_ADOPTION_APPS AS
 SELECT
     a.APPLICATIONID,
     a.CATID,
@@ -87,13 +87,29 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
     END submit_application;
 
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL) IS
+        v_applicant_user_id VARCHAR2(36);
+        v_blacklisted NUMBER := 0;
     BEGIN
-        UPDATE ADOPT_APPLICATIONS
-        SET CURRENTSTATUS = p_status,
-            REVIEWERUSERID = p_reviewer_user_id,
-            AGREEMENTNO = p_agreement_no,
-            CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
-        WHERE APPLICATIONID = p_application_id;
+        -- 检查申请人是否在黑名单中（状态为 ACTIVE 表示仍在黑名单）
+        SELECT APPLICANTUSERID INTO v_applicant_user_id FROM ADOPT_APPLICATIONS WHERE APPLICATIONID = p_application_id;
+        SELECT COUNT(1) INTO v_blacklisted FROM USER_BLACKLIST ub WHERE ub.USERID = v_applicant_user_id AND ub.BLACKLISTSTATUS = 'ACTIVE';
+
+        IF v_blacklisted > 0 THEN
+            -- 若在黑名单，强制设置为 REJECTED 并记录审核人/时间，避免通过
+            UPDATE ADOPT_APPLICATIONS
+            SET CURRENTSTATUS = 'REJECTED',
+                REVIEWERUSERID = p_reviewer_user_id,
+                AGREEMENTNO = NULL,
+                CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
+            WHERE APPLICATIONID = p_application_id;
+        ELSE
+            UPDATE ADOPT_APPLICATIONS
+            SET CURRENTSTATUS = p_status,
+                REVIEWERUSERID = p_reviewer_user_id,
+                AGREEMENTNO = p_agreement_no,
+                CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
+            WHERE APPLICATIONID = p_application_id;
+        END IF;
     END review_application;
 
     PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_visitor_user_id IN VARCHAR2, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0) IS
