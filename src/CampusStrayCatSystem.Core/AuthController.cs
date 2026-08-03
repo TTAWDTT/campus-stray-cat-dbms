@@ -111,7 +111,12 @@ namespace CampusStrayCatSystem.Core
 
         private string BuildToken(User user, DateTime expiresAtUtc)
         {
-            var secret = _configuration["Auth:JwtSecret"] ?? "campus-stray-cat-dbms-dev-secret-key-please-change";
+            var secret = _configuration["Auth:JwtSecret"] ?? _configuration["AUTH_JWT_SECRET"];
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                throw new InvalidOperationException("缺少 Auth:JwtSecret，无法签发 Token。");
+            }
+
             var issuer = _configuration["Auth:Issuer"] ?? "CampusStrayCatSystem";
             var audience = _configuration["Auth:Audience"] ?? "CampusStrayCatSystemClient";
 

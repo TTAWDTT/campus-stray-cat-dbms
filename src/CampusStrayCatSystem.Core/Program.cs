@@ -10,7 +10,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add controllers
 builder.Services.AddControllers();
 
-var jwtSecret = builder.Configuration["Auth:JwtSecret"] ?? "campus-stray-cat-dbms-dev-secret-key-please-change";
+// JWT 密钥仅允许来自环境变量或未入库本地配置（如 appsettings.Development.json）。
+// 支持：Auth:JwtSecret / Auth__JwtSecret / AUTH_JWT_SECRET
+var jwtSecret = builder.Configuration["Auth:JwtSecret"]
+    ?? builder.Configuration["AUTH_JWT_SECRET"];
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException(
+        "缺少 Auth:JwtSecret。请通过环境变量 Auth__JwtSecret（或 AUTH_JWT_SECRET）或未提交的 appsettings.Development.json 配置，禁止使用仓库内固定密钥。");
+}
+
 var jwtIssuer = builder.Configuration["Auth:Issuer"] ?? "CampusStrayCatSystem";
 var jwtAudience = builder.Configuration["Auth:Audience"] ?? "CampusStrayCatSystemClient";
 
