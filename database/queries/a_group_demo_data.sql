@@ -103,15 +103,11 @@ VALUES
 PROMPT A-group member1 demo users ready. Login password: Passw0rd!
 /
 
--- =====================================================
--- 以下为成员2: 用户黑名单演示数据
--- =====================================================
+
 
 SET DEFINE OFF;
 
--- =====================================================
--- 1. 有效黑名单记录（user-normal-a-group 违规领养）
--- =====================================================
+
 MERGE INTO USER_BLACKLIST target
 USING (
     SELECT 
@@ -145,9 +141,7 @@ VALUES
     (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
      source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
 
--- =====================================================
--- 2. 有效黑名单记录（user-disabled-a-group 恶意行为）
--- =====================================================
+
 MERGE INTO USER_BLACKLIST target
 USING (
     SELECT 
@@ -181,9 +175,7 @@ VALUES
     (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
      source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
 
--- =====================================================
--- 3. 已解除黑名单记录（user-volunteer-a-group 虚假信息，已解除）
--- =====================================================
+
 MERGE INTO USER_BLACKLIST target
 USING (
     SELECT 
@@ -217,14 +209,8 @@ VALUES
     (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
      source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
 
--- =====================================================
--- 4. 验证黑名单数据
--- =====================================================
-PROMPT ==========================================
-PROMPT 成员2黑名单演示数据插入完成！
-PROMPT ==========================================
 
-PROMPT --- 黑名单记录 ---
+
 SELECT BLACKLISTID, USERID, REASONTYPE, STATUS, CREATEDAT
 FROM USER_BLACKLIST
 WHERE BLACKLISTID LIKE 'bl-%-a-group'
