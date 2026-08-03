@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 获取黑名单列表（仅管理员）
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "管理员")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(typeof(PagedResult<BlacklistResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -86,7 +87,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 获取黑名单详情（仅管理员）
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "管理员")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(typeof(BlacklistResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -113,7 +114,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 加入黑名单（仅管理员）
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "管理员")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -145,7 +146,9 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 获取当前操作人ID（从JWT中获取）
-                var operatorId = User.FindFirst("UserId")?.Value ?? "system";
+                var operatorId = User.FindFirst("sub")?.Value 
+                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                    ?? "system";
 
                 var newRecord = new UserBlacklist{
                     BlacklistID = Guid.NewGuid().ToString(),
@@ -157,7 +160,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                     CreateTime = DateTime.Now,
                     BlacklistStatus = "Active"
                 };
-                
+
                 await _blacklistRepository.AddAsync(newRecord);
 
                 return CreatedAtAction(nameof(GetById), new { id = newRecord.BlacklistID }, new
@@ -176,7 +179,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 解除黑名单（仅管理员）
         /// </summary>
         [HttpPatch("{id}/release")]
-        [Authorize(Roles = "管理员")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -201,7 +204,9 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 获取当前操作人ID
-                var operatorId = User.FindFirst("UserId")?.Value ?? "system";
+                var operatorId = User.FindFirst("sub")?.Value 
+                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                    ?? "system";
 
                 // 解除黑名单
                 await _blacklistRepository.ReleaseAsync(id, operatorId);
@@ -253,7 +258,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 批量解除黑名单（仅管理员）
         /// </summary>
         [HttpPatch("release/batch")]
-        [Authorize(Roles = "管理员")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ReleaseBatch([FromBody] ReleaseBatchDto dto)
@@ -265,7 +270,9 @@ namespace CampusStrayCatSystem.Core.Controllers
 
             try
             {
-                var operatorId = User.FindFirst("UserId")?.Value ?? "system";
+                var operatorId = User.FindFirst("sub")?.Value 
+                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                    ?? "system";
                 var successList = new List<string>();
                 var failList = new List<string>();
 
