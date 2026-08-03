@@ -32,6 +32,12 @@ namespace CampusStrayCatSystem.Core
             [FromQuery] string? status = null,
             [FromQuery] string? roleId = null)
         {
+            // 用户列表含学号、手机号等敏感字段，仅管理员可查询。
+            if (!HasAdminAccessFromClaims())
+            {
+                return Forbid();
+            }
+
             if (!string.IsNullOrWhiteSpace(status))
             {
                 var normalizedStatus = NormalizeStatus(status);
@@ -63,7 +69,19 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest(new { message = "用户 ID 不能为空。" });
             }
 
-            var user = await _userRepository.GetById(id.Trim());
+            var targetId = id.Trim();
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var isAdmin = HasAdminAccessFromClaims();
+            var isSelf = !string.IsNullOrWhiteSpace(currentUserId) &&
+                         currentUserId.Equals(targetId, StringComparison.OrdinalIgnoreCase);
+
+            // 非管理员只能查看自己的资料，避免泄露其他用户学号、手机号等信息。
+            if (!isAdmin && !isSelf)
+            {
+                return Forbid();
+            }
+
+            var user = await _userRepository.GetById(targetId);
             if (user == null)
             {
                 return NotFound(new { message = $"未找到 ID 为 {id} 的用户。" });
@@ -239,7 +257,9 @@ namespace CampusStrayCatSystem.Core
             return NoContent();
         }
 
-        private bool HasAdminAccess()
+        private bool HasAdminAccess() => HasAdminAccessFromClaims();
+
+        private bool HasAdminAccessFromClaims()
         {
             var roleName = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
             var permissionScope = User.FindFirst("permissionScope")?.Value ?? string.Empty;
