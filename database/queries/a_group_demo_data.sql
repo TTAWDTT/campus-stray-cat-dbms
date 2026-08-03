@@ -103,117 +103,29 @@ VALUES
 PROMPT A-group member1 demo users ready. Login password: Passw0rd!
 /
 
-
-
-SET DEFINE OFF;
-
-
+-- =====================================================
+-- 成员2：黑名单演示数据
+-- =====================================================
 MERGE INTO USER_BLACKLIST target
 USING (
-    SELECT 
-        'bl-001-a-group' AS BLACKLISTID,
-        'user-normal-a-group' AS USERID,
-        '违规领养' AS REASONTYPE,
-        '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL,
-        NULL AS APPLICATIONID,
-        'user-admin-a-group' AS CREATEDBY,
-        SYSTIMESTAMP AS CREATEDAT,
-        'Active' AS STATUS,
-        NULL AS RELEASETIME,
-        NULL AS RELEASEDBY
-    FROM DUAL
+    SELECT 'bl-001-a-group' AS BLACKLISTID, 'user-normal-a-group' AS USERID, '违规领养' AS REASONTYPE, '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL, NULL AS RELATEDAPPLICATIONID, 'user-admin-a-group' AS CREATEUSERID, SYSDATE AS CREATETIME, 'Active' AS BLACKLISTSTATUS, NULL AS RELEASETIME, NULL AS RELEASEDBY FROM DUAL
+    UNION ALL
+    SELECT 'bl-002-a-group', 'user-disabled-a-group', '恶意行为', '在校园内恶意伤害流浪猫', NULL, 'user-admin-a-group', SYSDATE-5, 'Active', NULL, NULL FROM DUAL
+    UNION ALL
+    SELECT 'bl-003-a-group', 'user-volunteer-a-group', '虚假信息', '提供虚假领养申请信息', NULL, 'user-admin-a-group', SYSDATE-30, 'Released', SYSDATE-15, 'user-admin-a-group' FROM DUAL
 ) source
 ON (target.BLACKLISTID = source.BLACKLISTID)
 WHEN MATCHED THEN UPDATE SET
     target.USERID = source.USERID,
     target.REASONTYPE = source.REASONTYPE,
     target.REASONDETAIL = source.REASONDETAIL,
-    target.APPLICATIONID = source.APPLICATIONID,
-    target.CREATEDBY = source.CREATEDBY,
-    target.CREATEDAT = source.CREATEDAT,
-    target.STATUS = source.STATUS,
+    target.RELATEDAPPLICATIONID = source.RELATEDAPPLICATIONID,
+    target.CREATEUSERID = source.CREATEUSERID,
+    target.CREATETIME = source.CREATETIME,
+    target.BLACKLISTSTATUS = source.BLACKLISTSTATUS,
     target.RELEASETIME = source.RELEASETIME,
     target.RELEASEDBY = source.RELEASEDBY
-WHEN NOT MATCHED THEN INSERT
-    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
-     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
-VALUES
-    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
-     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
-
-
-MERGE INTO USER_BLACKLIST target
-USING (
-    SELECT 
-        'bl-002-a-group' AS BLACKLISTID,
-        'user-disabled-a-group' AS USERID,
-        '恶意行为' AS REASONTYPE,
-        '在校园内恶意伤害流浪猫' AS REASONDETAIL,
-        NULL AS APPLICATIONID,
-        'user-admin-a-group' AS CREATEDBY,
-        SYSTIMESTAMP - 5 AS CREATEDAT,
-        'Active' AS STATUS,
-        NULL AS RELEASETIME,
-        NULL AS RELEASEDBY
-    FROM DUAL
-) source
-ON (target.BLACKLISTID = source.BLACKLISTID)
-WHEN MATCHED THEN UPDATE SET
-    target.USERID = source.USERID,
-    target.REASONTYPE = source.REASONTYPE,
-    target.REASONDETAIL = source.REASONDETAIL,
-    target.APPLICATIONID = source.APPLICATIONID,
-    target.CREATEDBY = source.CREATEDBY,
-    target.CREATEDAT = source.CREATEDAT,
-    target.STATUS = source.STATUS,
-    target.RELEASETIME = source.RELEASETIME,
-    target.RELEASEDBY = source.RELEASEDBY
-WHEN NOT MATCHED THEN INSERT
-    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
-     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
-VALUES
-    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
-     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
-
-
-MERGE INTO USER_BLACKLIST target
-USING (
-    SELECT 
-        'bl-003-a-group' AS BLACKLISTID,
-        'user-volunteer-a-group' AS USERID,
-        '虚假信息' AS REASONTYPE,
-        '提供虚假领养申请信息' AS REASONDETAIL,
-        NULL AS APPLICATIONID,
-        'user-admin-a-group' AS CREATEDBY,
-        SYSTIMESTAMP - 30 AS CREATEDAT,
-        'Released' AS STATUS,
-        SYSTIMESTAMP - 15 AS RELEASETIME,
-        'user-admin-a-group' AS RELEASEDBY
-    FROM DUAL
-) source
-ON (target.BLACKLISTID = source.BLACKLISTID)
-WHEN MATCHED THEN UPDATE SET
-    target.USERID = source.USERID,
-    target.REASONTYPE = source.REASONTYPE,
-    target.REASONDETAIL = source.REASONDETAIL,
-    target.APPLICATIONID = source.APPLICATIONID,
-    target.CREATEDBY = source.CREATEDBY,
-    target.CREATEDAT = source.CREATEDAT,
-    target.STATUS = source.STATUS,
-    target.RELEASETIME = source.RELEASETIME,
-    target.RELEASEDBY = source.RELEASEDBY
-WHEN NOT MATCHED THEN INSERT
-    (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, APPLICATIONID, 
-     CREATEDBY, CREATEDAT, STATUS, RELEASETIME, RELEASEDBY)
-VALUES
-    (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.APPLICATIONID,
-     source.CREATEDBY, source.CREATEDAT, source.STATUS, source.RELEASETIME, source.RELEASEDBY);
-
-
-
-SELECT BLACKLISTID, USERID, REASONTYPE, STATUS, CREATEDAT
-FROM USER_BLACKLIST
-WHERE BLACKLISTID LIKE 'bl-%-a-group'
-ORDER BY CREATEDAT DESC;
+WHEN NOT MATCHED THEN INSERT (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, RELATEDAPPLICATIONID, CREATEUSERID, CREATETIME, BLACKLISTSTATUS, RELEASETIME, RELEASEDBY)
+VALUES (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.RELATEDAPPLICATIONID, source.CREATEUSERID, source.CREATETIME, source.BLACKLISTSTATUS, source.RELEASETIME, source.RELEASEDBY);
 
 PROMPT A-group member2 blacklist demo data ready.

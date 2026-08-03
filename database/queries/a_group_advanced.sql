@@ -58,7 +58,7 @@ PROMPT A-group member1 advanced SQL ready.
 /
 
 -- =====================================================
--- 以下为成员2：角色权限与用户黑名单模块
+-- 以下为成员2
 -- =====================================================
 
 -- 1. 黑名单索引
@@ -70,25 +70,24 @@ EXCEPTION
 END;
 /
 
--- 2. 视图：有效黑名单用户
+-- 2. 有效黑名单视图
 CREATE OR REPLACE VIEW VW_ACTIVE_BLACKLIST_USERS AS
-SELECT
-    b.BLACKLISTID,
-    b.USERID,
-    u.USERNAME,
-    u.REALNAME,
-    u.STUDENTNO,
-    u.PHONE,
-    b.REASONTYPE,
-    b.REASONDETAIL,
-    b.RELATEDAPPLICATIONID,
-    b.CREATEUSERID,
-    b.CREATETIME,
-    b.BLACKLISTSTATUS
+SELECT b.BLACKLISTID,
+       b.USERID,
+       u.USERNAME,
+       u.REALNAME,
+       u.STUDENTNO,
+       u.PHONE,
+       b.REASONTYPE,
+       b.REASONDETAIL,
+       b.RELATEDAPPLICATIONID,
+       b.CREATEUSERID,
+       b.CREATETIME,
+       b.BLACKLISTSTATUS
 FROM USER_BLACKLIST b
 INNER JOIN SYS_USERS u ON b.USERID = u.USERID
 WHERE b.BLACKLISTSTATUS = 'Active'
-AND u.STATUS = 'ACTIVE'
+  AND u.STATUS = 'ACTIVE'
 ORDER BY b.CREATETIME DESC;
 
 -- 3. 分配角色存储过程
@@ -179,38 +178,34 @@ END SP_ADD_USER_BLACKLIST;
 
 -- 5. 解除黑名单存储过程
 CREATE OR REPLACE PROCEDURE SP_RELEASE_USER_BLACKLIST (
-    p_BlacklistID  IN  VARCHAR2,
-    p_ReleasedBy   IN  VARCHAR2,
-    p_Result       OUT VARCHAR2
+    p_BlacklistID IN VARCHAR2,
+    p_ReleasedBy IN VARCHAR2,
+    p_Result OUT VARCHAR2
 )
 IS
-    v_Status       VARCHAR2(20);
+    v_Status VARCHAR2(20);
 BEGIN
-    SAVEPOINT SP_RELEASE_USER_BLACKLIST_START;
-
     SELECT BLACKLISTSTATUS INTO v_Status
     FROM USER_BLACKLIST WHERE BLACKLISTID = p_BlacklistID;
 
     IF v_Status = 'Released' THEN
         p_Result := '该黑名单记录已被解除';
-        ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
         RETURN;
     END IF;
 
     UPDATE USER_BLACKLIST
     SET BLACKLISTSTATUS = 'Released',
-        RELEASETIME = SYSTIMESTAMP
+        RELEASETIME = SYSDATE
     WHERE BLACKLISTID = p_BlacklistID;
 
-    COMMIT;
     p_Result := '';
-
+    COMMIT;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
+        ROLLBACK;
         p_Result := '黑名单记录不存在';
     WHEN OTHERS THEN
-        ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
+        ROLLBACK;
         p_Result := '解除黑名单失败: ' || SQLERRM;
 END SP_RELEASE_USER_BLACKLIST;
 /
