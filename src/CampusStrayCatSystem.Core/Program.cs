@@ -6,12 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add controllers
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.SchemaFilter<Utf8ByteLengthSchemaFilter>());
 
-// Dependency Injection - Repository
+// Repository 注册集中放在这里，便于后续按业务模块继续扩展。
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IMedReminderRepository, MedReminderRepository>();
 builder.Services.AddScoped<IEmergencyReportRepository, EmergencyReportRepository>();
@@ -23,6 +24,8 @@ builder.Services.AddScoped<ICatRepository, CatRepository>();
 builder.Services.AddScoped<ICatPhotoRepository, CatPhotoRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
+builder.Services.AddScoped<IAdoptionWorkflowRepository, AdoptionWorkflowRepository>();
+builder.Services.AddScoped<IVolunteerWorkflowRepository, VolunteerWorkflowRepository>();
 builder.Services.AddScoped<IServicePointRepository, ServicePointRepository>();
 builder.Services.AddScoped<INestMaintenanceRecordRepository, NestMaintenanceRecordRepository>();
 builder.Services.AddScoped<ICatSightingRepository, CatSightingRepository>();
