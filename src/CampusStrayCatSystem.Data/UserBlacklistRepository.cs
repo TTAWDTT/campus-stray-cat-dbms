@@ -6,6 +6,7 @@ using System.Data;
 using Oracle.ManagedDataAccess.Client;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Models.DTOs;
+using Microsoft.Extensions.Configuration;
 
 namespace CampusStrayCatSystem.Data
 {
@@ -13,9 +14,10 @@ namespace CampusStrayCatSystem.Data
     {
         private readonly string _connectionString;
 
-        public UserBlacklistRepository(string connectionString)
+        public UserBlacklistRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("Oracle")
+                ?? throw new InvalidOperationException("Connection string 'Oracle' not found.");
         }
 
         public async Task<IEnumerable<UserBlacklist>> GetAllAsync(
