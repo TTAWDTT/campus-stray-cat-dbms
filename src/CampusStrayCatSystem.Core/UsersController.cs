@@ -115,7 +115,22 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest(new { message = "Username、Password、RoleID 均为必填。" });
             }
 
-            var status = NormalizeStatus(request.Status) ?? UserStatusCodes.Active;
+            string status;
+            if (string.IsNullOrWhiteSpace(request.Status))
+            {
+                status = UserStatusCodes.Active;
+            }
+            else
+            {
+                var normalizedStatus = NormalizeStatus(request.Status);
+                if (normalizedStatus == null)
+                {
+                    return BadRequest(new { message = "Status 仅支持 ACTIVE 或 DISABLED。" });
+                }
+
+                status = normalizedStatus;
+            }
+
             if (!UserVerifyStatusCodes.IsKnown(request.VerifyStatus))
             {
                 return BadRequest(new { message = "VerifyStatus 仅支持 VERIFIED、UNVERIFIED 或空。" });
