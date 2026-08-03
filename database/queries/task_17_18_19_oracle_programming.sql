@@ -95,15 +95,30 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
         VALUES ('APP-' || DBMS_RANDOM.STRING('X', 8), p_cat_id, p_applicant_user_id, SYSDATE, p_status, NULL, NULL, NULL);
     END submit_application;
 
-    -- 审核领养申请，更新申请状态、审核人和协议编号。
+    -- 审核领养申请，更新申请状态、审核人和协议编号，若申请人处于黑名单则强制拒绝。
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL) IS
+        v_applicant_user_id VARCHAR2(36);
+        v_blacklisted NUMBER := 0;
     BEGIN
-        UPDATE ADOPT_APPLICATIONS
-        SET CURRENTSTATUS = p_status,
-            REVIEWERUSERID = p_reviewer_user_id,
-            AGREEMENTNO = p_agreement_no,
-            CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
-        WHERE APPLICATIONID = p_application_id;
+        -- 先查申请人并判断是否在黑名单中
+        SELECT APPLICANTUSERID INTO v_applicant_user_id FROM ADOPT_APPLICATIONS WHERE APPLICATIONID = p_application_id;
+        SELECT COUNT(1) INTO v_blacklisted FROM USER_BLACKLIST ub WHERE ub.USERID = v_applicant_user_id AND ub.BLACKLISTSTATUS = 'ACTIVE';
+
+        IF v_blacklisted > 0 THEN
+            UPDATE ADOPT_APPLICATIONS
+            SET CURRENTSTATUS = 'REJECTED',
+                REVIEWERUSERID = p_reviewer_user_id,
+                AGREEMENTNO = NULL,
+                CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
+            WHERE APPLICATIONID = p_application_id;
+        ELSE
+            UPDATE ADOPT_APPLICATIONS
+            SET CURRENTSTATUS = p_status,
+                REVIEWERUSERID = p_reviewer_user_id,
+                AGREEMENTNO = p_agreement_no,
+                CONFIRMTIME = NVL(p_confirm_time, SYSDATE)
+            WHERE APPLICATIONID = p_application_id;
+        END IF;
     END review_application;
 
     -- 为某个申请增加一次回访记录。
@@ -139,18 +154,36 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         VALUES ('SHIFT-' || DBMS_RANDOM.STRING('X', 8), p_volunteer_id, p_point_id, p_backup_volunteer_id, p_plan_start_time, p_plan_end_time, p_shift_status);
     END create_shift;
 
-    -- 志愿者打卡，记录签到位置和状态。
+    -- 志愿者打卡，记录签到位置和状态。若为正常签到，则自动产生积分记录并更新志愿者总积分。
     PROCEDURE check_in_shift(p_shift_id IN VARCHAR2, p_checkin_time IN DATE DEFAULT SYSDATE, p_longitude IN NUMBER DEFAULT NULL, p_latitude IN NUMBER DEFAULT NULL, p_photo_url IN VARCHAR2 DEFAULT NULL, p_distance_meters IN NUMBER DEFAULT NULL, p_checkin_status IN VARCHAR2 DEFAULT 'CHECKED_IN') IS
+        v_volunteer_id VARCHAR2(36);
+        v_score_change NUMBER := 0;
+        v_credit_level VARCHAR2(20);
     BEGIN
         INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
         VALUES ('CHK-' || DBMS_RANDOM.STRING('X', 8), p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
+
+        -- 如果为正常签到，则给予 1 分（可按需调整），并更新志愿者总积分。
+        IF p_checkin_status = 'CHECKED_IN' THEN
+            SELECT VOLUNTEERID INTO v_volunteer_id FROM VOL_SHIFTS WHERE SHIFTID = p_shift_id;
+            SELECT NVL(CREDITLEVEL, 'L1') INTO v_credit_level FROM VOL_VOLUNTEERS WHERE VOLUNTEERID = v_volunteer_id;
+            v_score_change := 1;
+
+            -- 插入积分日志（复用包内 add_credit_log）
+            add_credit_log(v_volunteer_id, 'CHECKIN', p_shift_id, v_score_change, v_credit_level, p_checkin_time, 'Auto credit for check-in');
+        END IF;
     END check_in_shift;
 
-    -- 为志愿者增加积分变更记录。
+    -- 为志愿者增加积分变更记录，并同步更新志愿者的累计服务分数。
     PROCEDURE add_credit_log(p_volunteer_id IN VARCHAR2, p_source_type IN VARCHAR2, p_source_id IN VARCHAR2, p_score_change IN NUMBER, p_credit_level_after IN VARCHAR2, p_create_time IN DATE DEFAULT SYSDATE, p_remark IN VARCHAR2 DEFAULT NULL) IS
     BEGIN
         INSERT INTO VOL_CREDITLOGS (CREDITLOGID, VOLUNTEERID, SOURCETYPE, SOURCEID, SCORECHANGE, CREDITLEVELAFTER, CREATETIME, REMARK)
         VALUES ('CRED-' || DBMS_RANDOM.STRING('X', 8), p_volunteer_id, p_source_type, p_source_id, p_score_change, p_credit_level_after, p_create_time, p_remark);
+
+        -- 更新累计积分（若不存在则忽略）
+        UPDATE VOL_VOLUNTEERS
+        SET SERVICESCORE = NVL(SERVICESCORE, 0) + NVL(p_score_change, 0)
+        WHERE VOLUNTEERID = p_volunteer_id;
     END add_credit_log;
 END PKG_VOLUNTEER_MGMT;
 /
