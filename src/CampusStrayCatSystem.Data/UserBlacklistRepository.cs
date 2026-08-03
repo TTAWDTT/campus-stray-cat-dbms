@@ -5,12 +5,10 @@ using Dapper;
 using System.Data;
 using Oracle.ManagedDataAccess.Client;
 using CampusStrayCatSystem.Models;
+using CampusStrayCatSystem.Models.DTOs;
 
 namespace CampusStrayCatSystem.Data
 {
-    /// <summary>
-    /// 用户黑名单数据访问实现
-    /// </summary>
     public class UserBlacklistRepository : IUserBlacklistRepository
     {
         private readonly string _connectionString;
@@ -21,30 +19,51 @@ namespace CampusStrayCatSystem.Data
         }
 
         public async Task<IEnumerable<UserBlacklist>> GetAllAsync(
-            string userId = null, 
-            string status = null, 
-            int page = 1, 
+            string userId = null,
+            string status = null,
+            int page = 1,
             int pageSize = 20)
         {
             using var conn = new OracleConnection(_connectionString);
-            
+
             var sql = @"
-                SELECT * FROM USER_BLACKLIST 
+                SELECT
+                    BlacklistID,
+                    UserID,
+                    ReasonType,
+                    ReasonDetail,
+                    ApplicationID,
+                    CreateUserID,
+                    CreateTime,
+                    BlacklistStatus,
+                    ReleaseTime,
+                    ReleasedBy
+                FROM USER_BLACKLIST
                 WHERE 1=1
-                AND (:UserId IS NULL OR UserID = :UserId)
-                AND (:Status IS NULL OR Status = :Status)
-                ORDER BY CreatedAt DESC
-                OFFSET (:Page - 1) * :PageSize ROWS
+            ";
+
+            var parameters = new DynamicParameters();
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                sql += " AND UserID = :UserId";
+                parameters.Add("UserId", userId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                sql += " AND BlacklistStatus = :Status";
+                parameters.Add("Status", status);
+            }
+
+            sql += @"
+                ORDER BY CreateTime DESC
+                OFFSET :Offset ROWS
                 FETCH NEXT :PageSize ROWS ONLY
             ";
 
-            var parameters = new
-            {
-                UserId = userId,
-                Status = status,
-                Page = page,
-                PageSize = pageSize
-            };
+            parameters.Add("Offset", (page - 1) * pageSize);
+            parameters.Add("PageSize", pageSize);
 
             return await conn.QueryAsync<UserBlacklist>(sql, parameters);
         }
@@ -52,71 +71,94 @@ namespace CampusStrayCatSystem.Data
         public async Task<UserBlacklist> GetByIdAsync(string blacklistId)
         {
             using var conn = new OracleConnection(_connectionString);
-            
-            var sql = "SELECT * FROM USER_BLACKLIST WHERE BlacklistID = :BlacklistID";
-            
-            return await conn.QueryFirstOrDefaultAsync<UserBlacklist>(
-                sql, 
-                new { BlacklistID = blacklistId }
-            );
+
+            var sql = @"
+                SELECT
+                    BlacklistID,
+                    UserID,
+                    ReasonType,
+                    ReasonDetail,
+                    ApplicationID,
+                    CreateUserID,
+                    CreateTime,
+                    BlacklistStatus,
+                    ReleaseTime,
+                    ReleasedBy
+                FROM USER_BLACKLIST
+                WHERE BlacklistID = :BlacklistID
+            ";
+
+            return await conn.QueryFirstOrDefaultAsync<UserBlacklist>(sql, new { BlacklistID = blacklistId });
         }
 
         public async Task AddAsync(UserBlacklist record)
         {
             using var conn = new OracleConnection(_connectionString);
-            
-            // 调用存储过程
-            var parameters = new OracleDynamicParameters();
-            parameters.Add("p_UserID", record.UserID);
-            parameters.Add("p_ReasonType", record.ReasonType);
-            parameters.Add("p_ReasonDetail", record.ReasonDetail);
-            parameters.Add("p_ApplicationID", record.ApplicationID ?? (object)DBNull.Value);
-            parameters.Add("p_CreatedBy", record.CreatedBy);
-            parameters.Add("p_Result", dbType: OracleDbType.Varchar2, direction: ParameterDirection.Output, size: 200);
 
-            await conn.ExecuteAsync(
-                "SP_ADD_USER_BLACKLIST",
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
+            var sql = @"
+                INSERT INTO USER_BLACKLIST (
+                    BlacklistID,
+                    UserID,
+                    ReasonType,
+                    ReasonDetail,
+                    ApplicationID,
+                    CreateUserID,
+                    CreateTime,
+                    BlacklistStatus
+                ) VALUES (
+                    :BlacklistID,
+                    :UserID,
+                    :ReasonType,
+                    :ReasonDetail,
+                    :ApplicationID,
+                    :CreateUserID,
+                    :CreateTime,
+                    :BlacklistStatus
+                )";
 
-            var result = parameters.Get<string>("p_Result");
-            if (!string.IsNullOrEmpty(result))
-            {
-                throw new Exception(result);
-            }
+            record.BlacklistID = string.IsNullOrEmpty(record.BlacklistID)
+                ? Guid.NewGuid().ToString()
+                : record.BlacklistID;
+            record.CreateTime = DateTime.Now;
+            record.BlacklistStatus = "Active";
+
+            await conn.ExecuteAsync(sql, record);
         }
 
         public async Task ReleaseAsync(string blacklistId, string releasedBy)
         {
             using var conn = new OracleConnection(_connectionString);
-            
-            var parameters = new OracleDynamicParameters();
-            parameters.Add("p_BlacklistID", blacklistId);
-            parameters.Add("p_ReleasedBy", releasedBy);
-            parameters.Add("p_Result", dbType: OracleDbType.Varchar2, direction: ParameterDirection.Output, size: 200);
 
-            await conn.ExecuteAsync(
-                "SP_RELEASE_USER_BLACKLIST",
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
+            var sql = @"
+                UPDATE USER_BLACKLIST
+                SET BlacklistStatus = 'Released',
+                    ReleaseTime = SYSTIMESTAMP,
+                    ReleasedBy = :ReleasedBy
+                WHERE BlacklistID = :BlacklistID
+                  AND BlacklistStatus = 'Active'
+            ";
 
-            var result = parameters.Get<string>("p_Result");
-            if (!string.IsNullOrEmpty(result))
+            var rowsAffected = await conn.ExecuteAsync(sql, new
             {
-                throw new Exception(result);
+                BlacklistID = blacklistId,
+                ReleasedBy = releasedBy
+            });
+
+            if (rowsAffected == 0)
+            {
+                throw new Exception("黑名单记录不存在或已被解除");
             }
         }
 
         public async Task<bool> HasActiveBlacklistAsync(string userId)
         {
             using var conn = new OracleConnection(_connectionString);
-            
+
             var sql = @"
-                SELECT COUNT(1) 
-                FROM USER_BLACKLIST 
-                WHERE UserID = :UserId AND Status = 'Active'
+                SELECT COUNT(1)
+                FROM USER_BLACKLIST
+                WHERE UserID = :UserId
+                AND BlacklistStatus = 'Active'
             ";
 
             var count = await conn.ExecuteScalarAsync<int>(sql, new { UserId = userId });
@@ -126,23 +168,61 @@ namespace CampusStrayCatSystem.Data
         public async Task<BlacklistStatusDto> GetActiveStatusByUserIdAsync(string userId)
         {
             using var conn = new OracleConnection(_connectionString);
-            
+
             var sql = @"
-                SELECT 
+                SELECT
                     UserID as UserId,
+                    'Y' as IsBlacklisted,
+                    BlacklistID as BlacklistId,
                     ReasonType as ReasonType,
                     ReasonDetail as ReasonDetail,
-                    CreatedAt as CreatedAt
-                FROM USER_BLACKLIST 
-                WHERE UserID = :UserId AND Status = 'Active'
-                ORDER BY CreatedAt DESC
+                    CreateTime as BlacklistedAt
+                FROM USER_BLACKLIST
+                WHERE UserID = :UserId
+                AND BlacklistStatus = 'Active'
+                ORDER BY CreateTime DESC
                 FETCH FIRST 1 ROW ONLY
             ";
 
-            return await conn.QueryFirstOrDefaultAsync<BlacklistStatusDto>(
-                sql, 
-                new { UserId = userId }
-            );
+            var result = await conn.QueryFirstOrDefaultAsync<BlacklistStatusDto>(sql, new { UserId = userId });
+
+            if (result == null)
+            {
+                return new BlacklistStatusDto
+                {
+                    UserId = userId,
+                    IsBlacklisted = false
+                };
+            }
+
+            return result;
+        }
+
+        public async Task<int> GetTotalCountAsync(string userId = null, string status = null)
+        {
+            using var conn = new OracleConnection(_connectionString);
+
+            var sql = @"
+                SELECT COUNT(1)
+                FROM USER_BLACKLIST
+                WHERE 1=1
+            ";
+
+            var parameters = new DynamicParameters();
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                sql += " AND UserID = :UserId";
+                parameters.Add("UserId", userId);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                sql += " AND BlacklistStatus = :Status";
+                parameters.Add("Status", status);
+            }
+
+            return await conn.ExecuteScalarAsync<int>(sql, parameters);
         }
     }
 }
