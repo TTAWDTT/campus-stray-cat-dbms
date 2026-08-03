@@ -1,0 +1,115 @@
+-- =============================================================================
+-- 功能点 20（投喂记录与交接记录）与 功能点 21（众筹财务公示与统计报表）
+-- 演示数据脚本
+--
+-- 说明：
+--   本脚本为功能点 20/21 提供可运行的演示数据，覆盖所有验收标准场景。
+--   数据按外键依赖顺序插入，使用固定 UUID 便于测试与交叉引用。
+--   依赖前置表：SYS_ROLES、SYS_USERS、MAP_CAMPUSAREAS、CAT_CATS、MAP_SERVICEPOINTS。
+--   若相关基础数据已存在，可跳过基础数据部分，仅执行业务数据部分。
+--   执行前请先执行 create_tables.sql 建表。
+-- =============================================================================
+
+SET DEFINE OFF;
+PROMPT ===== Demo data for task 20 & 21 =====;
+
+-- -----------------------------------------------------------------------------
+-- 0. 基础数据（角色 / 用户 / 区域 / 猫咪 / 投喂点）
+--    如已存在同名数据，可注释掉本段。这里使用固定 ID 保证后续外键可用。
+-- -----------------------------------------------------------------------------
+
+-- 角色：管理员、志愿者、普通用户
+INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+VALUES ('role-admin-0001', '管理员', '系统管理员', 'ALL');
+INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+VALUES ('role-volunteer-01', '志愿者', '投喂与救助志愿者', 'FEEDING,TNR,RESCUE');
+INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+VALUES ('role-user-0001', '普通用户', '普通注册用户', 'VIEW,DONATE');
+
+-- 用户：3 个测试账号（密码哈希仅作占位，实际应由应用层加密）
+INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, STATUS, VERIFYSTATUS)
+VALUES ('user-admin-0001', 'role-admin-0001', 'admin', 'hash-placeholder', '管理员张三', 'ACTIVE', 'VERIFIED');
+INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, STATUS, VERIFYSTATUS)
+VALUES ('user-volunteer-01', 'role-volunteer-01', 'volunteer_li', 'hash-placeholder', '志愿者李四', 'ACTIVE', 'VERIFIED');
+INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, STATUS, VERIFYSTATUS)
+VALUES ('user-volunteer-02', 'role-volunteer-01', 'volunteer_wang', 'hash-placeholder', '志愿者王五', 'ACTIVE', 'VERIFIED');
+INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, STATUS, VERIFYSTATUS)
+VALUES ('user-donor-0001', 'role-user-0001', 'donor_zhao', 'hash-placeholder', '捐赠人赵六', 'ACTIVE', 'VERIFIED');
+
+-- 校园区域
+INSERT INTO MAP_CAMPUSAREAS (AREAID, AREANAME, CAMPUSNAME, AREATYPE, RISKLEVEL)
+VALUES ('area-east-0001', '东区花园', '同济大学', 'GREENBELT', 'LOW');
+
+-- 猫咪档案（2 只，用于众筹）
+INSERT INTO CAT_CATS (CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG, LIFESTATUS, ARCHIVESTATUS)
+VALUES ('cat-orange-0001', '小橘', 'MALE', '中华田园猫', '橘色', 0, 'ALIVE', 'ACTIVE');
+INSERT INTO CAT_CATS (CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG, LIFESTATUS, ARCHIVESTATUS)
+VALUES ('cat-white-0002', '小白', 'FEMALE', '中华田园猫', '白色', 0, 'ALIVE', 'ACTIVE');
+
+-- 投喂点（服务点位）
+INSERT INTO MAP_SERVICEPOINTS (POINTID, AREAID, POINTNAME, POINTTYPE, FACILITYSTATUS, DEPLOYTIME)
+VALUES ('point-feed-0001', 'area-east-0001', '东区花园投喂点A', 'FEEDING', 'NORMAL', SYSDATE);
+
+-- =============================================================================
+-- 功能点 20：投喂记录与交接记录
+-- =============================================================================
+
+-- 志愿者档案（2 名）
+INSERT INTO VOL_VOLUNTEERS (VOLUNTEERID, USERID, JOINDATE, SERVICESCORE, CREDITLEVEL, ACTIVESTATUS)
+VALUES ('vol-0001', 'user-volunteer-01', SYSDATE-180, 50, 'L2', 'ACTIVE');
+INSERT INTO VOL_VOLUNTEERS (VOLUNTEERID, USERID, JOINDATE, SERVICESCORE, CREDITLEVEL, ACTIVESTATUS)
+VALUES ('vol-0002', 'user-volunteer-02', SYSDATE-120, 30, 'L1', 'ACTIVE');
+
+-- 投喂任务（排班）：3 条，分别处于“已完成 / 待执行 / 已排班”状态
+INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
+VALUES ('shift-0001', 'vol-0001', 'point-feed-0001', SYSDATE-1, SYSDATE-1+1/24, 'COMPLETED');
+INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
+VALUES ('shift-0002', 'vol-0001', 'point-feed-0001', SYSDATE+1, SYSDATE+1+1/24, 'ASSIGNED');
+INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
+VALUES ('shift-0003', 'vol-0002', 'point-feed-0001', SYSDATE+2, SYSDATE+2+1/24, 'PLANNED');
+
+-- 投喂打卡记录（投喂历史）：对应 shift-0001 已完成的投喂
+INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, CHECKINSTATUS)
+VALUES ('checkin-0001', 'shift-0001', SYSDATE-1+0.9/24, 'CHECKED_IN');
+
+-- 交接记录：vol-0001 把 shift-0002 转交给 vol-0002，状态为待确认
+INSERT INTO VOL_HANDOVERS (HANDOVERID, FROMVOLUNTEERID, TOVOLUNTEERID, RELATEDTYPE, RELATEDID, APPLYTIME, HANDOVERSTATUS, REMARK)
+VALUES ('handover-0001', 'vol-0001', 'vol-0002', 'SHIFT', 'shift-0002', SYSDATE, 'PENDING', '因事无法执行，转交给王五');
+
+-- =============================================================================
+-- 功能点 21：众筹财务公示与统计报表
+-- =============================================================================
+
+-- 众筹项目：为小橘发起医疗众筹，进行中
+INSERT INTO FUND_CROWDFUNDINGPROJECTS (PROJECTID, CATID, TITLE, TARGETAMOUNT, RAISEDAMOUNT, STARTTIME, ENDTIME, PROJECTSTATUS)
+VALUES ('proj-0001', 'cat-orange-0001', '小橘绝育与医疗众筹', 2000, 0, SYSDATE-10, SYSDATE+20, 'ACTIVE');
+
+-- 捐赠记录：3 笔捐赠（注意 RAISEDAMOUNT 需同步累加，这里手动置为汇总值）
+-- 演示用：直接把项目已筹金额更新为 3 笔之和 800
+UPDATE FUND_CROWDFUNDINGPROJECTS SET RAISEDAMOUNT = 800 WHERE PROJECTID = 'proj-0001';
+
+INSERT INTO FUND_DONATIONS (DONATIONID, PROJECTID, DONORUSERID, AMOUNT, PAYTIME, PUBLICFLAG)
+VALUES ('don-0001', 'proj-0001', 'user-donor-0001', 500, SYSDATE-8, 1);
+INSERT INTO FUND_DONATIONS (DONATIONID, PROJECTID, DONORUSERID, AMOUNT, PAYTIME, PUBLICFLAG)
+VALUES ('don-0002', 'proj-0001', 'user-volunteer-01', 200, SYSDATE-5, 1);
+INSERT INTO FUND_DONATIONS (DONATIONID, PROJECTID, DONORUSERID, AMOUNT, PAYTIME, PUBLICFLAG)
+VALUES ('don-0003', 'proj-0001', 'user-donor-0001', 100, SYSDATE-2, 0);
+
+-- 支出记录：2 笔，1 笔已审核通过、1 笔待审核
+INSERT INTO FUND_FINANCERECORDS (FINANCEID, PROJECTID, AMOUNT, AUDITUSERID, AUDITSTATUS, PUBLICTIME)
+VALUES ('fin-0001', 'proj-0001', 300, 'user-admin-0001', 'APPROVED', SYSDATE-3);
+INSERT INTO FUND_FINANCERECORDS (FINANCEID, PROJECTID, AMOUNT, AUDITUSERID, AUDITSTATUS, PUBLICTIME)
+VALUES ('fin-0002', 'proj-0001', 150, NULL, 'PENDING', NULL);
+
+-- 统计快照：为 proj-0001 生成一份统计报表（手动写入，演示用）
+INSERT INTO RPT_STATISTICSSNAPSHOTS (SNAPSHOTID, SNAPSHOTDATE, METRICCODE, DIMENSIONTYPE, DIMENSIONVALUE, METRICVALUE, UNIT, GENERATETIME, REMARK)
+VALUES ('rpt-0001', TRUNC(SYSDATE), 'TOTAL_DONATION', 'PROJECT', 'proj-0001', 800, 'CNY', SYSDATE, '项目累计捐赠总额');
+INSERT INTO RPT_STATISTICSSNAPSHOTS (SNAPSHOTID, SNAPSHOTDATE, METRICCODE, DIMENSIONTYPE, DIMENSIONVALUE, METRICVALUE, UNIT, GENERATETIME, REMARK)
+VALUES ('rpt-0002', TRUNC(SYSDATE), 'TOTAL_EXPENSE', 'PROJECT', 'proj-0001', 300, 'CNY', SYSDATE, '项目已审核通过支出总额');
+INSERT INTO RPT_STATISTICSSNAPSHOTS (SNAPSHOTID, SNAPSHOTDATE, METRICCODE, DIMENSIONTYPE, DIMENSIONVALUE, METRICVALUE, UNIT, GENERATETIME, REMARK)
+VALUES ('rpt-0003', TRUNC(SYSDATE), 'NET_BALANCE', 'PROJECT', 'proj-0001', 500, 'CNY', SYSDATE, '项目净余额（捐赠-支出）');
+INSERT INTO RPT_STATISTICSSNAPSHOTS (SNAPSHOTID, SNAPSHOTDATE, METRICCODE, DIMENSIONTYPE, DIMENSIONVALUE, METRICVALUE, UNIT, GENERATETIME, REMARK)
+VALUES ('rpt-0004', TRUNC(SYSDATE), 'DONATION_COUNT', 'PROJECT', 'proj-0001', 3, 'COUNT', SYSDATE, '项目捐赠笔数');
+
+COMMIT;
+PROMPT ===== Demo data for task 20 & 21 inserted =====;
