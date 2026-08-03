@@ -1,2 +1,89 @@
--- Development test queries will be added here.
+SET DEFINE OFF;
+
+PROMPT ===== Zhao Qing module test queries =====;
+
+PROMPT 1. Campus area hierarchy;
+SELECT AREAID,
+       AREANAME,
+       CAMPUSNAME,
+       PARENTAREAID,
+       AREATYPE,
+       RISKLEVEL,
+       LEVEL AS HIERARCHYLEVEL
+FROM MAP_CAMPUSAREAS
+START WITH PARENTAREAID IS NULL
+CONNECT BY NOCYCLE PRIOR AREAID = PARENTAREAID
+ORDER SIBLINGS BY AREANAME;
+
+PROMPT 2. Service points in the demo area;
+SELECT POINTID,
+       POINTNAME,
+       POINTTYPE,
+       LONGITUDE,
+       LATITUDE,
+       FACILITYSTATUS,
+       DEPLOYTIME
+FROM MAP_SERVICEPOINTS
+WHERE AREAID = 'demo-area-library'
+ORDER BY POINTNAME;
+
+PROMPT 3. Maintenance history for the demo cat nest;
+SELECT MAINTENANCEID,
+       POINTID,
+       MATERIALTYPE,
+       CHECKTIME,
+       WEATHERCONDITION,
+       DAMAGELEVEL,
+       ACTIONTYPE,
+       OPERATORUSERID,
+       NEXTCHECKTIME,
+       REMARK
+FROM NEST_MAINTENANCERECORDS
+WHERE POINTID = 'demo-point-library-nest'
+ORDER BY CHECKTIME DESC NULLS LAST;
+
+PROMPT 4. Sighting records filtered by cat, area and time;
+SELECT SIGHTINGID,
+       CATID,
+       USERID,
+       AREAID,
+       LONGITUDE,
+       LATITUDE,
+       PHOTOURL,
+       SIGHTINGTIME,
+       REMARK
+FROM CAT_SIGHTINGS
+WHERE CATID = 'demo-cat-campus-001'
+  AND AREAID = 'demo-area-library'
+  AND SIGHTINGTIME >= TO_DATE('2026-07-01', 'YYYY-MM-DD')
+  AND SIGHTINGTIME < TO_DATE('2026-08-01', 'YYYY-MM-DD')
+ORDER BY SIGHTINGTIME DESC;
+
+PROMPT 5. Ten most recent sightings for a cat;
+SELECT *
+FROM (
+    SELECT SIGHTINGID,
+           CATID,
+           USERID,
+           AREAID,
+           SIGHTINGTIME,
+           REMARK
+    FROM CAT_SIGHTINGS
+    WHERE CATID = 'demo-cat-campus-001'
+    ORDER BY SIGHTINGTIME DESC NULLS LAST
+)
+WHERE ROWNUM <= 10;
+
+PROMPT 6. Joined display for area, cat and reporter;
+SELECT sighting.SIGHTINGID,
+       cat.CATNAME,
+       area.AREANAME,
+       app_user.USERNAME,
+       sighting.SIGHTINGTIME,
+       sighting.REMARK
+FROM CAT_SIGHTINGS sighting
+LEFT JOIN CAT_CATS cat ON cat.CATID = sighting.CATID
+LEFT JOIN MAP_CAMPUSAREAS area ON area.AREAID = sighting.AREAID
+LEFT JOIN SYS_USERS app_user ON app_user.USERID = sighting.USERID
+ORDER BY sighting.SIGHTINGTIME DESC NULLS LAST;
 
