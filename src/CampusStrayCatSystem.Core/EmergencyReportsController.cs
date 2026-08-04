@@ -182,8 +182,10 @@ namespace CampusStrayCatSystem.Core
                 return Forbid();
             }
 
-            var rows = await _reportRepository.UpdateStatus(reportId, report.ProcessStatus, report.ProcessResult);
-            return rows == 1 ? NoContent() : Conflict("上报状态未发生变化。");
+            // 这里调用的是 Oracle Package，ExecuteNonQuery 的返回值不代表包内 UPDATE 行数。
+            // 报告不存在和非法状态由 Package 抛错，接口只在调用成功后返回 204。
+            await _reportRepository.UpdateStatus(reportId, report.ProcessStatus, report.ProcessResult);
+            return NoContent();
         }
     }
 }

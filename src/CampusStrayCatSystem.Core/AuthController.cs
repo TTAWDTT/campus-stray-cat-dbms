@@ -143,11 +143,7 @@ namespace CampusStrayCatSystem.Core
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private static bool IsUserActive(string? status) =>
-            !string.IsNullOrWhiteSpace(status) &&
-            (status.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase) ||
-             status.Equals("ENABLED", StringComparison.OrdinalIgnoreCase) ||
-             status.Equals("正常", StringComparison.OrdinalIgnoreCase));
+        private static bool IsUserActive(string? status) => UserStatusCodes.IsActive(status);
 
         private static UserProfileResponse ToProfile(User user) => new()
         {
