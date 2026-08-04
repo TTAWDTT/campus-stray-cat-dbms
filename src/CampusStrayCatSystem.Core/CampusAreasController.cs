@@ -1,6 +1,7 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -56,6 +57,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<CampusArea>> CreateArea([FromBody] CampusArea area)
         {
             var validationError = await ValidateAreaAsync(area, null);
@@ -72,6 +74,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateArea(string id, [FromBody] CampusArea area)
         {
             if (!string.IsNullOrWhiteSpace(area.AreaID)
@@ -98,6 +101,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> DeleteArea(string id)
         {
             if (await _areaRepository.GetByIdAsync(id) == null)

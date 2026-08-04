@@ -154,8 +154,13 @@ namespace CampusStrayCatSystem.Core
             if (user == null || !UserStatusCodes.IsActive(user.Status)) return Unauthorized();
 
             var isAdmin = string.Equals(user.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
-                || (user.PermissionScope ?? string.Empty).Contains("ROLE_MANAGE", StringComparison.OrdinalIgnoreCase);
+                || HasPermission(user.PermissionScope, "ROLE_MANAGE");
             return isAdmin ? null : Forbid();
         }
+
+        private static bool HasPermission(string? permissionScope, string requiredPermission) =>
+            (permissionScope ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(permission => permission.Equals(requiredPermission, StringComparison.OrdinalIgnoreCase));
     }
 }

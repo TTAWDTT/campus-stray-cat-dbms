@@ -71,9 +71,9 @@ namespace CampusStrayCatSystem.Core
             }
 
             var user = await _userRepository.GetById(userId);
-            if (user == null)
+            if (user == null || !IsUserActive(user.Status))
             {
-                return NotFound(new { message = "当前登录用户不存在。" });
+                return Unauthorized(new { message = "当前登录状态已失效。" });
             }
 
             return Ok(ToProfile(user));

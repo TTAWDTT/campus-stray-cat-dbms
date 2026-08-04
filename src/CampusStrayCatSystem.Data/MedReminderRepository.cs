@@ -75,11 +75,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_REMINDERTIME", reminder.ReminderTime, DbType.DateTime);
             parameters.Add("O_REMINDERID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            using var connection = CreateConnection();
-            var rows = await connection.ExecuteAsync(
+            var rows = await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.CREATE_REMINDER",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
 
             reminder.ReminderID = parameters.Get<string>("O_REMINDERID");
             reminder.SendStatus = "PENDING";
@@ -92,11 +90,9 @@ namespace CampusStrayCatSystem.Data
             var parameters = new DynamicParameters();
             parameters.Add("P_REMINDERID", reminderId, DbType.String);
 
-            using var connection = CreateConnection();
-            return await connection.ExecuteAsync(
+            return await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.MARK_REMINDER_SENT",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
         }
 
         public async Task<int> Complete(string reminderId)
@@ -104,11 +100,9 @@ namespace CampusStrayCatSystem.Data
             var parameters = new DynamicParameters();
             parameters.Add("P_REMINDERID", reminderId, DbType.String);
 
-            using var connection = CreateConnection();
-            return await connection.ExecuteAsync(
+            return await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.COMPLETE_REMINDER",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
         }
     }
 }

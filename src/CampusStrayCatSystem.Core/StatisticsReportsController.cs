@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -8,6 +9,7 @@ namespace CampusStrayCatSystem.Core
     // 提供统计快照的生成与查询
     [Route("api/statistics-reports")]
     [ApiController]
+    [Authorize]
     public class StatisticsReportsController : ControllerBase
     {
         private readonly IRptStatisticsSnapshotRepository _snapshotRepository;
@@ -64,6 +66,7 @@ namespace CampusStrayCatSystem.Core
 
         // 为指定众筹项目生成统计报表快照（事务）：聚合总捐赠额、已审核通过支出、净余额、捐赠笔数，一次性写入 RPT_STATISTICSSNAPSHOTS 表
         [HttpPost("generate/{projectId}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GenerateProjectReport(string projectId)
         {
             var project = await _projectRepository.GetById(projectId);

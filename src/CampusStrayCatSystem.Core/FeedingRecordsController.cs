@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -8,17 +10,21 @@ namespace CampusStrayCatSystem.Core
     // 志愿者完成投喂任务后通过本接口记录完成情况，系统在同一事务中把对应任务标记为已完成
     [Route("api/feeding-records")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class FeedingRecordsController : ControllerBase
     {
         private readonly IVolCheckInRepository _checkInRepository;
         private readonly IVolShiftRepository _shiftRepository;
+        private readonly IReferenceCheckRepository _referenceCheck;
 
         public FeedingRecordsController(
             IVolCheckInRepository checkInRepository,
-            IVolShiftRepository shiftRepository)
+            IVolShiftRepository shiftRepository,
+            IReferenceCheckRepository referenceCheck)
         {
             _checkInRepository = checkInRepository;
             _shiftRepository = shiftRepository;
+            _referenceCheck = referenceCheck;
         }
 
         // 获取所有投喂记录（按签到时间倒序）
@@ -62,6 +68,7 @@ namespace CampusStrayCatSystem.Core
 
         // 记录一次投喂完成情况：新增打卡记录，并把对应任务状态置为 COMPLETED
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<VolCheckIn>> Create([FromBody] VolCheckIn record)
         {
             if (record == null)
@@ -71,8 +78,17 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(record.ShiftID))
                 return BadRequest("ShiftID 不能为空。");
 
-            if (!await _shiftRepository.Exists(record.ShiftID))
+            var shift = await _shiftRepository.GetById(record.ShiftID);
+            if (shift == null)
                 return BadRequest($"投喂任务 ShiftID='{record.ShiftID}' 不存在。");
+
+            if (!User.IsInRole("ADMIN"))
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var volunteerUserId = await _referenceCheck.GetVolunteerUserId(shift.VolunteerID);
+                if (string.IsNullOrWhiteSpace(userId) || !string.Equals(userId, volunteerUserId, StringComparison.OrdinalIgnoreCase))
+                    return Forbid();
+            }
 
             // 校验打卡状态合法性
             if (!string.IsNullOrWhiteSpace(record.CheckInStatus))

@@ -86,11 +86,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_REMARK", sighting.Remark, DbType.String);
             parameters.Add("O_SIGHTINGID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            using var connection = CreateConnection();
-            var rows = await connection.ExecuteAsync(
+            var rows = await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.CREATE_SIGHTING",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
 
             sighting.SightingID = parameters.Get<string>("O_SIGHTINGID");
 
@@ -108,11 +106,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_REMARK", alert.Remark, DbType.String);
             parameters.Add("O_ALERTID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            using var connection = CreateConnection();
-            var rows = await connection.ExecuteAsync(
+            var rows = await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.CREATE_MISSING_ALERT",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
 
             alert.AlertID = parameters.Get<string>("O_ALERTID");
             alert.AlertStatus = "PROCESSING";
@@ -129,11 +125,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_HANDLERUSERID", handlerUserId, DbType.String);
             parameters.Add("P_REMARK", remark, DbType.String);
 
-            using var connection = CreateConnection();
-            return await connection.ExecuteAsync(
+            return await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.UPDATE_MISSING_STATUS",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
         }
     }
 }

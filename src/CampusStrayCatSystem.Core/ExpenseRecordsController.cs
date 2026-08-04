@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -8,6 +10,7 @@ namespace CampusStrayCatSystem.Core
     // 提供支出的记录、查询、审核功能，支出需审核通过后才计入财务公示
     [Route("api/expense-records")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class ExpenseRecordsController : ControllerBase
     {
         private readonly IFundExpenseRecordRepository _expenseRecordRepository;
@@ -67,6 +70,7 @@ namespace CampusStrayCatSystem.Core
 
         // 记录支出：新增一条支出记录（默认待审核状态）
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<FundExpenseRecord>> Create([FromBody] FundExpenseRecord record)
         {
             if (record == null)
@@ -86,6 +90,7 @@ namespace CampusStrayCatSystem.Core
 
         // 审核支出记录：管理员审核支出，更新审核状态和审核人，审核通过后会记录公示时间
         [HttpPut("{id}/audit")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Audit(string id, [FromBody] AuditExpenseRecordRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.AuditStatus))
@@ -95,8 +100,9 @@ namespace CampusStrayCatSystem.Core
             if (normalizedStatus is not (AuditStatuses.Approved or AuditStatuses.Rejected))
                 return BadRequest("审核状态只能是 APPROVED 或 REJECTED。");
 
-            if (string.IsNullOrWhiteSpace(request.AuditUserID))
-                return BadRequest("审核人 AuditUserID 不能为空。");
+            var auditUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(auditUserId))
+                return Unauthorized();
 
             var existing = await _expenseRecordRepository.GetById(id);
             if (existing == null)
@@ -107,10 +113,10 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest($"当前审核状态为 '{existing.AuditStatus}'，仅 '{AuditStatuses.Pending}' 状态的记录可审核。");
 
             // 校验审核人存在
-            if (!await _referenceCheck.UserExists(request.AuditUserID))
-                return BadRequest($"审核人 UserID='{request.AuditUserID}' 不存在。");
+            if (!await _referenceCheck.UserExists(auditUserId))
+                return Unauthorized();
 
-            var updated = await _expenseRecordRepository.Audit(id, request.AuditUserID, normalizedStatus);
+            var updated = await _expenseRecordRepository.Audit(id, auditUserId, normalizedStatus);
             if (updated != 1)
                 return Conflict("支出记录的审核状态已经变化，请刷新后重试。");
 

@@ -15,6 +15,12 @@ namespace CampusStrayCatSystem.Data
             return count > 0;
         }
 
+        public async Task<string?> GetVolunteerUserId(string volunteerId)
+        {
+            const string sql = "SELECT USERID FROM VOL_VOLUNTEERS WHERE VOLUNTEERID = :VolunteerID";
+            return await QuerySingleAsync<string>(sql, new { VolunteerID = volunteerId });
+        }
+
         // 判断投喂点 ID 在 MAP_SERVICEPOINTS 表中是否存在
         public async Task<bool> ServicePointExists(string pointId)
         {

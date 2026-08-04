@@ -47,12 +47,37 @@ namespace CampusStrayCatSystem.Data
         protected async Task<int> ExecuteAsync(string sql, object? param = null)
         {
             using var connection = CreateConnection();
-            return await connection.ExecuteAsync(sql, param);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try {
+                var affected = await connection.ExecuteAsync(sql, param, transaction);
+                transaction.Commit();
+                return affected;
+            } catch {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         protected async Task<int> ExecuteAsync(IDbConnection connection, IDbTransaction transaction, string sql, object? param = null)
         {
             return await connection.ExecuteAsync(sql, param, transaction);
+        }
+
+        protected async Task<int> ExecuteStoredProcedureAsync(string procedureName, object param)
+        {
+            using var connection = CreateConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+            try {
+                var affected = await connection.ExecuteAsync(procedureName, param, transaction,
+                    commandType: CommandType.StoredProcedure);
+                transaction.Commit();
+                return affected;
+            } catch {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         protected async Task<TResult?> QuerySingleAsync<TResult>(IDbConnection connection, string sql, object? param = null)

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -6,6 +8,7 @@ namespace CampusStrayCatSystem.Core
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
     public class TnrCasesController : ControllerBase
     {
         private readonly ITnrCaseRepository _tnrCaseRepository;
@@ -47,6 +50,7 @@ namespace CampusStrayCatSystem.Core
 
         //创建新的TNR案例
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
         public async Task<ActionResult<TnrCase>> CreateTnrCase([FromBody] TnrCase tnrCase)
         {
             if (tnrCase == null)
@@ -63,6 +67,7 @@ namespace CampusStrayCatSystem.Core
 
         //更新TNR案例基本信息（状态只能通过专用状态接口修改）
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
         public async Task<IActionResult> UpdateTnrCase(string id, [FromBody] TnrCase tnrCase)
         {
             if (tnrCase == null)
@@ -95,6 +100,7 @@ namespace CampusStrayCatSystem.Core
 
         //更新TNR状态（自动生成状态流转日志，同一事务）
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
         public async Task<IActionResult> UpdateTnrStatus(string id, [FromBody] UpdateStatusRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.NewStatus))
@@ -108,12 +114,12 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的TNR案例，无法更新状态。");
 
-            var operatorId = string.IsNullOrWhiteSpace(request.OperatorID)
-                ? null
-                : request.OperatorID.Trim();
+            var operatorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(operatorId))
+                return Unauthorized();
 
-            if (operatorId != null && !await _userRepository.Exists(operatorId))
-                return BadRequest($"操作人 UserID='{operatorId}' 不存在。");
+            if (!await _userRepository.Exists(operatorId))
+                return Unauthorized();
 
             var oldStatus = existing.CurrentStatus;
 

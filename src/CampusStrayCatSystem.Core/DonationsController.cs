@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -8,6 +9,7 @@ namespace CampusStrayCatSystem.Core
     // 记录捐赠时，系统在事务中同时把金额累加到项目的已筹金额，保证财务数据一致
     [Route("api/donations")]
     [ApiController]
+    [Authorize]
     public class DonationsController : ControllerBase
     {
         private readonly IFundDonationRepository _donationRepository;

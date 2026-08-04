@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
     // 志愿者交接控制器，对应数据库表 VOL_HANDOVERS
     [Route("api/handovers")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class HandoversController : ControllerBase
     {
         private readonly IVolHandoverRepository _handoverRepository;
@@ -79,6 +82,7 @@ namespace CampusStrayCatSystem.Core
 
         // 提交交接：新建交接记录，状态默认 PENDING，发起方把任务转交给接收方
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<VolHandover>> Create([FromBody] VolHandover handover)
         {
             if (handover == null)
@@ -88,12 +92,16 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
+            var access = await EnsureVolunteerAsync(handover.FromVolunteerID);
+            if (access != null) return access;
+
             await _handoverRepository.Create(handover);
             return CreatedAtAction(nameof(GetById), new { id = handover.HandoverID }, handover);
         }
 
         // 确认交接：接收方接受，状态置为 CONFIRMED；若关联投喂任务，则把任务负责人改为接收方
         [HttpPut("{id}/confirm")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> Confirm(string id)
         {
             var existing = await _handoverRepository.GetById(id);
@@ -103,6 +111,9 @@ namespace CampusStrayCatSystem.Core
             // 只有处于待确认状态的交接才能被确认
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可确认。");
+
+            var access = await EnsureVolunteerAsync(existing.ToVolunteerID);
+            if (access != null) return access;
 
             var confirmed = await _handoverRepository.Confirm(
                 id,
@@ -118,6 +129,7 @@ namespace CampusStrayCatSystem.Core
 
         // 拒绝交接：接收方拒绝接受
         [HttpPut("{id}/reject")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> Reject(string id)
         {
             var existing = await _handoverRepository.GetById(id);
@@ -126,6 +138,9 @@ namespace CampusStrayCatSystem.Core
 
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可拒绝。");
+
+            var access = await EnsureVolunteerAsync(existing.ToVolunteerID);
+            if (access != null) return access;
 
             var rejected = await _handoverRepository.Reject(id);
             if (rejected != 1)
@@ -136,6 +151,7 @@ namespace CampusStrayCatSystem.Core
 
         // 撤销交接：发起方撤销尚未确认的交接
         [HttpPut("{id}/cancel")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> Cancel(string id)
         {
             var existing = await _handoverRepository.GetById(id);
@@ -144,6 +160,9 @@ namespace CampusStrayCatSystem.Core
 
             if (!string.Equals(existing.HandoverStatus, HandoverStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 return BadRequest($"当前交接状态为 '{existing.HandoverStatus}'，仅处于 '{HandoverStatuses.Pending}' 状态的交接可撤销。");
+
+            var access = await EnsureVolunteerAsync(existing.FromVolunteerID);
+            if (access != null) return access;
 
             var cancelled = await _handoverRepository.Cancel(id);
             if (cancelled != 1)
@@ -187,6 +206,19 @@ namespace CampusStrayCatSystem.Core
                 return "只有当前任务负责人才能发起该投喂任务的交接。";
 
             return null; // 校验通过
+        }
+
+        private async Task<ActionResult?> EnsureVolunteerAsync(string volunteerId)
+        {
+            if (User.IsInRole("ADMIN")) return null;
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var volunteerUserId = await _referenceCheck.GetVolunteerUserId(volunteerId);
+            return string.Equals(userId, volunteerUserId, StringComparison.OrdinalIgnoreCase)
+                ? null
+                : Forbid();
         }
     }
 }

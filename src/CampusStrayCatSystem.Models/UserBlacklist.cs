@@ -7,7 +7,7 @@ public class UserBlacklist
     public string ApplicationID { get; set; }    // 关联领养申请，可空
     public string CreateUserID { get; set; }
     public DateTime CreateTime { get; set; }
-    public string BlacklistStatus { get; set; }           // Active / Released
+    public string BlacklistStatus { get; set; }           // ACTIVE / RELEASED
     public DateTime? ReleaseTime { get; set; }
     public string ReleasedBy { get; set; }
 }

@@ -17,7 +17,9 @@ namespace CampusStrayCatSystem.Data
 
         Task<UserBlacklist> GetByIdAsync(string blacklistId);
 
-        Task AddAsync(UserBlacklist record);
+        Task<bool> AddAsync(UserBlacklist record);
+
+        Task<bool> ApplicationExistsAsync(string applicationId);
 
         Task ReleaseAsync(string blacklistId, string releasedBy);
 

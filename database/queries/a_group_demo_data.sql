@@ -108,11 +108,11 @@ PROMPT A-group member1 demo users ready. Login password: Passw0rd!
 -- =====================================================
 MERGE INTO USER_BLACKLIST target
 USING (
-    SELECT 'bl-001-a-group' AS BLACKLISTID, 'user-normal-a-group' AS USERID, '违规领养' AS REASONTYPE, '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL, NULL AS RELATEDAPPLICATIONID, 'user-admin-a-group' AS CREATEUSERID, SYSDATE AS CREATETIME, 'Active' AS BLACKLISTSTATUS, NULL AS RELEASETIME, NULL AS RELEASEDBY FROM DUAL
+    SELECT 'bl-001-a-group' AS BLACKLISTID, 'user-normal-a-group' AS USERID, '违规领养' AS REASONTYPE, '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL, NULL AS RELATEDAPPLICATIONID, 'user-admin-a-group' AS CREATEUSERID, SYSDATE AS CREATETIME, 'ACTIVE' AS BLACKLISTSTATUS, NULL AS RELEASETIME, NULL AS RELEASEDBY FROM DUAL
     UNION ALL
-    SELECT 'bl-002-a-group', 'user-disabled-a-group', '恶意行为', '在校园内恶意伤害流浪猫', NULL, 'user-admin-a-group', SYSDATE-5, 'Active', NULL, NULL FROM DUAL
+    SELECT 'bl-002-a-group', 'user-disabled-a-group', '恶意行为', '在校园内恶意伤害流浪猫', NULL, 'user-admin-a-group', SYSDATE-5, 'ACTIVE', NULL, NULL FROM DUAL
     UNION ALL
-    SELECT 'bl-003-a-group', 'user-volunteer-a-group', '虚假信息', '提供虚假领养申请信息', NULL, 'user-admin-a-group', SYSDATE-30, 'Released', SYSDATE-15, 'user-admin-a-group' FROM DUAL
+    SELECT 'bl-003-a-group', 'user-volunteer-a-group', '虚假信息', '提供虚假领养申请信息', NULL, 'user-admin-a-group', SYSDATE-30, 'RELEASED', SYSDATE-15, 'user-admin-a-group' FROM DUAL
 ) source
 ON (target.BLACKLISTID = source.BLACKLISTID)
 WHEN MATCHED THEN UPDATE SET
@@ -127,5 +127,7 @@ WHEN MATCHED THEN UPDATE SET
     target.RELEASEDBY = source.RELEASEDBY
 WHEN NOT MATCHED THEN INSERT (BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, RELATEDAPPLICATIONID, CREATEUSERID, CREATETIME, BLACKLISTSTATUS, RELEASETIME, RELEASEDBY)
 VALUES (source.BLACKLISTID, source.USERID, source.REASONTYPE, source.REASONDETAIL, source.RELATEDAPPLICATIONID, source.CREATEUSERID, source.CREATETIME, source.BLACKLISTSTATUS, source.RELEASETIME, source.RELEASEDBY);
+
+COMMIT;
 
 PROMPT A-group member2 blacklist demo data ready.

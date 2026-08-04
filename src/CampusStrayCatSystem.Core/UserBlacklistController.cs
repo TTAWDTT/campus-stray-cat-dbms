@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Models.DTOs;
@@ -15,19 +16,22 @@ namespace CampusStrayCatSystem.Core.Controllers
     /// <summary>
     /// 用户黑名单管理控制器
     /// </summary>
-    [Route("api/[controller]")]
+    [Route("api/blacklist")]
     [ApiController]
     public class UserBlacklistController : ControllerBase
     {
         private readonly IUserBlacklistRepository _blacklistRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<UserBlacklistController> _logger;
 
         public UserBlacklistController(
             IUserBlacklistRepository blacklistRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ILogger<UserBlacklistController> logger)
         {
             _blacklistRepository = blacklistRepository;
             _userRepository = userRepository;
+            _logger = logger;
         }
 
         /// <summary>
@@ -51,7 +55,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                 if (denied != null) return denied;
 
                 // 参数校验
-                if (page < 1) page = 1;
+                page = Math.Clamp(page, 1, 1_000_000);
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
                 // 获取数据
@@ -83,7 +87,8 @@ namespace CampusStrayCatSystem.Core.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "获取黑名单列表失败", error = ex.Message });
+                _logger.LogError(ex, "获取黑名单列表失败");
+                return StatusCode(500, new { message = "获取黑名单列表失败" });
             }
         }
 
@@ -109,11 +114,24 @@ namespace CampusStrayCatSystem.Core.Controllers
                     return NotFound(new { message = "黑名单记录不存在" });
                 }
 
-                return Ok(record);
+                return Ok(new BlacklistResponseDto
+                {
+                    BlacklistId = record.BlacklistID,
+                    UserId = record.UserID,
+                    ReasonType = record.ReasonType,
+                    ReasonDetail = record.ReasonDetail,
+                    ApplicationId = record.ApplicationID,
+                    CreatedBy = record.CreateUserID,
+                    CreatedAt = record.CreateTime,
+                    Status = record.BlacklistStatus,
+                    ReleaseTime = record.ReleaseTime,
+                    ReleasedBy = record.ReleasedBy
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "获取黑名单详情失败", error = ex.Message });
+                _logger.LogError(ex, "获取黑名单详情失败");
+                return StatusCode(500, new { message = "获取黑名单详情失败" });
             }
         }
 
@@ -148,6 +166,11 @@ namespace CampusStrayCatSystem.Core.Controllers
                     return NotFound(new { message = "用户不存在" });
                 }
 
+                var applicationId = string.IsNullOrWhiteSpace(dto.ApplicationId) ? null : dto.ApplicationId.Trim();
+                if (applicationId != null && !await _blacklistRepository.ApplicationExistsAsync(applicationId)) {
+                    return NotFound(new { message = "关联的领养申请不存在" });
+                }
+
                 // 检查用户是否已在黑名单中
                 var isBlacklisted = await _blacklistRepository.HasActiveBlacklistAsync(dto.UserId);
                 if (isBlacklisted)
@@ -164,13 +187,15 @@ namespace CampusStrayCatSystem.Core.Controllers
                     UserID = dto.UserId,
                     ReasonType = dto.ReasonType,
                     ReasonDetail = dto.ReasonDetail,
-                    ApplicationID = dto.ApplicationId,
+                    ApplicationID = applicationId,
                     CreateUserID = operatorId,
                     CreateTime = DateTime.Now,
-                    BlacklistStatus = "Active"
+                    BlacklistStatus = "ACTIVE"
                 };
 
-                await _blacklistRepository.AddAsync(newRecord);
+                if (!await _blacklistRepository.AddAsync(newRecord)) {
+                    return Conflict(new { message = "该用户已在黑名单中，请勿重复拉黑" });
+                }
 
                 return CreatedAtAction(nameof(GetById), new { id = newRecord.BlacklistID }, new
                 {
@@ -180,7 +205,8 @@ namespace CampusStrayCatSystem.Core.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "加入黑名单失败", error = ex.Message });
+                _logger.LogError(ex, "加入黑名单失败");
+                return StatusCode(500, new { message = "加入黑名单失败" });
             }
         }
 
@@ -195,7 +221,7 @@ namespace CampusStrayCatSystem.Core.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Release(string id, [FromBody] ReleaseBlacklistDto dto)
+        public async Task<IActionResult> Release(string id, [FromBody] ReleaseBlacklistDto? dto)
         {
             var denied = await EnsureAdminAccessAsync();
             if (denied != null) return denied;
@@ -210,8 +236,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 检查是否已解除
-                if (record.BlacklistStatus == "Released")
-                {
+                if (string.Equals(record.BlacklistStatus, "RELEASED", StringComparison.OrdinalIgnoreCase)) {
                     return Conflict(new { message = "该黑名单记录已被解除" });
                 }
 
@@ -232,7 +257,8 @@ namespace CampusStrayCatSystem.Core.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "解除黑名单失败", error = ex.Message });
+                _logger.LogError(ex, "解除黑名单失败");
+                return StatusCode(500, new { message = "解除黑名单失败" });
             }
         }
 
@@ -240,11 +266,18 @@ namespace CampusStrayCatSystem.Core.Controllers
         /// 查询用户有效黑名单状态（供领养审核模块调用）
         /// </summary>
         [HttpGet("status/{userId}")]
-        [AllowAnonymous] // 内部调用，可加特殊权限控制
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         [ProducesResponseType(typeof(BlacklistStatusDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetUserBlacklistStatus(string userId)
         {
+            var denied = await EnsureBlacklistStatusAccessAsync();
+            if (denied != null) return denied;
+
+            if (string.IsNullOrWhiteSpace(userId)) {
+                return BadRequest(new { message = "用户 ID 不能为空" });
+            }
+
             try
             {
                 // 检查用户是否存在
@@ -261,7 +294,8 @@ namespace CampusStrayCatSystem.Core.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "查询用户黑名单状态失败", error = ex.Message });
+                _logger.LogError(ex, "查询用户黑名单状态失败");
+                return StatusCode(500, new { message = "查询用户黑名单状态失败" });
             }
         }
 
@@ -302,8 +336,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                         }
 
                         // 检查是否已解除
-                        if (record.BlacklistStatus == "Released")
-                        {
+                        if (string.Equals(record.BlacklistStatus, "RELEASED", StringComparison.OrdinalIgnoreCase)) {
                             failList.Add($"{blacklistId} (已解除)");
                             continue;
                         }
@@ -326,7 +359,8 @@ namespace CampusStrayCatSystem.Core.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "批量解除黑名单失败", error = ex.Message });
+                _logger.LogError(ex, "批量解除黑名单失败");
+                return StatusCode(500, new { message = "批量解除黑名单失败" });
             }
         }
 
@@ -341,9 +375,26 @@ namespace CampusStrayCatSystem.Core.Controllers
             if (user == null || !UserStatusCodes.IsActive(user.Status)) return Unauthorized();
 
             var isAdmin = string.Equals(user.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
-                || (user.PermissionScope ?? string.Empty).Contains("BLACKLIST_MANAGE", StringComparison.OrdinalIgnoreCase);
+                || HasPermission(user.PermissionScope, "BLACKLIST_MANAGE");
             return isAdmin ? null : Forbid();
         }
+
+        private async Task<ActionResult?> EnsureBlacklistStatusAccessAsync()
+        {
+            var userId = CurrentOperatorId();
+            if (userId == null) return Unauthorized();
+
+            var user = await _userRepository.GetById(userId);
+            if (user == null || !UserStatusCodes.IsActive(user.Status)) return Unauthorized();
+
+            var roleName = user.RoleName ?? string.Empty;
+            var canView = roleName.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) || roleName.Equals("VOLUNTEER", StringComparison.OrdinalIgnoreCase);
+            return canView ? null : Forbid();
+        }
+
+        private static bool HasPermission(string? permissionScope, string requiredPermission) =>
+            (permissionScope ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(permission => permission.Equals(requiredPermission, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>

@@ -87,7 +87,7 @@ SELECT
     b.BLACKLISTSTATUS
 FROM USER_BLACKLIST b
 INNER JOIN SYS_USERS u ON b.USERID = u.USERID
-WHERE b.BLACKLISTSTATUS = 'Active'
+WHERE UPPER(b.BLACKLISTSTATUS) = 'ACTIVE'
   AND u.STATUS = 'ACTIVE';
 
 -- 3. 分配角色存储过程
@@ -101,6 +101,7 @@ IS
     v_OldRoleID  VARCHAR2(36);
     v_UserExists NUMBER;
     v_RoleExists NUMBER;
+    v_OperatorExists NUMBER;
 BEGIN
     SAVEPOINT SP_ASSIGN_USER_ROLE_START;
 
@@ -118,6 +119,19 @@ BEGIN
         RETURN;
     END IF;
 
+    SELECT COUNT(1) INTO v_OperatorExists
+    FROM SYS_USERS u
+    INNER JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
+    WHERE u.USERID = p_OperatorID
+      AND UPPER(NVL(u.STATUS, 'DISABLED')) = 'ACTIVE'
+      AND (UPPER(r.ROLENAME) = 'ADMIN'
+           OR INSTR(',' || REPLACE(UPPER(NVL(r.PERMISSIONSCOPE, '')), ' ', '') || ',', ',ROLE_MANAGE,') > 0);
+    IF v_OperatorExists = 0 THEN
+        p_Result := '操作人无权分配角色';
+        ROLLBACK TO SP_ASSIGN_USER_ROLE_START;
+        RETURN;
+    END IF;
+
     SELECT ROLEID INTO v_OldRoleID FROM SYS_USERS WHERE USERID = p_UserID;
     IF v_OldRoleID = p_NewRoleID THEN
         p_Result := '';
@@ -125,6 +139,13 @@ BEGIN
     END IF;
 
     UPDATE SYS_USERS SET ROLEID = p_NewRoleID WHERE USERID = p_UserID;
+
+    INSERT INTO LOG_AUDITTRAILS (
+        LOGID, TABLENAME, RECORDID, ACTIONTYPE, OLDVALUE, NEWVALUE, OPERATORID, OPTIME
+    ) VALUES (
+        LOWER(RAWTOHEX(SYS_GUID())), 'SYS_USERS', p_UserID, 'UPDATE_ROLE',
+        v_OldRoleID, p_NewRoleID, p_OperatorID, SYSDATE
+    );
 
     COMMIT;
     p_Result := '';
@@ -148,29 +169,62 @@ CREATE OR REPLACE PROCEDURE SP_ADD_USER_BLACKLIST (
 IS
     v_ActiveCount NUMBER;
     v_BlacklistID VARCHAR2(36);
+    v_TargetUserID VARCHAR2(36);
+    v_OperatorExists NUMBER;
+    v_ApplicationExists NUMBER;
 BEGIN
+    SAVEPOINT SP_ADD_USER_BLACKLIST_START;
+
     SELECT COUNT(1) INTO v_ActiveCount FROM SYS_USERS WHERE USERID = p_UserID;
     IF v_ActiveCount = 0 THEN
         p_Result := '用户不存在';
         RETURN;
     END IF;
 
-    SELECT COUNT(1) INTO v_ActiveCount
-    FROM USER_BLACKLIST
-    WHERE USERID = p_UserID AND BLACKLISTSTATUS = 'Active';
-
-    IF v_ActiveCount > 0 THEN
-        p_Result := '该用户已在黑名单中，请勿重复拉黑';
+    SELECT COUNT(1) INTO v_OperatorExists
+    FROM SYS_USERS u
+    INNER JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
+    WHERE u.USERID = p_CreatedBy
+      AND UPPER(NVL(u.STATUS, 'DISABLED')) = 'ACTIVE'
+      AND (UPPER(r.ROLENAME) = 'ADMIN'
+           OR INSTR(',' || REPLACE(UPPER(NVL(r.PERMISSIONSCOPE, '')), ' ', '') || ',', ',BLACKLIST_MANAGE,') > 0);
+    IF v_OperatorExists = 0 THEN
+        p_Result := '操作人无权加入黑名单';
         RETURN;
     END IF;
 
-    v_BlacklistID := SYS_GUID();
+    IF p_ApplicationID IS NOT NULL THEN
+        SELECT COUNT(1) INTO v_ApplicationExists
+        FROM ADOPT_APPLICATIONS
+        WHERE APPLICATIONID = p_ApplicationID;
+        IF v_ApplicationExists = 0 THEN
+            p_Result := '关联领养申请不存在';
+            RETURN;
+        END IF;
+    END IF;
+
+    SELECT USERID INTO v_TargetUserID
+    FROM SYS_USERS
+    WHERE USERID = p_UserID
+    FOR UPDATE;
+
+    SELECT COUNT(1) INTO v_ActiveCount
+    FROM USER_BLACKLIST
+    WHERE USERID = p_UserID AND UPPER(BLACKLISTSTATUS) = 'ACTIVE';
+
+    IF v_ActiveCount > 0 THEN
+        p_Result := '该用户已在黑名单中，请勿重复拉黑';
+        ROLLBACK TO SP_ADD_USER_BLACKLIST_START;
+        RETURN;
+    END IF;
+
+    v_BlacklistID := LOWER(RAWTOHEX(SYS_GUID()));
     INSERT INTO USER_BLACKLIST (
         BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, RELATEDAPPLICATIONID,
         CREATEUSERID, CREATETIME, BLACKLISTSTATUS
     ) VALUES (
         v_BlacklistID, p_UserID, p_ReasonType, p_ReasonDetail, p_ApplicationID,
-        p_CreatedBy, SYSDATE, 'Active'
+        p_CreatedBy, SYSDATE, 'ACTIVE'
     );
 
     p_Result := '';
@@ -190,23 +244,44 @@ CREATE OR REPLACE PROCEDURE SP_RELEASE_USER_BLACKLIST (
 )
 IS
     v_Status       VARCHAR2(20);
+    v_OperatorExists NUMBER;
 BEGIN
     SAVEPOINT SP_RELEASE_USER_BLACKLIST_START;
 
     SELECT BLACKLISTSTATUS INTO v_Status
     FROM USER_BLACKLIST WHERE BLACKLISTID = p_BlacklistID;
 
-    IF v_Status = 'Released' THEN
+    IF UPPER(v_Status) = 'RELEASED' THEN
         p_Result := '该黑名单记录已被解除';
         ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
         RETURN;
     END IF;
 
+    SELECT COUNT(1) INTO v_OperatorExists
+    FROM SYS_USERS u
+    INNER JOIN SYS_ROLES r ON r.ROLEID = u.ROLEID
+    WHERE u.USERID = p_ReleasedBy
+      AND UPPER(NVL(u.STATUS, 'DISABLED')) = 'ACTIVE'
+      AND (UPPER(r.ROLENAME) = 'ADMIN'
+           OR INSTR(',' || REPLACE(UPPER(NVL(r.PERMISSIONSCOPE, '')), ' ', '') || ',', ',BLACKLIST_MANAGE,') > 0);
+    IF v_OperatorExists = 0 THEN
+        p_Result := '操作人无权解除黑名单';
+        ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
+        RETURN;
+    END IF;
+
     UPDATE USER_BLACKLIST
-    SET BLACKLISTSTATUS = 'Released',
+    SET BLACKLISTSTATUS = 'RELEASED',
         RELEASETIME = SYSTIMESTAMP,
         RELEASEDBY = p_ReleasedBy
-    WHERE BLACKLISTID = p_BlacklistID;
+    WHERE BLACKLISTID = p_BlacklistID
+      AND UPPER(BLACKLISTSTATUS) = 'ACTIVE';
+
+    IF SQL%ROWCOUNT = 0 THEN
+        p_Result := '黑名单记录不存在或已被解除';
+        ROLLBACK TO SP_RELEASE_USER_BLACKLIST_START;
+        RETURN;
+    END IF;
 
     COMMIT;
     p_Result := '';

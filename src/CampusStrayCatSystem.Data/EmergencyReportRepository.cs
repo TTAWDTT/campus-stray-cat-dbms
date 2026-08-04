@@ -69,11 +69,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_URGENCYLEVEL", report.UrgencyLevel, DbType.String);
             parameters.Add("O_REPORTID", dbType: DbType.String, direction: ParameterDirection.Output, size: 36);
 
-            using var connection = CreateConnection();
-            var rows = await connection.ExecuteAsync(
+            var rows = await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.SUBMIT_EMERGENCY_REPORT",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
 
             report.ReportID = parameters.Get<string>("O_REPORTID");
             report.ReportTime = DateTime.Now;
@@ -88,11 +86,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_REPORTID", reportId, DbType.String);
             parameters.Add("P_HANDLERUSERID", handlerUserId, DbType.String);
 
-            using var connection = CreateConnection();
-            return await connection.ExecuteAsync(
+            return await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.ASSIGN_EMERGENCY_REPORT",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
         }
 
         public async Task<int> UpdateStatus(string reportId, string status, string? processResult)
@@ -102,11 +98,9 @@ namespace CampusStrayCatSystem.Data
             parameters.Add("P_PROCESSSTATUS", status, DbType.String);
             parameters.Add("P_PROCESSRESULT", processResult, DbType.String);
 
-            using var connection = CreateConnection();
-            return await connection.ExecuteAsync(
+            return await ExecuteStoredProcedureAsync(
                 "PKG_RESCUE_CARE.UPDATE_EMERGENCY_STATUS",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+                parameters);
         }
     }
 }

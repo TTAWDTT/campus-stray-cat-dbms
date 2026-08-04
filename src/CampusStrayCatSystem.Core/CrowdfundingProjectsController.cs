@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -61,6 +62,7 @@ namespace CampusStrayCatSystem.Core
 
         // 创建众筹项目
         [HttpPost]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<FundCrowdfundingProject>> Create([FromBody] FundCrowdfundingProject project)
         {
             if (project == null)
@@ -83,6 +85,7 @@ namespace CampusStrayCatSystem.Core
 
         // 更新众筹项目基本信息
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Update(string id, [FromBody] FundCrowdfundingProject project)
         {
             if (project == null)
@@ -108,6 +111,7 @@ namespace CampusStrayCatSystem.Core
 
         // 更新项目状态（如发布为 ACTIVE、结束为 COMPLETED）
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> UpdateStatus(string id, [FromBody] UpdateProjectStatusRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.NewStatus))

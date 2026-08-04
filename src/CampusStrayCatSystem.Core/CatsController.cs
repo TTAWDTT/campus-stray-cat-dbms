@@ -1,6 +1,7 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CampusStrayCatSystem.Core {
     [Route("api/cats")]
@@ -38,7 +39,7 @@ namespace CampusStrayCatSystem.Core {
 
         [ProducesResponseType<CatSummary>(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpPost] public async Task<ActionResult<CatSummary>> CreateCat(CreateCatRequest request) {
+        [HttpPost] [Authorize(Roles = "ADMIN,VOLUNTEER")] public async Task<ActionResult<CatSummary>> CreateCat(CreateCatRequest request) {
             if (request.MainAreaId != null &&
                 await _campusAreaRepository.GetByIdAsync(request.MainAreaId) == null) {
                 return BadRequest(new { message = $"未找到 ID 为 {request.MainAreaId} 的校园区域。" });}
@@ -66,6 +67,7 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{catId}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateCat(string catId, UpdateCatRequest request) {
             var existingCat = await _catRepository.GetByIdAsync(catId);
             if (existingCat == null) {
@@ -96,7 +98,7 @@ namespace CampusStrayCatSystem.Core {
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpDelete("{catId}")] public async Task<IActionResult> ArchiveCat(string catId) {
+        [HttpDelete("{catId}")] [Authorize(Roles = "ADMIN,VOLUNTEER")] public async Task<IActionResult> ArchiveCat(string catId) {
             var affectedRows = await _catRepository.ArchiveAsync(catId);
             if (affectedRows == 0) {
                 return NotFound(new { message = $"未找到 ID 为 {catId} 的猫咪档案。" });}

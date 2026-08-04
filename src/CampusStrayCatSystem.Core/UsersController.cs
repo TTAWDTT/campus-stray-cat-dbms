@@ -299,7 +299,7 @@ namespace CampusStrayCatSystem.Core
             var roleName = user.RoleName ?? string.Empty;
             var permissionScope = user.PermissionScope ?? string.Empty;
             var isAdmin = roleName.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
-                          permissionScope.Contains("USER_MANAGE", StringComparison.OrdinalIgnoreCase);
+                          HasPermission(permissionScope, "USER_MANAGE");
             if (!isAdmin)
             {
                 return Forbid();
@@ -307,6 +307,11 @@ namespace CampusStrayCatSystem.Core
 
             return null;
         }
+
+        private static bool HasPermission(string permissionScope, string requiredPermission) =>
+            permissionScope
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(permission => permission.Equals(requiredPermission, StringComparison.OrdinalIgnoreCase));
 
         private static string? NormalizeOptional(string? value) =>
             string.IsNullOrWhiteSpace(value) ? null : value.Trim();

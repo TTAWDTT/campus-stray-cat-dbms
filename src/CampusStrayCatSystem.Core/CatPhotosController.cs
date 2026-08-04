@@ -1,5 +1,6 @@
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CampusStrayCatSystem.Core {
     [Route("api/cats/{catId}/photos")]
@@ -39,7 +40,7 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [RequestSizeLimit(MaximumMultipartBodySize)]
         [RequestFormLimits(MultipartBodyLengthLimit = MaximumMultipartBodySize)]
-        [HttpPost] public async Task<ActionResult<CatPhoto>> UploadPhoto(string catId,
+        [HttpPost] [Authorize(Roles = "ADMIN,VOLUNTEER")] public async Task<ActionResult<CatPhoto>> UploadPhoto(string catId,
                                                                         [FromForm] UploadCatPhotoRequest request,
                                                                         CancellationToken cancellationToken) {
             var result = await _catPhotoService.UploadAsync(catId, request, cancellationToken);
@@ -70,6 +71,7 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [HttpPut("{photoId}/primary")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> SetPrimary(string catId, string photoId) {
             var status = await _catPhotoService.SetPrimaryAsync(catId, photoId);
             if (status == CatPhotoServiceStatus.InvalidIdentifier) {
@@ -100,6 +102,7 @@ namespace CampusStrayCatSystem.Core {
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [HttpDelete("{photoId}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> DeletePhoto(string catId, string photoId) {
             var status = await _catPhotoService.DeleteAsync(catId, photoId);
             if (status == CatPhotoServiceStatus.InvalidIdentifier) {

@@ -83,7 +83,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
     PROCEDURE submit_application(p_cat_id IN VARCHAR2, p_applicant_user_id IN VARCHAR2, p_status IN VARCHAR2 DEFAULT 'PENDING') IS
     BEGIN
         INSERT INTO ADOPT_APPLICATIONS (APPLICATIONID, CATID, APPLICANTUSERID, APPLYTIME, CURRENTSTATUS, REVIEWERUSERID, AGREEMENTNO, CONFIRMTIME)
-        VALUES ('APP-' || DBMS_RANDOM.STRING('X', 8), p_cat_id, p_applicant_user_id, SYSDATE, p_status, NULL, NULL, NULL);
+        VALUES ('APP-' || DBMS_RANDOM.STRING('X', 8), p_cat_id, p_applicant_user_id, SYSDATE, 'PENDING', NULL, NULL, NULL);
     END submit_application;
 
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL) IS
@@ -105,7 +105,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
             raise_application_error(-20032, '只有 PENDING 状态的申请可以审核');
         END IF;
 
-        SELECT COUNT(1) INTO v_blacklisted FROM USER_BLACKLIST ub WHERE ub.USERID = v_applicant_user_id AND ub.BLACKLISTSTATUS = 'ACTIVE';
+        SELECT COUNT(1) INTO v_blacklisted FROM USER_BLACKLIST ub WHERE ub.USERID = v_applicant_user_id AND UPPER(ub.BLACKLISTSTATUS) = 'ACTIVE';
 
         IF v_blacklisted > 0 THEN
             -- 若在黑名单，强制设置为 REJECTED 并记录审核人/时间，避免通过

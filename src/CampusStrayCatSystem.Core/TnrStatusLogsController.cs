@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
 
@@ -6,6 +7,7 @@ namespace CampusStrayCatSystem.Core
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
     public class TnrStatusLogsController : ControllerBase
     {
         private readonly ITnrStatusLogRepository _tnrStatusLogRepository;

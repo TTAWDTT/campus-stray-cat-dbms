@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 
@@ -10,6 +11,7 @@ namespace CampusStrayCatSystem.Core
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
     public class MedReminderController : ControllerBase
     {
         private static readonly HashSet<string> AllowedReminderTypes = new(StringComparer.OrdinalIgnoreCase)

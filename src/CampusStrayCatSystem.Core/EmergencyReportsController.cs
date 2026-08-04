@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -10,6 +12,7 @@ namespace CampusStrayCatSystem.Core
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmergencyReportsController : ControllerBase
     {
         private static readonly HashSet<string> AllowedUrgencyLevels = new(StringComparer.OrdinalIgnoreCase)
@@ -30,10 +33,14 @@ namespace CampusStrayCatSystem.Core
         };
 
         private readonly IEmergencyReportRepository _reportRepository;
+        private readonly IUserRepository _userRepository;
 
-        public EmergencyReportsController(IEmergencyReportRepository reportRepository)
+        public EmergencyReportsController(
+            IEmergencyReportRepository reportRepository,
+            IUserRepository userRepository)
         {
             _reportRepository = reportRepository;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -68,6 +75,7 @@ namespace CampusStrayCatSystem.Core
         /// 这是普通用户最先使用的入口。
         /// </summary>
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<EmergencyReport>> Create([FromBody] EmergencyReport report)
         {
             if (report == null)
@@ -75,10 +83,12 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("上报数据不能为空。");
             }
 
-            if (string.IsNullOrWhiteSpace(report.ReporterUserID))
+            var reporterUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(reporterUserId))
             {
-                return BadRequest("上报人 ID 不能为空。");
+                return Unauthorized();
             }
+            report.ReporterUserID = reporterUserId;
 
             if (string.IsNullOrWhiteSpace(report.AreaID))
             {
@@ -105,6 +115,7 @@ namespace CampusStrayCatSystem.Core
         /// 一般由管理员或志愿者在接单后调用。
         /// </summary>
         [HttpPut("{reportId}/assign")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> AssignHandler(string reportId, [FromBody] string? handlerUserId)
         {
             if (string.IsNullOrWhiteSpace(reportId))
@@ -115,6 +126,14 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(handlerUserId))
             {
                 return BadRequest("处理人 ID 不能为空。");
+            }
+
+            var handler = await _userRepository.GetById(handlerUserId.Trim());
+            if (handler == null || !UserStatusCodes.IsActive(handler.Status)
+                || !(string.Equals(handler.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(handler.RoleName, "VOLUNTEER", StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest("处理人必须是有效的管理员或志愿者。");
             }
 
             if (await _reportRepository.GetById(reportId) == null)
@@ -131,6 +150,7 @@ namespace CampusStrayCatSystem.Core
         /// 这个接口负责把“已受理、处理中、已完成”等状态写回去。
         /// </summary>
         [HttpPut("{reportId}/status")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateStatus(string reportId, [FromBody] EmergencyReport report)
         {
             if (report == null)

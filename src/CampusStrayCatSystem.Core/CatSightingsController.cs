@@ -1,6 +1,8 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -60,8 +62,15 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<CatSighting>> CreateSighting([FromBody] CatSighting sighting)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+            sighting.UserID = userId;
             sighting.SightingTime ??= DateTime.UtcNow;
             var validationError = await ValidateSightingAsync(sighting);
             if (validationError != null)
@@ -77,6 +86,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateSighting(string id, [FromBody] CatSighting sighting)
         {
             if (!string.IsNullOrWhiteSpace(sighting.SightingID)
@@ -103,6 +113,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> DeleteSighting(string id)
         {
             if (await _sightingRepository.GetByIdAsync(id) == null)

@@ -7,8 +7,7 @@ namespace CampusStrayCatSystem.Models.DTOs
     /// </summary>
     public class ReleaseBlacklistDto
     {
-        [Required(ErrorMessage = "黑名单记录ID不能为空")]
-        public string BlacklistId { get; set; }
+        public string? BlacklistId { get; set; }
 
         [MaxLength(500, ErrorMessage = "解除说明长度不能超过500")]
         public string ReleaseReason { get; set; }  // 可选

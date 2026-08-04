@@ -1,11 +1,14 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
     [Route("api/nest-maintenance-records")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class NestMaintenanceRecordsController : ControllerBase
     {
         private readonly INestMaintenanceRecordRepository _maintenanceRepository;
@@ -45,6 +48,7 @@ namespace CampusStrayCatSystem.Core
         public async Task<ActionResult<NestMaintenanceRecord>> CreateRecord(
             [FromBody] NestMaintenanceRecord record)
         {
+            record.OperatorUserID = User.FindFirstValue(ClaimTypes.NameIdentifier);
             record.CheckTime ??= DateTime.UtcNow;
             var validationError = await ValidateRecordAsync(record);
             if (validationError != null)
@@ -76,6 +80,7 @@ namespace CampusStrayCatSystem.Core
             }
 
             record.MaintenanceID = id;
+            record.OperatorUserID = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var validationError = await ValidateRecordAsync(record);
             if (validationError != null)
             {

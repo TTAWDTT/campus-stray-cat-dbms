@@ -37,12 +37,12 @@ namespace CampusStrayCatSystem.Core
                     message = "数据库连接正常。"
                 });
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, new
                 {
                     database = "disconnected",
-                    message = $"数据库连接失败：{ex.Message}"
+                    message = "数据库连接失败。"
                 });
             }
         }

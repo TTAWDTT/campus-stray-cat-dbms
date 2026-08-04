@@ -12,6 +12,7 @@ namespace CampusStrayCatSystem.Data
 {
     public class UserBlacklistRepository : IUserBlacklistRepository
     {
+        private const string ActiveStatus = "ACTIVE";
         private readonly string _connectionString;
 
         public UserBlacklistRepository(IConfiguration configuration)
@@ -27,6 +28,8 @@ namespace CampusStrayCatSystem.Data
             int page = 1,
             int pageSize = 20)
         {
+            page = Math.Max(1, Math.Min(page, 1_000_000));
+            pageSize = Math.Clamp(pageSize, 1, 100); // 先兜住分页参数，Oracle 不喜欢负 offset
             using var conn = new OracleConnection(_connectionString);
 
             var sql = @"
@@ -35,7 +38,7 @@ namespace CampusStrayCatSystem.Data
                     UserID,
                     ReasonType,
                     ReasonDetail,
-                    ApplicationID,
+                    RELATEDAPPLICATIONID AS ApplicationID,
                     CreateUserID,
                     CreateTime,
                     BlacklistStatus,
@@ -55,8 +58,8 @@ namespace CampusStrayCatSystem.Data
 
             if (!string.IsNullOrEmpty(status))
             {
-                sql += " AND BlacklistStatus = :Status";
-                parameters.Add("Status", status);
+                sql += " AND UPPER(BlacklistStatus) = :Status";
+                parameters.Add("Status", status.Trim().ToUpperInvariant());
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -71,7 +74,7 @@ namespace CampusStrayCatSystem.Data
                 FETCH NEXT :PageSize ROWS ONLY
             ";
 
-            parameters.Add("Offset", (page - 1) * pageSize);
+            parameters.Add("Offset", (long)(page - 1) * pageSize);
             parameters.Add("PageSize", pageSize);
 
             return await conn.QueryAsync<UserBlacklist>(sql, parameters);
@@ -87,7 +90,7 @@ namespace CampusStrayCatSystem.Data
                     UserID,
                     ReasonType,
                     ReasonDetail,
-                    ApplicationID,
+                    RELATEDAPPLICATIONID AS ApplicationID,
                     CreateUserID,
                     CreateTime,
                     BlacklistStatus,
@@ -100,7 +103,7 @@ namespace CampusStrayCatSystem.Data
             return await conn.QueryFirstOrDefaultAsync<UserBlacklist>(sql, new { BlacklistID = blacklistId });
         }
 
-        public async Task AddAsync(UserBlacklist record)
+        public async Task<bool> AddAsync(UserBlacklist record)
         {
             using var conn = new OracleConnection(_connectionString);
 
@@ -110,7 +113,7 @@ namespace CampusStrayCatSystem.Data
                     UserID,
                     ReasonType,
                     ReasonDetail,
-                    ApplicationID,
+                    RELATEDAPPLICATIONID,
                     CreateUserID,
                     CreateTime,
                     BlacklistStatus
@@ -129,9 +132,40 @@ namespace CampusStrayCatSystem.Data
                 ? Guid.NewGuid().ToString()
                 : record.BlacklistID;
             record.CreateTime = DateTime.Now;
-            record.BlacklistStatus = "Active";
+            record.BlacklistStatus = ActiveStatus;
 
-            await conn.ExecuteAsync(sql, record);
+            await conn.OpenAsync();
+            using var transaction = conn.BeginTransaction();
+            try {
+                var userId = await conn.ExecuteScalarAsync<string>(
+                    "SELECT USERID FROM SYS_USERS WHERE USERID = :UserID FOR UPDATE",
+                    new { record.UserID }, transaction);
+                if (userId == null) throw new InvalidOperationException("用户不存在");
+
+                var activeCount = await conn.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(1) FROM USER_BLACKLIST WHERE USERID = :UserID AND UPPER(BLACKLISTSTATUS) = 'ACTIVE'",
+                    new { record.UserID }, transaction);
+                if (activeCount > 0) {
+                    transaction.Commit();
+                    return false;
+                }
+
+                await conn.ExecuteAsync(sql, record, transaction);
+                transaction.Commit();
+                return true;
+            } catch {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<bool> ApplicationExistsAsync(string applicationId)
+        {
+            using var conn = new OracleConnection(_connectionString);
+            var count = await conn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(1) FROM ADOPT_APPLICATIONS WHERE APPLICATIONID = :ApplicationID",
+                new { ApplicationID = applicationId });
+            return count > 0;
         }
 
         public async Task ReleaseAsync(string blacklistId, string releasedBy)
@@ -140,22 +174,28 @@ namespace CampusStrayCatSystem.Data
 
             var sql = @"
                 UPDATE USER_BLACKLIST
-                SET BlacklistStatus = 'Released',
+                SET BlacklistStatus = 'RELEASED',
                     ReleaseTime = SYSTIMESTAMP,
                     ReleasedBy = :ReleasedBy
                 WHERE BlacklistID = :BlacklistID
-                  AND BlacklistStatus = 'Active'
+                  AND UPPER(BlacklistStatus) = 'ACTIVE'
             ";
 
-            var rowsAffected = await conn.ExecuteAsync(sql, new
-            {
-                BlacklistID = blacklistId,
-                ReleasedBy = releasedBy
-            });
+            await conn.OpenAsync(); using var transaction = conn.BeginTransaction();
+            int rowsAffected;
+            try {
+                rowsAffected = await conn.ExecuteAsync(sql, new
+                {
+                    BlacklistID = blacklistId,
+                    ReleasedBy = releasedBy
+                }, transaction);
 
-            if (rowsAffected == 0)
-            {
-                throw new Exception("黑名单记录不存在或已被解除");
+                if (rowsAffected == 0) throw new Exception("黑名单记录不存在或已被解除");
+
+                transaction.Commit();
+            } catch {
+                transaction.Rollback();
+                throw;
             }
         }
 
@@ -167,7 +207,7 @@ namespace CampusStrayCatSystem.Data
                 SELECT COUNT(1)
                 FROM USER_BLACKLIST
                 WHERE UserID = :UserId
-                AND BlacklistStatus = 'Active'
+                AND UPPER(BlacklistStatus) = 'ACTIVE'
             ";
 
             var count = await conn.ExecuteScalarAsync<int>(sql, new { UserId = userId });
@@ -181,14 +221,14 @@ namespace CampusStrayCatSystem.Data
             var sql = @"
                 SELECT
                     UserID as UserId,
-                    'True' as IsBlacklisted,
+                    1 as IsBlacklisted,
                     BlacklistID as BlacklistId,
                     ReasonType as ReasonType,
                     ReasonDetail as ReasonDetail,
                     CreateTime as BlacklistedAt
                 FROM USER_BLACKLIST
                 WHERE UserID = :UserId
-                AND BlacklistStatus = 'Active'
+                AND UPPER(BlacklistStatus) = 'ACTIVE'
                 ORDER BY CreateTime DESC
                 FETCH FIRST 1 ROW ONLY
             ";
@@ -227,8 +267,8 @@ namespace CampusStrayCatSystem.Data
 
             if (!string.IsNullOrEmpty(status))
             {
-                sql += " AND BlacklistStatus = :Status";
-                parameters.Add("Status", status);
+                sql += " AND UPPER(BlacklistStatus) = :Status";
+                parameters.Add("Status", status.Trim().ToUpperInvariant());
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))

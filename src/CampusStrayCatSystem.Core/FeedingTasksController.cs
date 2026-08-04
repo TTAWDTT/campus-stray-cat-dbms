@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -8,6 +10,7 @@ namespace CampusStrayCatSystem.Core
     // 提供查看所有任务、按志愿者/点位/状态筛选、创建排班、更新任务、更新状态
     [Route("api/feeding-tasks")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class FeedingTasksController : ControllerBase
     {
         private readonly IVolShiftRepository _shiftRepository;
@@ -69,6 +72,7 @@ namespace CampusStrayCatSystem.Core
 
         // 创建新的投喂任务
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<VolShift>> Create([FromBody] VolShift shift)
         {
             if (shift == null)
@@ -78,12 +82,16 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
+            if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(shift.VolunteerID))
+                return Forbid();
+
             await _shiftRepository.Create(shift);
             return CreatedAtAction(nameof(GetById), new { id = shift.ShiftID }, shift);
         }
 
         // 更新投喂任务基本信息
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> Update(string id, [FromBody] VolShift shift)
         {
             if (shift == null)
@@ -100,12 +108,16 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
+            if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(existing.VolunteerID))
+                return Forbid();
+
             await _shiftRepository.Update(shift);
             return NoContent();
         }
 
         // 更新投喂任务状态（如标记为已完成/爽约）
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateStatus(string id, [FromBody] UpdateShiftStatusRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.NewStatus))
@@ -117,6 +129,9 @@ namespace CampusStrayCatSystem.Core
             var existing = await _shiftRepository.GetById(id);
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的投喂任务，无法更新状态。");
+
+            if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(existing.VolunteerID))
+                return Forbid();
 
             await _shiftRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant());
             return Ok(new { message = "投喂任务状态更新成功。" });
@@ -163,6 +178,15 @@ namespace CampusStrayCatSystem.Core
             }
 
             return null; // 校验通过
+        }
+
+        private async Task<bool> IsCurrentVolunteerAsync(string volunteerId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return false;
+
+            var volunteerUserId = await _referenceCheck.GetVolunteerUserId(volunteerId);
+            return string.Equals(userId, volunteerUserId, StringComparison.OrdinalIgnoreCase);
         }
     }
 

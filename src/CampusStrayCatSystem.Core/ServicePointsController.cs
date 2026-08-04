@@ -1,11 +1,13 @@
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CampusStrayCatSystem.Core
 {
     [Route("api/service-points")]
     [ApiController]
+    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class ServicePointsController : ControllerBase
     {
         private readonly IServicePointRepository _pointRepository;

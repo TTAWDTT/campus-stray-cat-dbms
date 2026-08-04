@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 
@@ -10,6 +12,7 @@ namespace CampusStrayCatSystem.Core
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MissingAlertsController : ControllerBase
     {
         private static readonly HashSet<string> AllowedAlertStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -96,6 +99,9 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("目击时间不能为空。");
             }
 
+            sighting.UserID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(sighting.UserID)) return Unauthorized();
+
             await _missingAlertRepository.CreateSighting(sighting);
             return Ok(sighting);
         }
@@ -122,6 +128,8 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("阈值天数必须大于 0。");
             }
 
+            alert.HandlerUserID = null;
+
             await _missingAlertRepository.CreateAlert(alert);
             return CreatedAtAction(nameof(GetById), new { alertId = alert.AlertID }, alert);
         }
@@ -131,6 +139,7 @@ namespace CampusStrayCatSystem.Core
         /// 支持处理中、已寻回、已关闭等状态流转。
         /// </summary>
         [HttpPut("{alertId}/status")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateStatus(string alertId, [FromBody] CatMissingAlert alert)
         {
             if (alert == null)
@@ -149,17 +158,15 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
             }
 
-            if (string.IsNullOrWhiteSpace(alert.HandlerUserID))
-            {
-                return BadRequest("处理人 ID 不能为空。");
-            }
+            var handlerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(handlerUserId)) return Unauthorized();
 
             if (await _missingAlertRepository.GetById(alertId) == null)
             {
                 return NotFound($"未找到预警 {alertId}。");
             }
 
-            var rows = await _missingAlertRepository.UpdateStatus(alertId, alert.AlertStatus, alert.HandlerUserID, alert.Remark);
+            var rows = await _missingAlertRepository.UpdateStatus(alertId, alert.AlertStatus, handlerUserId, alert.Remark);
             return NoContent();
         }
     }
