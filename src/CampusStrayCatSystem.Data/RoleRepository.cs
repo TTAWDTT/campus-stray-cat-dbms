@@ -71,5 +71,21 @@ namespace CampusStrayCatSystem.Data
             const string sql = "DELETE FROM SYS_ROLES WHERE ROLEID = :RoleID";
             return await ExecuteAsync(sql, new { RoleID = id });
         }
+
+        public async Task<int> AssignRole(string userId, string roleId)
+        {
+            const string sql = @"
+                UPDATE SYS_USERS
+                SET ROLEID = :RoleID
+                WHERE USERID = :UserID";
+
+            return await ExecuteAsync(sql, new { UserID = userId, RoleID = roleId });
+        }
+
+        public async Task<int> GetUserCount(string roleId)
+        {
+            const string sql = "SELECT COUNT(1) FROM SYS_USERS WHERE ROLEID = :RoleID";
+            return await QuerySingleAsync<int>(sql, new { RoleID = roleId });
+        }
     }
 }

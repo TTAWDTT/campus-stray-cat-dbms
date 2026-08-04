@@ -10,6 +10,7 @@ namespace CampusStrayCatSystem.Data
         Task<IEnumerable<UserBlacklist>> GetAllAsync(
             string userId = null,
             string status = null,
+            string keyword = null,
             int page = 1,
             int pageSize = 20
         );
@@ -24,6 +25,6 @@ namespace CampusStrayCatSystem.Data
 
         Task<BlacklistStatusDto> GetActiveStatusByUserIdAsync(string userId);
 
-        Task<int> GetTotalCountAsync(string userId = null, string status = null);
+        Task<int> GetTotalCountAsync(string userId = null, string status = null, string keyword = null);
     }
 }

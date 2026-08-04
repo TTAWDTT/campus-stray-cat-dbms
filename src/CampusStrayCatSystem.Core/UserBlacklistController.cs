@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using CampusStrayCatSystem.Data;
+using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Models.DTOs;
 
 namespace CampusStrayCatSystem.Core.Controllers
@@ -46,13 +47,16 @@ namespace CampusStrayCatSystem.Core.Controllers
         {
             try
             {
+                var denied = await EnsureAdminAccessAsync();
+                if (denied != null) return denied;
+
                 // 参数校验
                 if (page < 1) page = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
                 // 获取数据
-                var items = await _blacklistRepository.GetAllAsync(userId, status, page, pageSize);
-                var totalCount = await _blacklistRepository.GetTotalCountAsync(userId, status);
+                var items = await _blacklistRepository.GetAllAsync(userId, status, keyword, page, pageSize);
+                var totalCount = await _blacklistRepository.GetTotalCountAsync(userId, status, keyword);
 
                 var result = new PagedResult<BlacklistResponseDto>
                 {
@@ -96,6 +100,9 @@ namespace CampusStrayCatSystem.Core.Controllers
         {
             try
             {
+                var denied = await EnsureAdminAccessAsync();
+                if (denied != null) return denied;
+
                 var record = await _blacklistRepository.GetByIdAsync(id);
                 if (record == null)
                 {
@@ -123,6 +130,9 @@ namespace CampusStrayCatSystem.Core.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Add([FromBody] AddBlacklistDto dto)
         {
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null) return denied;
+
             // 参数校验
             if (!ModelState.IsValid)
             {
@@ -146,9 +156,8 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 获取当前操作人ID（从JWT中获取）
-                var operatorId = User.FindFirst("sub")?.Value 
-                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                    ?? "system";
+                var operatorId = CurrentOperatorId();
+                if (operatorId == null) return Unauthorized(new { message = "登录状态无效，请重新登录。" });
 
                 var newRecord = new UserBlacklist{
                     BlacklistID = Guid.NewGuid().ToString(),
@@ -188,6 +197,9 @@ namespace CampusStrayCatSystem.Core.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Release(string id, [FromBody] ReleaseBlacklistDto dto)
         {
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null) return denied;
+
             try
             {
                 // 检查黑名单记录是否存在
@@ -204,9 +216,8 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 // 获取当前操作人ID
-                var operatorId = User.FindFirst("sub")?.Value 
-                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                    ?? "system";
+                var operatorId = CurrentOperatorId();
+                if (operatorId == null) return Unauthorized(new { message = "登录状态无效，请重新登录。" });
 
                 // 解除黑名单
                 await _blacklistRepository.ReleaseAsync(id, operatorId);
@@ -263,6 +274,9 @@ namespace CampusStrayCatSystem.Core.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ReleaseBatch([FromBody] ReleaseBatchDto dto)
         {
+            var denied = await EnsureAdminAccessAsync();
+            if (denied != null) return denied;
+
             if (!ModelState.IsValid || dto.BlacklistIds == null || dto.BlacklistIds.Count == 0)
             {
                 return BadRequest(new { message = "请提供要解除的黑名单ID列表" });
@@ -270,9 +284,8 @@ namespace CampusStrayCatSystem.Core.Controllers
 
             try
             {
-                var operatorId = User.FindFirst("sub")?.Value 
-                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                    ?? "system";
+                var operatorId = CurrentOperatorId();
+                if (operatorId == null) return Unauthorized(new { message = "登录状态无效，请重新登录。" });
                 var successList = new List<string>();
                 var failList = new List<string>();
 
@@ -315,6 +328,21 @@ namespace CampusStrayCatSystem.Core.Controllers
             {
                 return StatusCode(500, new { message = "批量解除黑名单失败", error = ex.Message });
             }
+        }
+
+        private string? CurrentOperatorId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        private async Task<ActionResult?> EnsureAdminAccessAsync()
+        {
+            var userId = CurrentOperatorId();
+            if (userId == null) return Unauthorized();
+
+            var user = await _userRepository.GetById(userId);
+            if (user == null || !UserStatusCodes.IsActive(user.Status)) return Unauthorized();
+
+            var isAdmin = string.Equals(user.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
+                || (user.PermissionScope ?? string.Empty).Contains("BLACKLIST_MANAGE", StringComparison.OrdinalIgnoreCase);
+            return isAdmin ? null : Forbid();
         }
     }
 

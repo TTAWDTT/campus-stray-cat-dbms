@@ -23,6 +23,7 @@ namespace CampusStrayCatSystem.Data
         public async Task<IEnumerable<UserBlacklist>> GetAllAsync(
             string userId = null,
             string status = null,
+            string keyword = null,
             int page = 1,
             int pageSize = 20)
         {
@@ -56,6 +57,12 @@ namespace CampusStrayCatSystem.Data
             {
                 sql += " AND BlacklistStatus = :Status";
                 parameters.Add("Status", status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                sql += " AND (UPPER(ReasonType) LIKE '%' || UPPER(:Keyword) || '%' OR UPPER(ReasonDetail) LIKE '%' || UPPER(:Keyword) || '%')";
+                parameters.Add("Keyword", keyword.Trim());
             }
 
             sql += @"
@@ -174,7 +181,7 @@ namespace CampusStrayCatSystem.Data
             var sql = @"
                 SELECT
                     UserID as UserId,
-                    'Y' as IsBlacklisted,
+                    'True' as IsBlacklisted,
                     BlacklistID as BlacklistId,
                     ReasonType as ReasonType,
                     ReasonDetail as ReasonDetail,
@@ -200,7 +207,7 @@ namespace CampusStrayCatSystem.Data
             return result;
         }
 
-        public async Task<int> GetTotalCountAsync(string userId = null, string status = null)
+        public async Task<int> GetTotalCountAsync(string userId = null, string status = null, string keyword = null)
         {
             using var conn = new OracleConnection(_connectionString);
 
@@ -222,6 +229,12 @@ namespace CampusStrayCatSystem.Data
             {
                 sql += " AND BlacklistStatus = :Status";
                 parameters.Add("Status", status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                sql += " AND (UPPER(ReasonType) LIKE '%' || UPPER(:Keyword) || '%' OR UPPER(ReasonDetail) LIKE '%' || UPPER(:Keyword) || '%')";
+                parameters.Add("Keyword", keyword.Trim());
             }
 
             return await conn.ExecuteScalarAsync<int>(sql, parameters);

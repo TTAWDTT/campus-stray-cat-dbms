@@ -10,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add controllers
 builder.Services.AddControllers();
-builder.Services.AddAuthorization();
 
 // JWT 密钥仅允许来自环境变量或未入库本地配置（如 appsettings.Development.json）。
 // 支持：Auth:JwtSecret / Auth__JwtSecret / AUTH_JWT_SECRET
