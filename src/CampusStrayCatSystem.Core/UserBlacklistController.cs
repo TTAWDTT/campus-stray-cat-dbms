@@ -68,14 +68,17 @@ namespace CampusStrayCatSystem.Core.Controllers
                     {
                         BlacklistId = item.BlacklistID,
                         UserId = item.UserID,
+                        UserName = item.UserName,
                         ReasonType = item.ReasonType,
                         ReasonDetail = item.ReasonDetail,
                         ApplicationId = item.ApplicationID,
                         CreatedBy = item.CreateUserID,
+                        CreatedByName = item.CreatedByName,
                         CreatedAt = item.CreateTime,
                         Status = item.BlacklistStatus,
                         ReleaseTime = item.ReleaseTime,
-                        ReleasedBy = item.ReleasedBy
+                        ReleasedBy = item.ReleasedBy,
+                        ReleasedByName = item.ReleasedByName
                     }).ToList(),
                     TotalCount = totalCount,
                     Page = page,
@@ -118,14 +121,17 @@ namespace CampusStrayCatSystem.Core.Controllers
                 {
                     BlacklistId = record.BlacklistID,
                     UserId = record.UserID,
+                    UserName = record.UserName,
                     ReasonType = record.ReasonType,
                     ReasonDetail = record.ReasonDetail,
                     ApplicationId = record.ApplicationID,
                     CreatedBy = record.CreateUserID,
+                    CreatedByName = record.CreatedByName,
                     CreatedAt = record.CreateTime,
                     Status = record.BlacklistStatus,
                     ReleaseTime = record.ReleaseTime,
-                    ReleasedBy = record.ReleasedBy
+                    ReleasedBy = record.ReleasedBy,
+                    ReleasedByName = record.ReleasedByName
                 });
             }
             catch (Exception ex)

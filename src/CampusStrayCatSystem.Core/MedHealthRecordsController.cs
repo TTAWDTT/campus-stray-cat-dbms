@@ -60,7 +60,8 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
-            await _medHealthRecordRepository.Create(record);
+            if (await _medHealthRecordRepository.Create(record) != 1)
+                return Conflict("医疗记录创建未生效。");
             return CreatedAtAction(nameof(GetById), new { id = record.RecordID }, record);
         }
 
@@ -82,8 +83,9 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
-            await _medHealthRecordRepository.Update(record);
-            return NoContent();
+            return await _medHealthRecordRepository.Update(record) == 1
+                ? NoContent()
+                : Conflict("医疗记录更新未生效。");
         }
 
         // 业务校验

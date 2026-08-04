@@ -347,9 +347,19 @@ CREATE OR REPLACE PACKAGE BODY PKG_RESCUE_CARE AS
         P_REMINDERTIME   IN MED_REMINDERS.REMINDERTIME%TYPE,
         O_REMINDERID     OUT MED_REMINDERS.REMINDERID%TYPE
     ) AS
+        V_RECORD_COUNT NUMBER;
     BEGIN
         ASSERT_NOT_BLANK(P_CATID, -20120, 'Cat id is required');
         ASSERT_NOT_BLANK(P_REMINDERTYPE, -20121, 'Reminder type is required');
+
+        IF P_RECORDID IS NOT NULL THEN
+            SELECT COUNT(1) INTO V_RECORD_COUNT
+            FROM MED_HEALTHRECORDS
+            WHERE RECORDID = P_RECORDID AND CATID = P_CATID;
+            IF V_RECORD_COUNT = 0 THEN
+                RAISE_APPLICATION_ERROR(-20128, 'Medical record does not belong to the specified cat');
+            END IF;
+        END IF;
 
         IF P_REMINDERTIME IS NULL THEN
             RAISE_APPLICATION_ERROR(-20122, 'Reminder time is required');
@@ -544,8 +554,26 @@ CREATE OR REPLACE PACKAGE BODY PKG_RESCUE_CARE AS
         P_REMARK           IN CAT_MISSINGALERTS.REMARK%TYPE,
         O_ALERTID          OUT CAT_MISSINGALERTS.ALERTID%TYPE
     ) AS
+        V_SIGHTING_COUNT NUMBER;
+        V_ACTIVE_ALERT_COUNT NUMBER;
     BEGIN
         ASSERT_NOT_BLANK(P_CATID, -20160, 'Cat id is required');
+
+        IF P_LASTSIGHTINGID IS NOT NULL THEN
+            SELECT COUNT(1) INTO V_SIGHTING_COUNT
+            FROM CAT_SIGHTINGS
+            WHERE SIGHTINGID = P_LASTSIGHTINGID AND CATID = P_CATID;
+            IF V_SIGHTING_COUNT = 0 THEN
+                RAISE_APPLICATION_ERROR(-20162, 'Last sighting does not belong to the specified cat');
+            END IF;
+        END IF;
+
+        SELECT COUNT(1) INTO V_ACTIVE_ALERT_COUNT
+        FROM CAT_MISSINGALERTS
+        WHERE CATID = P_CATID AND UPPER(ALERTSTATUS) = 'PROCESSING';
+        IF V_ACTIVE_ALERT_COUNT > 0 THEN
+            RAISE_APPLICATION_ERROR(-20163, 'The cat already has an active missing alert');
+        END IF;
 
         IF P_THRESHOLDDAYS IS NOT NULL AND P_THRESHOLDDAYS <= 0 THEN
             RAISE_APPLICATION_ERROR(-20161, 'Threshold days must be greater than 0');

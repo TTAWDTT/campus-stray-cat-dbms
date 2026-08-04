@@ -34,17 +34,23 @@ namespace CampusStrayCatSystem.Data
 
             var sql = @"
                 SELECT
-                    BlacklistID,
-                    UserID,
-                    ReasonType,
-                    ReasonDetail,
-                    RELATEDAPPLICATIONID AS ApplicationID,
-                    CreateUserID,
-                    CreateTime,
-                    BlacklistStatus,
-                    ReleaseTime,
-                    ReleasedBy
-                FROM USER_BLACKLIST
+                    blacklist.BlacklistID,
+                    blacklist.UserID,
+                    blacklist.ReasonType,
+                    blacklist.ReasonDetail,
+                    blacklist.RELATEDAPPLICATIONID AS ApplicationID,
+                    blacklist.CreateUserID,
+                    blacklist.CreateTime,
+                    blacklist.BlacklistStatus,
+                    blacklist.ReleaseTime,
+                    blacklist.ReleasedBy,
+                    target_user.USERNAME AS UserName,
+                    creator.REALNAME AS CreatedByName,
+                    releaser.REALNAME AS ReleasedByName
+                FROM USER_BLACKLIST blacklist
+                LEFT JOIN SYS_USERS target_user ON target_user.USERID = blacklist.USERID
+                LEFT JOIN SYS_USERS creator ON creator.USERID = blacklist.CREATEUSERID
+                LEFT JOIN SYS_USERS releaser ON releaser.USERID = blacklist.RELEASEDBY
                 WHERE 1=1
             ";
 
@@ -52,24 +58,24 @@ namespace CampusStrayCatSystem.Data
 
             if (!string.IsNullOrEmpty(userId))
             {
-                sql += " AND UserID = :UserId";
+                sql += " AND blacklist.UserID = :UserId";
                 parameters.Add("UserId", userId);
             }
 
             if (!string.IsNullOrEmpty(status))
             {
-                sql += " AND UPPER(BlacklistStatus) = :Status";
+                sql += " AND UPPER(blacklist.BlacklistStatus) = :Status";
                 parameters.Add("Status", status.Trim().ToUpperInvariant());
             }
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
-                sql += " AND (UPPER(ReasonType) LIKE '%' || UPPER(:Keyword) || '%' OR UPPER(ReasonDetail) LIKE '%' || UPPER(:Keyword) || '%')";
+                sql += " AND (UPPER(blacklist.ReasonType) LIKE '%' || UPPER(:Keyword) || '%' OR UPPER(blacklist.ReasonDetail) LIKE '%' || UPPER(:Keyword) || '%')";
                 parameters.Add("Keyword", keyword.Trim());
             }
 
             sql += @"
-                ORDER BY CreateTime DESC
+                ORDER BY blacklist.CreateTime DESC
                 OFFSET :Offset ROWS
                 FETCH NEXT :PageSize ROWS ONLY
             ";
@@ -86,18 +92,24 @@ namespace CampusStrayCatSystem.Data
 
             var sql = @"
                 SELECT
-                    BlacklistID,
-                    UserID,
-                    ReasonType,
-                    ReasonDetail,
-                    RELATEDAPPLICATIONID AS ApplicationID,
-                    CreateUserID,
-                    CreateTime,
-                    BlacklistStatus,
-                    ReleaseTime,
-                    ReleasedBy
-                FROM USER_BLACKLIST
-                WHERE BlacklistID = :BlacklistID
+                    blacklist.BlacklistID,
+                    blacklist.UserID,
+                    blacklist.ReasonType,
+                    blacklist.ReasonDetail,
+                    blacklist.RELATEDAPPLICATIONID AS ApplicationID,
+                    blacklist.CreateUserID,
+                    blacklist.CreateTime,
+                    blacklist.BlacklistStatus,
+                    blacklist.ReleaseTime,
+                    blacklist.ReleasedBy,
+                    target_user.USERNAME AS UserName,
+                    creator.REALNAME AS CreatedByName,
+                    releaser.REALNAME AS ReleasedByName
+                FROM USER_BLACKLIST blacklist
+                LEFT JOIN SYS_USERS target_user ON target_user.USERID = blacklist.USERID
+                LEFT JOIN SYS_USERS creator ON creator.USERID = blacklist.CREATEUSERID
+                LEFT JOIN SYS_USERS releaser ON releaser.USERID = blacklist.RELEASEDBY
+                WHERE blacklist.BlacklistID = :BlacklistID
             ";
 
             return await conn.QueryFirstOrDefaultAsync<UserBlacklist>(sql, new { BlacklistID = blacklistId });

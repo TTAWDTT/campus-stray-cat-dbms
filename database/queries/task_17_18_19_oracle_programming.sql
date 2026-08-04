@@ -91,7 +91,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
         v_current_status VARCHAR2(30);
         v_blacklisted NUMBER := 0;
     BEGIN
-        IF p_status NOT IN ('APPROVED', 'REJECTED') THEN
+        IF p_status IS NULL OR p_status NOT IN ('APPROVED', 'REJECTED') THEN
             raise_application_error(-20031, '审核状态只能是 APPROVED 或 REJECTED');
         END IF;
 
@@ -128,7 +128,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
     PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visitor_user_id IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0) IS
         v_current_status VARCHAR2(30);
     BEGIN
-        IF p_passflag NOT IN (0, 1) THEN
+        IF p_passflag IS NULL OR p_passflag NOT IN (0, 1) THEN
             raise_application_error(-20033, '回访通过标记只能是 0 或 1');
         END IF;
 
@@ -156,13 +156,45 @@ END PKG_VOLUNTEER_MGMT;
 
 CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
     PROCEDURE register_volunteer(p_user_id IN VARCHAR2, p_join_date IN DATE DEFAULT SYSDATE, p_service_score IN NUMBER DEFAULT 0, p_credit_level IN VARCHAR2 DEFAULT 'L1', p_active_status IN VARCHAR2 DEFAULT 'ACTIVE', p_graduation_year IN VARCHAR2 DEFAULT NULL) IS
+        v_existing NUMBER;
     BEGIN
+        SELECT COUNT(1) INTO v_existing FROM VOL_VOLUNTEERS WHERE USERID = p_user_id;
+        IF v_existing > 0 THEN
+            raise_application_error(-20043, '该用户已经注册为志愿者');
+        END IF;
+
         INSERT INTO VOL_VOLUNTEERS (VOLUNTEERID, USERID, JOINDATE, SERVICESCORE, CREDITLEVEL, ACTIVESTATUS, GRADUATIONYEAR)
         VALUES ('VOL-' || DBMS_RANDOM.STRING('X', 8), p_user_id, p_join_date, p_service_score, p_credit_level, p_active_status, p_graduation_year);
     END register_volunteer;
 
     PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED') IS
+        v_count NUMBER;
     BEGIN
+        IF p_plan_start_time IS NULL OR p_plan_end_time IS NULL OR p_plan_end_time <= p_plan_start_time THEN
+            raise_application_error(-20044, '排班时间不能为空且结束时间必须晚于开始时间');
+        END IF;
+
+        SELECT COUNT(1) INTO v_count
+        FROM VOL_VOLUNTEERS
+        WHERE VOLUNTEERID = p_volunteer_id AND ACTIVESTATUS = 'ACTIVE';
+        IF v_count = 0 THEN
+            raise_application_error(-20045, '志愿者不存在或已停用');
+        END IF;
+
+        SELECT COUNT(1) INTO v_count FROM MAP_SERVICEPOINTS WHERE POINTID = p_point_id;
+        IF v_count = 0 THEN
+            raise_application_error(-20046, '投喂点不存在');
+        END IF;
+
+        IF p_backup_volunteer_id IS NOT NULL THEN
+            SELECT COUNT(1) INTO v_count
+            FROM VOL_VOLUNTEERS
+            WHERE VOLUNTEERID = p_backup_volunteer_id AND ACTIVESTATUS = 'ACTIVE';
+            IF v_count = 0 OR p_backup_volunteer_id = p_volunteer_id THEN
+                raise_application_error(-20047, '备用志愿者不存在、已停用或不能与负责人相同');
+            END IF;
+        END IF;
+
         INSERT INTO VOL_SHIFTS (SHIFTID, VOLUNTEERID, POINTID, BACKUPVOLUNTEERID, PLANSTARTTIME, PLANENDTIME, SHIFTSTATUS)
         VALUES ('SHIFT-' || DBMS_RANDOM.STRING('X', 8), p_volunteer_id, p_point_id, p_backup_volunteer_id, p_plan_start_time, p_plan_end_time, p_shift_status);
     END create_shift;
@@ -189,7 +221,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         SELECT COUNT(1) INTO v_existing
         FROM VOL_CHECKINS
         WHERE SHIFTID = p_shift_id
-          AND CHECKINSTATUS = 'CHECKED_IN';
+          AND UPPER(CHECKINSTATUS) IN ('CHECKED_IN', 'LATE');
 
         IF v_existing > 0 THEN
             raise_application_error(-20042, '该排班已经签到，不能重复签到');

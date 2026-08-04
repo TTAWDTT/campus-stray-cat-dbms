@@ -61,7 +61,8 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
-            await _tnrCaseRepository.Create(tnrCase);
+            if (await _tnrCaseRepository.Create(tnrCase) != 1)
+                return Conflict("TNR 案例创建未生效。");
             return CreatedAtAction(nameof(GetTnrCase), new { id = tnrCase.CaseID }, tnrCase);
         }
 
@@ -94,8 +95,9 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
-            await _tnrCaseRepository.Update(tnrCase);
-            return NoContent();
+            return await _tnrCaseRepository.Update(tnrCase) == 1
+                ? NoContent()
+                : Conflict("TNR 案例更新未生效。");
         }
 
         //更新TNR状态（自动生成状态流转日志，同一事务）

@@ -84,7 +84,8 @@ namespace CampusStrayCatSystem.Core
             record.AuditUserID = null;
             record.AuditStatus = AuditStatuses.Pending;
             record.PublicTime = null;
-            await _expenseRecordRepository.Create(record);
+            if (await _expenseRecordRepository.Create(record) != 1)
+                return Conflict("支出记录创建未生效。");
             return CreatedAtAction(nameof(GetById), new { id = record.FinanceID }, record);
         }
 
@@ -117,6 +118,8 @@ namespace CampusStrayCatSystem.Core
                 return Unauthorized();
 
             var updated = await _expenseRecordRepository.Audit(id, auditUserId, normalizedStatus);
+            if (updated != 1)
+                return Conflict("支出记录审核未生效。");
             if (updated != 1)
                 return Conflict("支出记录的审核状态已经变化，请刷新后重试。");
 

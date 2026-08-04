@@ -85,7 +85,8 @@ namespace CampusStrayCatSystem.Core
             if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(shift.VolunteerID))
                 return Forbid();
 
-            await _shiftRepository.Create(shift);
+            if (await _shiftRepository.Create(shift) != 1)
+                return Conflict("投喂任务创建未生效。");
             return CreatedAtAction(nameof(GetById), new { id = shift.ShiftID }, shift);
         }
 
@@ -111,8 +112,9 @@ namespace CampusStrayCatSystem.Core
             if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(existing.VolunteerID))
                 return Forbid();
 
-            await _shiftRepository.Update(shift);
-            return NoContent();
+            return await _shiftRepository.Update(shift) == 1
+                ? NoContent()
+                : Conflict("投喂任务更新未生效。");
         }
 
         // 更新投喂任务状态（如标记为已完成/爽约）
@@ -133,8 +135,9 @@ namespace CampusStrayCatSystem.Core
             if (!User.IsInRole("ADMIN") && !await IsCurrentVolunteerAsync(existing.VolunteerID))
                 return Forbid();
 
-            await _shiftRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant());
-            return Ok(new { message = "投喂任务状态更新成功。" });
+            return await _shiftRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant()) == 1
+                ? Ok(new { message = "投喂任务状态更新成功。" })
+                : Conflict("投喂任务状态更新未生效。");
         }
 
         // 业务校验：志愿者、投喂点存在性；状态合法性；时间先后顺序

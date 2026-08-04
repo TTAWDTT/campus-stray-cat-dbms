@@ -79,7 +79,8 @@ namespace CampusStrayCatSystem.Core
             project.ProjectStatus = string.IsNullOrWhiteSpace(project.ProjectStatus)
                 ? ProjectStatuses.Active
                 : project.ProjectStatus.ToUpperInvariant();
-            await _projectRepository.Create(project);
+            if (await _projectRepository.Create(project) != 1)
+                return Conflict("众筹项目创建未生效。");
             return CreatedAtAction(nameof(GetById), new { id = project.ProjectID }, project);
         }
 
@@ -105,8 +106,9 @@ namespace CampusStrayCatSystem.Core
             if (validationError != null)
                 return BadRequest(validationError);
 
-            await _projectRepository.Update(project);
-            return NoContent();
+            return await _projectRepository.Update(project) == 1
+                ? NoContent()
+                : Conflict("众筹项目更新未生效。");
         }
 
         // 更新项目状态（如发布为 ACTIVE、结束为 COMPLETED）
@@ -124,8 +126,9 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的众筹项目，无法更新状态。");
 
-            await _projectRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant());
-            return Ok(new { message = "众筹项目状态更新成功。" });
+            return await _projectRepository.UpdateStatus(id, request.NewStatus.ToUpperInvariant()) == 1
+                ? Ok(new { message = "众筹项目状态更新成功。" })
+                : Conflict("众筹项目状态更新未生效。");
         }
 
         // 业务校验：猫咪存在性、金额非负、时间先后、状态合法性
