@@ -10,25 +10,25 @@ namespace CampusStrayCatSystem.Data
         public async Task<IEnumerable<Role>> GetAll()
         {
             const string sql = @"
-                SELECT ROLE_ID AS RoleID,
-                       ROLE_NAME AS RoleName,
+                SELECT ROLEID AS RoleID,
+                       ROLENAME AS RoleName,
                        DESCRIPTION AS Description,
                        PERMISSIONSCOPE AS PermissionScope
-                FROM ROLES
-                ORDER BY CREATED_DATE DESC";
+                FROM SYS_ROLES
+                ORDER BY ROLENAME";
 
             return await QueryAsync(sql);
         }
 
-        public async Task<Role?> GetByIdRole(int id)
+        public async Task<Role?> GetByIdRole(string id)
         {
             const string sql = @"
-                SELECT ROLE_ID AS RoleID,
-                       ROLE_NAME AS RoleName,
+                SELECT ROLEID AS RoleID,
+                       ROLENAME AS RoleName,
                        DESCRIPTION AS Description,
                        PERMISSIONSCOPE AS PermissionScope
-                FROM ROLES
-                WHERE ROLE_ID = :RoleID";
+                FROM SYS_ROLES
+                WHERE ROLEID = :RoleID";
 
             return await QuerySingleAsync(sql, new { RoleID = id });
         }
@@ -36,11 +36,12 @@ namespace CampusStrayCatSystem.Data
         public async Task<int> CreateRole(Role role)
         {
             const string sql = @"
-                INSERT INTO ROLES (ROLE_ID, ROLE_NAME, DESCRIPTION, PERMISSIONSCOPE)
-                VALUES (ROLES_SEQ.NEXTVAL, :RoleName, :Description, :PermissionScope)";
+                INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
+                VALUES (:RoleID, :RoleName, :Description, :PermissionScope)";
 
             return await ExecuteAsync(sql, new
             {
+                role.RoleID,
                 role.RoleName,
                 role.Description,
                 role.PermissionScope
@@ -50,11 +51,11 @@ namespace CampusStrayCatSystem.Data
         public async Task<int> UpdateRole(Role role)
         {
             const string sql = @"
-                UPDATE ROLES
-                SET ROLE_NAME = :RoleName,
+                UPDATE SYS_ROLES
+                SET ROLENAME = :RoleName,
                     DESCRIPTION = :Description,
                     PERMISSIONSCOPE = :PermissionScope
-                WHERE ROLE_ID = :RoleID";
+                WHERE ROLEID = :RoleID";
 
             return await ExecuteAsync(sql, new
             {
@@ -65,14 +66,26 @@ namespace CampusStrayCatSystem.Data
             });
         }
 
-        public async Task<int> DeleteRole(int id)
+        public async Task<int> DeleteRole(string id)
+        {
+            const string sql = "DELETE FROM SYS_ROLES WHERE ROLEID = :RoleID";
+            return await ExecuteAsync(sql, new { RoleID = id });
+        }
+
+        public async Task<int> AssignRole(string userId, string roleId)
         {
             const string sql = @"
-                UPDATE ROLES
-                SET IS_ACTIVE = 0
-                WHERE ROLE_ID = :RoleID";
+                UPDATE SYS_USERS
+                SET ROLEID = :RoleID
+                WHERE USERID = :UserID";
 
-            return await ExecuteAsync(sql, new { RoleID = id });
+            return await ExecuteAsync(sql, new { UserID = userId, RoleID = roleId });
+        }
+
+        public async Task<int> GetUserCount(string roleId)
+        {
+            const string sql = "SELECT COUNT(1) FROM SYS_USERS WHERE ROLEID = :RoleID";
+            return await QuerySingleAsync<int>(sql, new { RoleID = roleId });
         }
     }
 }

@@ -24,6 +24,13 @@ namespace CampusStrayCatSystem.Tests {
         public bool ExistsResult { get; set; } = true;
 
         public Task<bool> Exists(string userId) => Task.FromResult(ExistsResult);
+        public Task<User?> GetById(string userId) => throw new NotSupportedException();
+        public Task<User?> GetByUsername(string username) => throw new NotSupportedException();
+        public Task<IEnumerable<User>> GetAll(string? username, string? status, string? roleId) => throw new NotSupportedException();
+        public Task<int> Create(User user) => throw new NotSupportedException();
+        public Task<int> Update(User user) => throw new NotSupportedException();
+        public Task<int> UpdateStatus(string userId, string status) => throw new NotSupportedException();
+        public Task<bool> UsernameExists(string username) => throw new NotSupportedException();
     }
 
     internal sealed class FakeCatPhotoRepository : ICatPhotoRepository {

@@ -1,12 +1,47 @@
 using CampusStrayCatSystem.Core;
 using CampusStrayCatSystem.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add controllers
 builder.Services.AddControllers();
+
+// JWT 密钥仅允许来自环境变量或未入库本地配置（如 appsettings.Development.json）。
+// 支持：Auth:JwtSecret / Auth__JwtSecret / AUTH_JWT_SECRET
+var jwtSecret = builder.Configuration["Auth:JwtSecret"]
+    ?? builder.Configuration["AUTH_JWT_SECRET"];
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException(
+        "缺少 Auth:JwtSecret。请通过环境变量 Auth__JwtSecret（或 AUTH_JWT_SECRET）或未提交的 appsettings.Development.json 配置，禁止使用仓库内固定密钥。");
+}
+
+var jwtIssuer = builder.Configuration["Auth:Issuer"] ?? "CampusStrayCatSystem";
+var jwtAudience = builder.Configuration["Auth:Audience"] ?? "CampusStrayCatSystemClient";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
+
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IPasswordHasher<CampusStrayCatSystem.Models.User>, PasswordHasher<CampusStrayCatSystem.Models.User>>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -23,6 +58,7 @@ builder.Services.AddScoped<IMedHealthRecordRepository, MedHealthRecordRepository
 builder.Services.AddScoped<ICatRepository, CatRepository>();
 builder.Services.AddScoped<ICatPhotoRepository, CatPhotoRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserBlacklistRepository, UserBlacklistRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
 builder.Services.AddScoped<IAdoptionWorkflowRepository, AdoptionWorkflowRepository>();
 builder.Services.AddScoped<IVolunteerWorkflowRepository, VolunteerWorkflowRepository>();
@@ -54,6 +90,7 @@ if (app.Environment.IsDevelopment()) {
 var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 Directory.CreateDirectory(webRootPath);
 app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(webRootPath) });
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
