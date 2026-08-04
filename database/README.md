@@ -12,8 +12,8 @@
 ## 推荐运行顺序
 
 1. 先连接到项目用户 `CAT_SYSTEM`，并确保当前容器是 `XEPDB1`。
-2. 如果需要重建数据库，先执行 `drop_tables.sql`。
-3. 再执行 `create_tables.sql`。
+2. 新环境直接执行 `setup_all.sql`，它会按依赖顺序创建表、约束、视图、Package 和演示数据。
+3. 已有数据的环境不要执行 `drop_tables.sql`，按 `scripts/setup_local_db.md` 的“仅初始化对象”顺序执行。
 4. 如需接口联调，执行 `insert_demo_data.sql`，再运行 `queries/test_queries.sql` 验证数据。
 
 已有数据库不需要重建即可执行 `queries/cat_photos_oracle_programming.sql`。脚本检测到同一猫咪存在多张主图时会中止，需先人工核对并修正重复数据。

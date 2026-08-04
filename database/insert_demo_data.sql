@@ -28,8 +28,8 @@ USING (
            'zhaoqing_demo' AS USERNAME,
            'DEMO_ONLY_NOT_A_REAL_HASH' AS PASSWORDHASH,
            '赵晴模块演示用户' AS REALNAME,
-           '已认证' AS VERIFYSTATUS,
-           '正常' AS STATUS
+           'VERIFIED' AS VERIFYSTATUS,
+           'ACTIVE' AS STATUS
     FROM DUAL
 ) source
 ON (target.USERID = source.USERID)
@@ -44,7 +44,7 @@ WHEN NOT MATCHED THEN INSERT
     (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, VERIFYSTATUS, STATUS)
 VALUES
     (source.USERID, source.ROLEID, source.USERNAME, source.PASSWORDHASH,
-     source.REALNAME, source.VERIFYSTATUS, source.STATUS);
+      source.REALNAME, source.VERIFYSTATUS, source.STATUS);
 
 MERGE INTO MAP_CAMPUSAREAS target
 USING (
