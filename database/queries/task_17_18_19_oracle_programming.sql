@@ -231,6 +231,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
         VALUES (v_checkin_id, p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
 
+        UPDATE VOL_SHIFTS
+        SET SHIFTSTATUS = 'COMPLETED'
+        WHERE SHIFTID = p_shift_id;
+
         IF p_checkin_status = 'CHECKED_IN' THEN
             UPDATE VOL_VOLUNTEERS
             SET SERVICESCORE = NVL(SERVICESCORE, 0) + 1
