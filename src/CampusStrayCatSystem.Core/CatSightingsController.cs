@@ -89,18 +89,25 @@ namespace CampusStrayCatSystem.Core
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateSighting(string id, [FromBody] CatSighting sighting)
         {
+            if (sighting == null)
+            {
+                return BadRequest("目击记录数据不能为空。");
+            }
+
             if (!string.IsNullOrWhiteSpace(sighting.SightingID)
                 && !string.Equals(id, sighting.SightingID, StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest("URL 中的目击记录 ID 与请求体中的 ID 不匹配。");
             }
 
-            if (await _sightingRepository.GetByIdAsync(id) == null)
+            var existing = await _sightingRepository.GetByIdAsync(id);
+            if (existing == null)
             {
                 return NotFound($"未找到 ID 为 {id} 的目击记录。");
             }
 
             sighting.SightingID = id;
+            sighting.UserID = existing.UserID;
             var validationError = await ValidateSightingAsync(sighting);
             if (validationError != null)
             {

@@ -8,7 +8,6 @@ namespace CampusStrayCatSystem.Core {
         [Required(ErrorMessage = "照片文件不能为空。")]
         public IFormFile? File { get; set; }
 
-        [Required(ErrorMessage = "上传用户 ID 不能为空。")]
         [Utf8ByteLength(36, ErrorMessage = "上传用户 ID 不能超过数据库允许的 36 字节。")]
         public string? UploadUserID {
             get => _uploadUserID;

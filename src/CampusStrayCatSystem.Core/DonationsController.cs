@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CampusStrayCatSystem.Models;
 using CampusStrayCatSystem.Data;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
@@ -28,6 +29,7 @@ namespace CampusStrayCatSystem.Core
 
         // 获取所有捐赠记录
         [HttpGet]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<IEnumerable<FundDonation>>> GetAll()
         {
             var donations = await _donationRepository.GetAll();
@@ -36,6 +38,7 @@ namespace CampusStrayCatSystem.Core
 
         // 按捐赠 ID 获取单条捐赠记录
         [HttpGet("{id}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<FundDonation>> GetById(string id)
         {
             var donation = await _donationRepository.GetById(id);
@@ -47,6 +50,7 @@ namespace CampusStrayCatSystem.Core
 
         // 按项目查询捐赠记录
         [HttpGet("by-project/{projectId}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<IEnumerable<FundDonation>>> GetByProject(string projectId)
         {
             if (!await _projectRepository.Exists(projectId))
@@ -60,6 +64,10 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("by-donor/{donorUserId}")]
         public async Task<ActionResult<IEnumerable<FundDonation>>> GetByDonor(string donorUserId)
         {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("ADMIN") && !string.Equals(currentUserId, donorUserId, StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+
             var donations = await _donationRepository.GetByDonor(donorUserId);
             return Ok(donations ?? new List<FundDonation>());
         }

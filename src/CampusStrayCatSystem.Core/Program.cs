@@ -1,9 +1,11 @@
 using CampusStrayCatSystem.Core;
 using CampusStrayCatSystem.Data;
+using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +39,33 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.FromMinutes(2)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var principal = context.Principal;
+                var userId = principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    context.Fail("Token 中缺少用户身份。");
+                    return;
+                }
+
+                var users = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var user = await users.GetById(userId);
+                if (user == null || !UserStatusCodes.IsActive(user.Status))
+                {
+                    context.Fail("用户已停用或不存在。");
+                    return;
+                }
+
+                var tokenRole = principal?.FindFirstValue(ClaimTypes.Role);
+                if (!string.Equals(tokenRole, user.RoleName, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Fail("用户角色已变化，请重新登录。");
+                }
+            }
         };
     });
 

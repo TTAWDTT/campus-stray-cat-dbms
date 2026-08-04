@@ -169,13 +169,21 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("处理状态必须是 SUBMITTED、ASSIGNED、PROCESSING、RESOLVED 或 CLOSED。");
             }
 
-            if (await _reportRepository.GetById(reportId) == null)
+            var existing = await _reportRepository.GetById(reportId);
+            if (existing == null)
             {
                 return NotFound($"未找到上报 {reportId}。");
             }
 
+            var operatorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("ADMIN") &&
+                !string.Equals(existing.HandlerUserID, operatorId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var rows = await _reportRepository.UpdateStatus(reportId, report.ProcessStatus, report.ProcessResult);
-            return NoContent();
+            return rows == 1 ? NoContent() : Conflict("上报状态未发生变化。");
         }
     }
 }

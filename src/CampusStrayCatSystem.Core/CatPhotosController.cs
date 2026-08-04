@@ -1,6 +1,7 @@
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core {
     [Route("api/cats/{catId}/photos")]
@@ -43,6 +44,11 @@ namespace CampusStrayCatSystem.Core {
         [HttpPost] [Authorize(Roles = "ADMIN,VOLUNTEER")] public async Task<ActionResult<CatPhoto>> UploadPhoto(string catId,
                                                                         [FromForm] UploadCatPhotoRequest request,
                                                                         CancellationToken cancellationToken) {
+            if (request == null) return BadRequest(new { message = "照片上传数据不能为空。" });
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(currentUserId)) return Unauthorized();
+            request.UploadUserID = currentUserId;
+
             var result = await _catPhotoService.UploadAsync(catId, request, cancellationToken);
             if (result.Status == CatPhotoServiceStatus.InvalidIdentifier) {
                 return BadRequest(new { message = "猫咪 ID 格式不正确。" });}
