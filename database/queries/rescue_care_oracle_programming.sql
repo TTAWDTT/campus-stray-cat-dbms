@@ -581,27 +581,32 @@ CREATE OR REPLACE PACKAGE BODY PKG_RESCUE_CARE AS
 
         O_ALERTID := NEW_ID();
 
-        INSERT INTO CAT_MISSINGALERTS (
-            ALERTID,
-            CATID,
-            LASTSIGHTINGID,
-            LASTSIGHTINGTIME,
-            THRESHOLDDAYS,
-            ALERTTIME,
-            ALERTSTATUS,
-            HANDLERUSERID,
-            REMARK
-        ) VALUES (
-            O_ALERTID,
-            P_CATID,
-            P_LASTSIGHTINGID,
-            P_LASTSIGHTINGTIME,
-            P_THRESHOLDDAYS,
-            SYSDATE,
-            'PROCESSING',
-            P_HANDLERUSERID,
-            P_REMARK
-        );
+        BEGIN
+            INSERT INTO CAT_MISSINGALERTS (
+                ALERTID,
+                CATID,
+                LASTSIGHTINGID,
+                LASTSIGHTINGTIME,
+                THRESHOLDDAYS,
+                ALERTTIME,
+                ALERTSTATUS,
+                HANDLERUSERID,
+                REMARK
+            ) VALUES (
+                O_ALERTID,
+                P_CATID,
+                P_LASTSIGHTINGID,
+                P_LASTSIGHTINGTIME,
+                P_THRESHOLDDAYS,
+                SYSDATE,
+                'PROCESSING',
+                P_HANDLERUSERID,
+                P_REMARK
+            );
+        EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+                RAISE_APPLICATION_ERROR(-20163, 'The cat already has an active missing alert');
+        END;
     END CREATE_MISSING_ALERT;
 
     PROCEDURE UPDATE_MISSING_STATUS(

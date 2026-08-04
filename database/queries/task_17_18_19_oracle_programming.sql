@@ -163,8 +163,13 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
             raise_application_error(-20043, '该用户已经注册为志愿者');
         END IF;
 
-        INSERT INTO VOL_VOLUNTEERS (VOLUNTEERID, USERID, JOINDATE, SERVICESCORE, CREDITLEVEL, ACTIVESTATUS, GRADUATIONYEAR)
-        VALUES ('VOL-' || DBMS_RANDOM.STRING('X', 8), p_user_id, p_join_date, p_service_score, p_credit_level, p_active_status, p_graduation_year);
+        BEGIN
+            INSERT INTO VOL_VOLUNTEERS (VOLUNTEERID, USERID, JOINDATE, SERVICESCORE, CREDITLEVEL, ACTIVESTATUS, GRADUATIONYEAR)
+            VALUES ('VOL-' || DBMS_RANDOM.STRING('X', 8), p_user_id, p_join_date, p_service_score, p_credit_level, p_active_status, p_graduation_year);
+        EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+                raise_application_error(-20043, '该用户已经注册为志愿者');
+        END;
     END register_volunteer;
 
     PROCEDURE create_shift(p_volunteer_id IN VARCHAR2, p_point_id IN VARCHAR2, p_plan_start_time IN DATE, p_plan_end_time IN DATE, p_backup_volunteer_id IN VARCHAR2 DEFAULT NULL, p_shift_status IN VARCHAR2 DEFAULT 'PLANNED') IS
@@ -228,8 +233,13 @@ CREATE OR REPLACE PACKAGE BODY PKG_VOLUNTEER_MGMT AS
         END IF;
 
         v_checkin_id := 'CHK-' || DBMS_RANDOM.STRING('X', 8);
-        INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
-        VALUES (v_checkin_id, p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
+        BEGIN
+            INSERT INTO VOL_CHECKINS (CHECKINID, SHIFTID, CHECKINTIME, LONGITUDE, LATITUDE, PHOTOURL, DISTANCEMETERS, CHECKINSTATUS)
+            VALUES (v_checkin_id, p_shift_id, p_checkin_time, p_longitude, p_latitude, p_photo_url, p_distance_meters, p_checkin_status);
+        EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN
+                raise_application_error(-20042, '该排班已经签到，不能重复签到');
+        END;
 
         UPDATE VOL_SHIFTS
         SET SHIFTSTATUS = 'COMPLETED'

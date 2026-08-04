@@ -48,12 +48,32 @@ public class NamingVoteRepository : BaseRepository<NamingCandidate>, INamingVote
             const string candidateSql = @"
                 SELECT CATID AS CatID, DEADLINE AS Deadline, WINFLAG AS WinFlag
                 FROM VOTE_NAMINGCANDIDATES
-                WHERE CANDIDATEID = :CandidateID
-                FOR UPDATE";
+                WHERE CANDIDATEID = :CandidateID";
             var candidate = await connection.QuerySingleOrDefaultAsync<NamingCandidate>(candidateSql,
                 new { CandidateID = candidateId }, transaction);
+            if (candidate == null || string.IsNullOrWhiteSpace(candidate.CatID))
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            var archiveStatus = await connection.ExecuteScalarAsync<string?>(@"
+                SELECT ARCHIVESTATUS FROM CAT_CATS
+                WHERE CATID = :CatID
+                FOR UPDATE", new { CatID = candidate.CatID }, transaction);
+            if (CatStatusCodes.NormalizeArchiveStatus(archiveStatus) == CatStatusCodes.ArchiveArchived)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            candidate = await connection.QuerySingleOrDefaultAsync<NamingCandidate>(@"
+                SELECT CATID AS CatID, DEADLINE AS Deadline, WINFLAG AS WinFlag
+                FROM VOTE_NAMINGCANDIDATES
+                WHERE CANDIDATEID = :CandidateID
+                FOR UPDATE", new { CandidateID = candidateId }, transaction);
             if (candidate == null || candidate.WinFlag == 1 ||
-                (candidate.Deadline.HasValue && candidate.Deadline.Value < DateTime.Now))
+                (candidate.Deadline.HasValue && candidate.Deadline.Value <= DateTime.Now))
             {
                 transaction.Rollback();
                 return false;
@@ -102,10 +122,44 @@ public class NamingVoteRepository : BaseRepository<NamingCandidate>, INamingVote
 
         try
         {
-            var catId = await connection.ExecuteScalarAsync<string?>(
-                "SELECT CATID FROM VOTE_NAMINGCANDIDATES WHERE CANDIDATEID = :CandidateID",
+            var target = await connection.QuerySingleOrDefaultAsync<NamingCandidate>(@"
+                SELECT CANDIDATEID AS CandidateID,
+                       CATID AS CatID,
+                       CANDIDATENAME AS CandidateName,
+                       VOTECOUNT AS VoteCount,
+                       DEADLINE AS Deadline,
+                       WINFLAG AS WinFlag
+                FROM VOTE_NAMINGCANDIDATES
+                WHERE CANDIDATEID = :CandidateID",
                 new { CandidateID = candidateId }, transaction);
-            if (string.IsNullOrWhiteSpace(catId))
+            if (target == null || string.IsNullOrWhiteSpace(target.CatID))
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            var archiveStatus = await connection.ExecuteScalarAsync<string?>(@"
+                SELECT ARCHIVESTATUS
+                FROM CAT_CATS
+                WHERE CATID = :CatID
+                FOR UPDATE", new { CatID = target.CatID }, transaction);
+            if (CatStatusCodes.NormalizeArchiveStatus(archiveStatus) == CatStatusCodes.ArchiveArchived ||
+                (target.Deadline.HasValue && target.Deadline.Value > DateTime.Now))
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            var candidates = (await connection.QueryAsync<NamingCandidate>(@"
+                SELECT CANDIDATEID AS CandidateID,
+                       NVL(VOTECOUNT, 0) AS VoteCount,
+                       WINFLAG AS WinFlag
+                FROM VOTE_NAMINGCANDIDATES
+                WHERE CATID = :CatID
+                FOR UPDATE", new { CatID = target.CatID }, transaction)).ToList();
+            var highest = candidates.Max(x => x.VoteCount);
+            var leaders = candidates.Where(x => x.VoteCount == highest).ToList();
+            if (target.WinFlag == 1 || leaders.Count != 1 || leaders[0].CandidateID != target.CandidateID)
             {
                 transaction.Rollback();
                 return false;
@@ -113,7 +167,7 @@ public class NamingVoteRepository : BaseRepository<NamingCandidate>, INamingVote
 
             await connection.ExecuteAsync(
                 "UPDATE VOTE_NAMINGCANDIDATES SET WINFLAG = 0 WHERE CATID = :CatID",
-                new { CatID = catId }, transaction);
+                new { CatID = target.CatID }, transaction);
             var rows = await connection.ExecuteAsync(@"
                 UPDATE VOTE_NAMINGCANDIDATES
                 SET WINFLAG = 1
@@ -129,7 +183,7 @@ public class NamingVoteRepository : BaseRepository<NamingCandidate>, INamingVote
                 UPDATE CAT_CATS
                 SET CATNAME = (SELECT CANDIDATENAME FROM VOTE_NAMINGCANDIDATES WHERE CANDIDATEID = :CandidateID)
                 WHERE CATID = :CatID",
-                new { CandidateID = candidateId, CatID = catId }, transaction);
+                new { CandidateID = candidateId, CatID = target.CatID }, transaction);
 
             transaction.Commit();
             return true;

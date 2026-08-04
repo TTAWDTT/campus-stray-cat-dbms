@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using CampusStrayCatSystem.Data;
 using CampusStrayCatSystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -35,9 +36,15 @@ public class NamingVotesController : ControllerBase
     {
         if (request == null || string.IsNullOrWhiteSpace(request.CandidateName))
             return BadRequest("候选名称不能为空。");
+        var candidateName = request.CandidateName.Trim();
+        if (Encoding.UTF8.GetByteCount(candidateName) > 50)
+            return BadRequest("候选名称不能超过 50 个字节。");
         if (request.Deadline.HasValue && request.Deadline.Value <= DateTime.Now)
             return BadRequest("投票截止时间必须晚于当前时间。");
-        if (!await _catRepository.Exists(catId)) return NotFound("猫咪不存在。");
+        var cat = await _catRepository.GetByIdAsync(catId);
+        if (cat == null) return NotFound("猫咪不存在。");
+        if (CatStatusCodes.NormalizeArchiveStatus(cat.ArchiveStatus) == CatStatusCodes.ArchiveArchived)
+            return Conflict("已归档的猫咪不能发起命名投票。");
 
         var proposer = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(proposer)) return Unauthorized();
@@ -45,7 +52,7 @@ public class NamingVotesController : ControllerBase
         {
             CandidateID = Guid.NewGuid().ToString(),
             CatID = catId,
-            CandidateName = request.CandidateName.Trim(),
+            CandidateName = candidateName,
             ProposerUserID = proposer,
             Deadline = request.Deadline
         };
@@ -61,7 +68,7 @@ public class NamingVotesController : ControllerBase
         if (string.IsNullOrWhiteSpace(voter)) return Unauthorized();
         return await _repository.Vote(candidateId, voter)
             ? Ok(new { message = "投票成功。" })
-            : Conflict("候选名称不存在、投票已截止或该用户已经投过票。");
+            : Conflict("候选名称不存在、猫咪已归档、投票已截止、已有获胜名称或该用户已经投过票。");
     }
 
     [HttpPost("candidates/{candidateId}/winner")]
@@ -70,6 +77,6 @@ public class NamingVotesController : ControllerBase
     {
         return await _repository.SelectWinner(candidateId)
             ? Ok(new { message = "已确定获胜名称。" })
-            : NotFound("候选名称不存在。");
+            : Conflict("候选不存在、投票尚未截止、猫咪已归档或票数并列，无法确定获胜名称。");
     }
 }
