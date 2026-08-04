@@ -17,6 +17,7 @@ namespace CampusStrayCatSystem.Data
 
         protected IDbConnection CreateConnection()
         {
+            // 所有仓储统一从配置里取 Oracle 连接串。
             return new OracleConnection(_connectionString);
         }
 
@@ -24,6 +25,12 @@ namespace CampusStrayCatSystem.Data
         {
             using var connection = CreateConnection();
             return await connection.QueryAsync<T>(sql, param);
+        }
+
+        protected async Task<IEnumerable<TModel>> QueryAsync<TModel>(string sql, object? param = null)
+        {
+            using var connection = CreateConnection();
+            return await connection.QueryAsync<TModel>(sql, param);
         }
 
         protected async Task<T?> QuerySingleAsync(string sql, object? param = null)

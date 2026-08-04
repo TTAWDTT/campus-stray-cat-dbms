@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add controllers
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 
 // JWT 密钥仅允许来自环境变量或未入库本地配置（如 appsettings.Development.json）。
 // 支持：Auth:JwtSecret / Auth__JwtSecret / AUTH_JWT_SECRET
@@ -46,7 +48,7 @@ builder.Services.AddScoped<IPasswordHasher<CampusStrayCatSystem.Models.User>, Pa
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.SchemaFilter<Utf8ByteLengthSchemaFilter>());
 
-// Dependency Injection - Repository
+// Repository 注册集中放在这里，便于后续按业务模块继续扩展。
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IMedReminderRepository, MedReminderRepository>();
 builder.Services.AddScoped<IEmergencyReportRepository, EmergencyReportRepository>();
@@ -55,9 +57,12 @@ builder.Services.AddScoped<ITnrCaseRepository, TnrCaseRepository>();
 builder.Services.AddScoped<ITnrStatusLogRepository, TnrStatusLogRepository>();
 builder.Services.AddScoped<IMedHealthRecordRepository, MedHealthRecordRepository>();
 builder.Services.AddScoped<ICatRepository, CatRepository>();
+builder.Services.AddScoped<ICatPhotoRepository, CatPhotoRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserBlacklistRepository, UserBlacklistRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
+builder.Services.AddScoped<IAdoptionWorkflowRepository, AdoptionWorkflowRepository>();
+builder.Services.AddScoped<IVolunteerWorkflowRepository, VolunteerWorkflowRepository>();
 builder.Services.AddScoped<IServicePointRepository, ServicePointRepository>();
 builder.Services.AddScoped<INestMaintenanceRecordRepository, NestMaintenanceRecordRepository>();
 builder.Services.AddScoped<ICatSightingRepository, CatSightingRepository>();
@@ -73,6 +78,8 @@ builder.Services.AddScoped<IFundCrowdfundingProjectRepository, FundCrowdfundingP
 builder.Services.AddScoped<IFundDonationRepository, FundDonationRepository>();
 builder.Services.AddScoped<IFundExpenseRecordRepository, FundExpenseRecordRepository>();
 builder.Services.AddScoped<IRptStatisticsSnapshotRepository, RptStatisticsSnapshotRepository>();
+builder.Services.AddSingleton<ICatPhotoFileStorage, CatPhotoFileStorage>();
+builder.Services.AddScoped<CatPhotoService>();
 
 var app = builder.Build();
 
@@ -81,6 +88,9 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();}
 
+var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(webRootPath);
+app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(webRootPath) });
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

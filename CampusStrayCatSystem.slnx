@@ -3,5 +3,6 @@
     <Project Path="src/CampusStrayCatSystem.Core/CampusStrayCatSystem.Core.csproj" />
     <Project Path="src/CampusStrayCatSystem.Data/CampusStrayCatSystem.Data.csproj" />
     <Project Path="src/CampusStrayCatSystem.Models/CampusStrayCatSystem.Models.csproj" />
+    <Project Path="src/CampusStrayCatSystem.Tests/CampusStrayCatSystem.Tests.csproj" />
   </Folder>
 </Solution>

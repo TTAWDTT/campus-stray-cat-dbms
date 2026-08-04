@@ -1,0 +1,232 @@
+{
+  "info": {
+    "_postman_id": "e34224d8-9a36-4201-98d6-5dad42f4977f",
+    "name": "Campus Stray Cat - B组猫咪照片模块",
+    "description": "猫咪照片上传、查询、静态文件、主图切换、特征读取和删除回归测试。请先执行 database/insert_demo_data.sql，并从仓库根目录运行或在 Postman 中重新选择 logo.png。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5047" },
+    { "key": "catId", "value": "demo-cat-campus-001" },
+    { "key": "userId", "value": "demo-user-zhaoqing" },
+    { "key": "photoId", "value": "" },
+    { "key": "secondPhotoId", "value": "" },
+    { "key": "photoUrl", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 查询初始照片列表",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('返回照片数组', function () { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 上传首张照片并自动设为主图",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "logo.png" },
+            { "key": "uploadUserID", "value": "{{userId}}", "type": "text" },
+            { "key": "isPrimary", "value": "0", "type": "text" }
+          ]
+        },
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('首张照片创建成功并成为主图', function () { pm.response.to.have.status(201); const body = pm.response.json(); pm.expect(body.isPrimary).to.eql(1); pm.collectionVariables.set('photoId', body.photoID); pm.collectionVariables.set('photoUrl', body.photoUrl); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 获取静态照片文件",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}{{photoUrl}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('返回 PNG 文件', function () { pm.response.to.have.status(200); pm.expect(pm.response.headers.get('Content-Type')).to.include('image/png'); pm.expect(pm.response.responseSize).to.be.above(0); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 查询单张照片元数据",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('照片 ID 与上传结果一致', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().photoID).to.eql(pm.collectionVariables.get('photoId')); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 读取尚未生成的照片特征",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}/feature"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('未生成特征时返回 null', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().featureVector).to.eql(null); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 上传第二张普通照片",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": "logo.png" },
+            { "key": "uploadUserID", "value": "{{userId}}", "type": "text" },
+            { "key": "isPrimary", "value": "0", "type": "text" }
+          ]
+        },
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('第二张照片默认不是主图', function () { pm.response.to.have.status(201); const body = pm.response.json(); pm.expect(body.isPrimary).to.eql(0); pm.collectionVariables.set('secondPhotoId', body.photoID); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 将第二张照片设为主图",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{secondPhotoId}}/primary"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('主图切换成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 验证唯一主图与排序",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('第二张照片位于首位且只有一个主图', function () { pm.response.to.have.status(200); const photos = pm.response.json(); pm.expect(photos[0].photoID).to.eql(pm.collectionVariables.get('secondPhotoId')); pm.expect(photos.filter(function (photo) { return photo.isPrimary === 1; })).to.have.lengthOf(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 删除当前主图",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{secondPhotoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('当前主图删除成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 验证剩余照片自动接替主图",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('首张照片自动接替主图', function () { pm.response.to.have.status(200); const photos = pm.response.json(); const target = photos.find(function (photo) { return photo.photoID === pm.collectionVariables.get('photoId'); }); pm.expect(target.isPrimary).to.eql(1); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 清理首张照片",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('测试照片清理成功', function () { pm.response.to.have.status(204); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
