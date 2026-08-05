@@ -5,11 +5,13 @@ import { RouteGuard } from './guards/RouteGuard';
 import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { PlaceholderPage } from '../shared/components/PlaceholderPage';
+import { SharedComponentsPreview } from '../shared/components/SharedComponentsPreview';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/preview/shared" element={<SharedComponentsPreview />} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
         </Route>

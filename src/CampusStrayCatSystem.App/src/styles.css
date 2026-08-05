@@ -190,6 +190,14 @@ button { font: inherit; }
 .feature-empty-icon { display: grid; place-items: center; width: 66px; height: 66px; margin-bottom: 15px; border-radius: 24px; color: var(--animal-text-color); background: rgba(255,255,255,.58); }
 .feature-empty-state h2 { margin: 0 0 7px; color: var(--animal-text-color); font-size: 21px; }
 .feature-empty-state p { max-width: 390px; margin: 0 0 22px; color: var(--animal-text-color-secondary); line-height: 1.7; }
+.shared-preview-page { max-width: 1120px; min-height: 100vh; margin: 0 auto; padding: 54px 32px; }
+.shared-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.shared-preview-card { min-height: 175px; border: 1px solid var(--animal-border-color-light) !important; }
+.shared-preview-label { margin-bottom: 10px; color: var(--animal-text-color); font-size: 14px; font-weight: 900; }
+.shared-preview-card p { margin: 0; color: var(--animal-text-color-secondary); font-size: 13px; line-height: 1.7; }
+.shared-preview-actions, .shared-preview-tags, .shared-preview-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.shared-preview-form .animal-input, .shared-preview-form input { flex: 1 1 170px; min-width: 0; }
+.shared-preview-card .animal-divider { margin: 18px 0 0; }
 .auth-layout { position: relative; min-height: 100vh; overflow: hidden; background: url('./assets/images/animal-island-home-bg.webp') 0 0 / auto repeat, #7dc395; animation: auth-bg-scroll 80s linear infinite; }
 .auth-layout::before, .auth-layout::after { display: none; }
 .login-page { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(330px, .7fr); align-items: center; gap: 8vw; max-width: 1060px; min-height: 100vh; margin: 0 auto; padding: 40px 34px; }
@@ -262,6 +270,8 @@ button { font: inherit; }
   .feature-page-header { display: block; margin-bottom: 21px; }
   .feature-page-actions { justify-content: flex-start; margin-top: 17px; }
   .feature-empty-state { padding: 36px 18px !important; }
+  .shared-preview-page { padding: 34px 18px; }
+  .shared-preview-grid { grid-template-columns: 1fr; }
   .login-page { display: block; min-height: auto; padding: 34px 18px 40px; }
   .login-art { padding: 25px 9px 37px; text-align: center; }
   .login-art > p:last-child { margin: 0 auto; }
