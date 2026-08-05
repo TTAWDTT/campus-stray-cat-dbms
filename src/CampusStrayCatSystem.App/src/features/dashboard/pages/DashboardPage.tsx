@@ -1,4 +1,5 @@
 import { Button, Card, Icon, Progress, Tag } from 'animal-island-ui';
+import { useAuthStore } from '../../../stores/auth.store';
 
 const statCards = [
   { label: '校园猫咪', value: '38', note: '较上月增加 4 只', icon: 'icon-critterpedia' as const, color: 'app-teal' as const },
@@ -7,10 +8,12 @@ const statCards = [
 ];
 
 export function DashboardPage() {
+  const profileName = useAuthStore((state) => state.user?.realName || state.user?.username || '校园伙伴');
+
   return (
     <div className="dashboard-page">
       <section className="dashboard-welcome">
-        <div><p className="kicker">星期四 · 10 月 24 日 · 晴</p><h1>早上好，罗臻 <Icon name="icon-design" size={25} /></h1><p>今天也一起照顾校园里的小邻居吧。</p></div>
+        <div><p className="kicker">星期四 · 10 月 24 日 · 晴</p><h1>早上好，{profileName} <Icon name="icon-design" size={25} /></h1><p>今天也一起照顾校园里的小邻居吧。</p></div>
         <div className="dashboard-actions"><Button className="dashboard-action" type="default" icon={<Icon name="icon-map" size={17} />}>查看地图</Button><Button className="dashboard-action" type="primary" icon={<Icon name="icon-camera" size={17} />}>记录目击</Button></div>
       </section>
       <section className="stat-grid" aria-label="校园概览统计">

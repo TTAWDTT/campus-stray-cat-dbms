@@ -6,6 +6,8 @@ import { LoginPage } from '../features/auth/pages/LoginPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { PlaceholderPage } from '../shared/components/PlaceholderPage';
 import { SharedComponentsPreview } from '../shared/components/SharedComponentsPreview';
+import { CatsPage } from '../features/cats/pages/CatsPage';
+import { CatDetailPage } from '../features/cats/pages/CatDetailPage';
 
 export default function App() {
   return (
@@ -18,7 +20,8 @@ export default function App() {
         <Route element={<RouteGuard />}>
           <Route element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="cats" element={<PlaceholderPage title="猫咪档案" icon="icon-critterpedia" description="猫咪列表、照片、特征和命名投票会在这里汇总。" />} />
+            <Route path="cats" element={<CatsPage />} />
+            <Route path="cats/:catId" element={<CatDetailPage />} />
             <Route path="campus" element={<PlaceholderPage title="校园地图" icon="icon-map" description="区域、服务点、猫窝和目击记录的入口。" />} />
             <Route path="rescue" element={<PlaceholderPage title="救助中心" icon="icon-camera" description="TNR、医疗提醒、紧急上报和失踪预警。" />} />
             <Route path="adoption" element={<PlaceholderPage title="领养与志愿者" icon="icon-chat" description="领养审核、排班、投喂和任务交接。" />} />

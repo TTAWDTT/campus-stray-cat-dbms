@@ -10,6 +10,13 @@ const colors: Record<string, TagColor> = {
   DISABLED: 'app-red',
   REJECTED: 'app-red',
   CLOSED: 'default',
+  ON_CAMPUS: 'app-green',
+  MISSING: 'app-yellow',
+  ADOPTED: 'app-teal',
+  DECEASED: 'default',
+  DRAFT: 'default',
+  PUBLISHED: 'app-green',
+  ARCHIVED: 'default',
 };
 
 interface StatusTagProps {
