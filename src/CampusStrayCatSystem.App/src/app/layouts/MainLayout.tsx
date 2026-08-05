@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icon, Tag } from 'animal-island-ui';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import campusLogo from '../../assets/images/campus-stray-cat-logo.png';
+import { useAuthStore } from '../../stores/auth.store';
 
 const navItems = [
   { label: '概览', to: '/', icon: 'icon-miles' as const },
@@ -16,6 +17,10 @@ const navItems = [
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
+  const profileName = user?.realName || user?.username || '用户';
+  const profileRole = user?.roleName || '普通用户';
+  const profileInitial = profileName.slice(0, 1);
 
   return (
     <div className={sidebarCollapsed ? 'shell sidebar-collapsed' : 'shell'}>
@@ -54,10 +59,10 @@ export function MainLayout() {
             <span className="brand-mark"><img src={campusLogo} alt="校园猫岛 Logo" /></span>
             <span><small>CAMPUS STRAY CAT</small><strong>校园猫岛</strong></span>
           </div>
-          <div className="profile-chip profile-capsule"><span className="profile-dot">罗</span><span className="profile-name">罗臻</span><Tag className="profile-role" size="small" color="app-teal" variant="soft">管理员</Tag></div>
+          <div className="profile-chip profile-capsule"><span className="profile-dot">{profileInitial}</span><span className="profile-name">{profileName}</span><Tag className="profile-role" size="small" color="app-teal" variant="soft">{profileRole}</Tag></div>
         </header>
         <main className="shell-content">
-          <div className="shell-profile-row"><div className="profile-chip profile-capsule"><span className="profile-dot">罗</span><span className="profile-name">罗臻</span><Tag size="small" color="app-teal" variant="soft">管理员</Tag></div></div>
+          <div className="shell-profile-row"><div className="profile-chip profile-capsule"><span className="profile-dot">{profileInitial}</span><span className="profile-name">{profileName}</span><Tag size="small" color="app-teal" variant="soft">{profileRole}</Tag></div></div>
           <div key={location.key} className="page-transition"><Outlet /></div>
         </main>
       </div>
