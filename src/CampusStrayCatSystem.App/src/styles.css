@@ -179,6 +179,17 @@ button { font: inherit; }
 .placeholder-icon { display: grid; place-items: center; width: 68px; height: 68px; margin: 0 auto 18px; border-radius: 24px; color: var(--animal-text-color); background: rgba(255,255,255,.58); }
 .placeholder-card h1 { margin: 16px 0 8px; color: var(--animal-text-color); font-size: 31px; }
 .placeholder-card p { margin: 0 auto 24px; max-width: 420px; color: var(--animal-text-color-secondary); line-height: 1.7; }
+.feature-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.feature-page-heading { min-width: 0; }
+.feature-page-title-row { display: flex; align-items: center; gap: 12px; }
+.feature-page-icon { display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 auto; border-radius: 16px; color: var(--animal-text-color); background: rgba(255,255,255,.58); }
+.feature-page-header h1 { margin: 7px 0 0; color: var(--animal-text-color); font-size: clamp(28px, 3.4vw, 42px); line-height: 1.1; letter-spacing: -.045em; }
+.feature-page-header p { margin: 9px 0 0; color: var(--animal-text-color-secondary); font-size: 14px; line-height: 1.6; }
+.feature-page-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+.feature-empty-state { display: grid; justify-items: center; padding: 46px 24px !important; border: 1px solid var(--animal-border-color-light) !important; text-align: center; }
+.feature-empty-icon { display: grid; place-items: center; width: 66px; height: 66px; margin-bottom: 15px; border-radius: 24px; color: var(--animal-text-color); background: rgba(255,255,255,.58); }
+.feature-empty-state h2 { margin: 0 0 7px; color: var(--animal-text-color); font-size: 21px; }
+.feature-empty-state p { max-width: 390px; margin: 0 0 22px; color: var(--animal-text-color-secondary); line-height: 1.7; }
 .auth-layout { position: relative; min-height: 100vh; overflow: hidden; background: url('./assets/images/animal-island-home-bg.webp') 0 0 / auto repeat, #7dc395; animation: auth-bg-scroll 80s linear infinite; }
 .auth-layout::before, .auth-layout::after { display: none; }
 .login-page { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(330px, .7fr); align-items: center; gap: 8vw; max-width: 1060px; min-height: 100vh; margin: 0 auto; padding: 40px 34px; }
@@ -248,6 +259,9 @@ button { font: inherit; }
   .dashboard-columns { grid-template-columns: 1fr; }
   .insight-card { min-height: 170px; }
   .section-heading h2 { font-size: 21px; }
+  .feature-page-header { display: block; margin-bottom: 21px; }
+  .feature-page-actions { justify-content: flex-start; margin-top: 17px; }
+  .feature-empty-state { padding: 36px 18px !important; }
   .login-page { display: block; min-height: auto; padding: 34px 18px 40px; }
   .login-art { padding: 25px 9px 37px; text-align: center; }
   .login-art > p:last-child { margin: 0 auto; }
