@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CampusStrayCatSystem.Models
 {
     /// <summary>
@@ -11,7 +13,9 @@ namespace CampusStrayCatSystem.Models
         public string AreaID { get; set; } = string.Empty;
         public string AnimalType { get; set; } = string.Empty;
         public string? PhotoURL { get; set; }
+        [Range(-180, 180, ErrorMessage = "经度必须在 -180 到 180 之间。")]
         public decimal? Longitude { get; set; }
+        [Range(-90, 90, ErrorMessage = "纬度必须在 -90 到 90 之间。")]
         public decimal? Latitude { get; set; }
         public DateTime? ReportTime { get; set; }
         public string UrgencyLevel { get; set; } = "LOW";

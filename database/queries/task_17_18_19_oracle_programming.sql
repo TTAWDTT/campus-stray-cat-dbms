@@ -128,6 +128,10 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
     PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visitor_user_id IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0) IS
         v_current_status VARCHAR2(30);
     BEGIN
+        IF UPPER(TRIM(p_visit_type)) NOT IN ('INITIAL', 'FOLLOW_UP', 'FINAL') THEN
+            raise_application_error(-20035, '回访类型只能是 INITIAL、FOLLOW_UP 或 FINAL');
+        END IF;
+
         IF p_passflag IS NULL OR p_passflag NOT IN (0, 1) THEN
             raise_application_error(-20033, '回访通过标记只能是 0 或 1');
         END IF;
@@ -141,7 +145,7 @@ CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
         END IF;
 
         INSERT INTO ADOPT_VISITS (VISITID, APPLICATIONID, VISITTYPE, VISITTIME, VISITORUSERID, CONCLUSION, PASSFLAG)
-        VALUES ('VIS-' || DBMS_RANDOM.STRING('X', 8), p_application_id, p_visit_type, p_visit_time, p_visitor_user_id, p_conclusion, p_passflag);
+        VALUES ('VIS-' || DBMS_RANDOM.STRING('X', 8), p_application_id, UPPER(TRIM(p_visit_type)), p_visit_time, p_visitor_user_id, p_conclusion, p_passflag);
     END create_visit;
 END PKG_ADOPTION_WORKFLOW;
 /

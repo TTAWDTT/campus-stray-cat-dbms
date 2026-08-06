@@ -71,8 +71,12 @@ namespace CampusStrayCatSystem.Core
         {
             if (string.IsNullOrWhiteSpace(applicationId) || request == null || string.IsNullOrWhiteSpace(request.VisitType))
                 return BadRequest(new { message = "申请编号和回访类型不能为空。" });
+            if (!VisitTypes.IsValid(request.VisitType))
+                return BadRequest(new { message = "VisitType 只能是 INITIAL、FOLLOW_UP 或 FINAL。" });
             if (request.PassFlag is not (0 or 1))
                 return BadRequest(new { message = "PassFlag 只能是 0 或 1。" });
+
+            request.VisitType = request.VisitType.Trim().ToUpperInvariant();
 
             var userId = CurrentUserId();
             if (userId == null) return Unauthorized();

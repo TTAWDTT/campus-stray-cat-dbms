@@ -13,6 +13,22 @@
 | 上报状态 | `SUBMITTED`、`ASSIGNED`、`PROCESSING`、`RESOLVED`、`CLOSED` |
 | 失踪预警状态 | `PROCESSING`、`FOUND`、`CLOSED` |
 
+### 字段编码字典
+
+接口中的状态和类型统一使用英文编码，前端再映射为中文显示。
+
+| 字段 | 合法值 | 中文含义 |
+|---|---|---|
+| `currentStatus`、`fromStatus`、`toStatus` | `DISCOVERED`、`CAPTURED`、`SURGERY`、`RECOVERING`、`RELEASED`、`CANCELLED` | 发现、捕捉、手术、恢复、放归、取消 |
+| `recordType`、`reminderType` | `VACCINATION`、`CHECKUP`、`TREATMENT`、`SURGERY`、`DEWORMING`、`EMERGENCY`、`OTHER` | 疫苗、检查、治疗、手术、驱虫、紧急、其他 |
+| `sendStatus` | `PENDING`、`SENT`、`COMPLETED` | 待发送、已发送、已完成 |
+| `animalType` | `CAT`、`DOG`、`OTHER` | 猫、狗、其他 |
+| `urgencyLevel` | `LOW`、`MEDIUM`、`HIGH`、`CRITICAL` | 低、中、高、紧急 |
+| `processStatus` | `SUBMITTED`、`ASSIGNED`、`PROCESSING`、`RESOLVED`、`CLOSED` | 已提交、已分配、处理中、已解决、已关闭 |
+| `alertStatus` | `PROCESSING`、`FOUND`、`CLOSED` | 处理中、已寻回、已关闭 |
+
+金额字段（如 `totalCost`）不得为负；`thresholdDays` 必须大于 0；捕捉、手术、放归时间应按流程先后填写。
+
 TNR、TNR 状态日志、医疗记录和医疗提醒接口要求 `ADMIN`、`VOLUNTEER` 或 `VET` 角色。紧急上报和失踪预警的查询、创建要求登录；分配或更新处理状态要求 `ADMIN` 或 `VOLUNTEER`。
 
 ## 2. 接口总览

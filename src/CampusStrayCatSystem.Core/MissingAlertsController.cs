@@ -15,13 +15,6 @@ namespace CampusStrayCatSystem.Core
     [Authorize]
     public class MissingAlertsController : ControllerBase
     {
-        private static readonly HashSet<string> AllowedAlertStatuses = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "PROCESSING",
-            "FOUND",
-            "CLOSED"
-        };
-
         private readonly IMissingAlertRepository _missingAlertRepository;
 
         public MissingAlertsController(IMissingAlertRepository missingAlertRepository)
@@ -130,6 +123,14 @@ namespace CampusStrayCatSystem.Core
 
             alert.HandlerUserID = null;
 
+            alert.AlertStatus = string.IsNullOrWhiteSpace(alert.AlertStatus)
+                ? MissingAlertStatuses.Processing
+                : alert.AlertStatus.Trim().ToUpperInvariant();
+            if (!MissingAlertStatuses.IsValid(alert.AlertStatus))
+            {
+                return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
+            }
+
             await _missingAlertRepository.CreateAlert(alert);
             return CreatedAtAction(nameof(GetById), new { alertId = alert.AlertID }, alert);
         }
@@ -153,7 +154,7 @@ namespace CampusStrayCatSystem.Core
             }
 
             if (string.IsNullOrWhiteSpace(alert.AlertStatus) ||
-                !AllowedAlertStatuses.Contains(alert.AlertStatus))
+                !MissingAlertStatuses.IsValid(alert.AlertStatus))
             {
                 return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
             }

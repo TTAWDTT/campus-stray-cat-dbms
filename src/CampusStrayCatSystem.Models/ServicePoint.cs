@@ -16,7 +16,10 @@ namespace CampusStrayCatSystem.Models
         [StringLength(30, ErrorMessage = "点位类型不能超过 30 个字符。")]
         public string? PointType { get; set; }
 
+        [Range(-180, 180, ErrorMessage = "经度必须在 -180 到 180 之间。")]
         public decimal? Longitude { get; set; }
+
+        [Range(-90, 90, ErrorMessage = "纬度必须在 -90 到 90 之间。")]
         public decimal? Latitude { get; set; }
 
         [StringLength(20, ErrorMessage = "设施状态不能超过 20 个字符。")]

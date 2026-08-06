@@ -14,17 +14,6 @@ namespace CampusStrayCatSystem.Core
     [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
     public class MedReminderController : ControllerBase
     {
-        private static readonly HashSet<string> AllowedReminderTypes = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "VACCINATION",
-            "CHECKUP",
-            "TREATMENT",
-            "SURGERY",
-            "DEWORMING",
-            "EMERGENCY",
-            "OTHER"
-        };
-
         private readonly IMedReminderRepository _reminderRepository;
 
         public MedReminderController(IMedReminderRepository reminderRepository)
@@ -77,9 +66,14 @@ namespace CampusStrayCatSystem.Core
             }
 
             if (string.IsNullOrWhiteSpace(reminder.ReminderType) ||
-                !AllowedReminderTypes.Contains(reminder.ReminderType))
+                !ReminderTypes.IsValid(reminder.ReminderType))
             {
-                return BadRequest($"提醒类型必须是 {string.Join("、", AllowedReminderTypes)}。");
+                return BadRequest($"提醒类型必须是 {string.Join("、", ReminderTypes.Allowed)}。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(reminder.SendStatus) && !ReminderStatuses.IsValid(reminder.SendStatus))
+            {
+                return BadRequest($"发送状态必须是 {string.Join("、", ReminderStatuses.Allowed)}。");
             }
 
             if (reminder.ReminderTime == null)
@@ -87,6 +81,10 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("提醒时间不能为空。");
             }
 
+            reminder.ReminderType = reminder.ReminderType.Trim().ToUpperInvariant();
+            reminder.SendStatus = string.IsNullOrWhiteSpace(reminder.SendStatus)
+                ? ReminderStatuses.Pending
+                : reminder.SendStatus.Trim().ToUpperInvariant();
             await _reminderRepository.CreateReminder(reminder);
             return CreatedAtAction(nameof(GetById), new { reminderId = reminder.ReminderID }, reminder);
         }

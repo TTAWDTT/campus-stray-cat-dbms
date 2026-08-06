@@ -163,6 +163,11 @@ namespace CampusStrayCatSystem.Core.Controllers
                 return BadRequest(ModelState);
             }
 
+            if (!BlacklistReasonTypes.IsValid(dto.ReasonType))
+            {
+                return BadRequest(new { message = "拉黑原因类型必须是 ABANDONMENT、ANIMAL_ABUSE、FALSE_INFORMATION 或 OTHER。" });
+            }
+
             try
             {
                 // 检查用户是否存在
@@ -191,7 +196,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                 var newRecord = new UserBlacklist{
                     BlacklistID = Guid.NewGuid().ToString(),
                     UserID = dto.UserId,
-                    ReasonType = dto.ReasonType,
+                    ReasonType = dto.ReasonType.Trim().ToUpperInvariant(),
                     ReasonDetail = dto.ReasonDetail,
                     ApplicationID = applicationId,
                     CreateUserID = operatorId,

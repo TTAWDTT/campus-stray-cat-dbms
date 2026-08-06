@@ -1,10 +1,16 @@
+/** Values persisted by MAP_CAMPUSAREAS. Keep labels in the page layer. */
+export type AreaType = 'CAMPUS' | 'PUBLIC_AREA' | 'ACTIVITY_AREA' | 'GREENBELT' | 'GATE';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+export type PointType = 'FEEDING' | 'NEST' | 'ACTIVITY';
+export type FacilityStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
+
 export interface CampusArea {
   areaID: string;
   areaName?: string | null;
   campusName?: string | null;
   parentAreaID?: string | null;
-  areaType?: string | null;
-  riskLevel?: string | null;
+  areaType?: AreaType | null;
+  riskLevel?: RiskLevel | null;
   geoBoundary?: string | null;
 }
 
@@ -13,10 +19,10 @@ export interface ServicePoint {
   areaID?: string | null;
   areaName?: string | null;
   pointName?: string | null;
-  pointType?: string | null;
+  pointType?: PointType | null;
   longitude?: number | null;
   latitude?: number | null;
-  facilityStatus?: string | null;
+  facilityStatus?: FacilityStatus | null;
 }
 
 export interface CatSighting {

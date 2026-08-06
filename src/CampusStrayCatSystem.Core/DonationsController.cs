@@ -121,6 +121,12 @@ namespace CampusStrayCatSystem.Core
             if (donation.PublicFlag.HasValue && donation.PublicFlag is not (0 or 1))
                 return "公开标记 PublicFlag 只能是 0（匿名）或 1（公开）。";
 
+            if (!string.IsNullOrWhiteSpace(donation.PayMethod) && !PaymentMethods.IsValid(donation.PayMethod))
+                return $"支付方式必须是 {string.Join("、", PaymentMethods.Allowed)}。";
+
+            if (!string.IsNullOrWhiteSpace(donation.PayMethod))
+                donation.PayMethod = donation.PayMethod.Trim().ToUpperInvariant();
+
             return null; // 校验通过
         }
     }

@@ -14,6 +14,32 @@
 | 项目状态 | `ACTIVE`、`COMPLETED`、`CANCELLED` |
 | 支出审核状态 | `PENDING`、`APPROVED`、`REJECTED` |
 
+### 字段编码字典
+
+接口中的枚举值统一使用英文编码，中文只作为前端显示文本。
+
+| 字段 | 合法值 | 中文含义 |
+|---|---|---|
+| `status`（领养申请） | `PENDING`、`APPROVED`、`REJECTED` | 待审核、已通过、已驳回 |
+| `visitType` | `INITIAL`、`FOLLOW_UP`、`FINAL` | 首次、跟进、最终回访 |
+| `passFlag`、`publicFlag` | `0`、`1` | 否、是 |
+| `creditLevel` | `L1`、`L2`、`L3` | 积分等级一、二、三 |
+| `activeStatus` | `ACTIVE`、`INACTIVE` | 启用、停用 |
+| `shiftStatus` | `PLANNED`、`ASSIGNED`、`IN_PROGRESS`、`COMPLETED`、`MISSED` | 计划、已分配、进行中、已完成、漏签 |
+| `checkInStatus` | `CHECKED_IN`、`LATE` | 已签到、迟到 |
+| `handoverType` | `TASK`、`SHIFT` | 任务、排班 |
+| `relatedType` | `SHIFT` | 排班关联（当前固定值） |
+| `handoverStatus` | `PENDING`、`CONFIRMED`、`REJECTED`、`CANCELLED` | 待确认、已确认、已拒绝、已撤销 |
+| `projectStatus` | `ACTIVE`、`COMPLETED`、`CANCELLED` | 进行中、已完成、已取消 |
+| `payMethod` | `ALIPAY`、`WECHAT`、`BANK_TRANSFER`、`CASH`、`OTHER` | 支付宝、微信、银行转账、现金、其他 |
+| `recordType`（支出） | `FOOD`、`MEDICAL`、`SUPPLIES`、`OTHER` | 食物、医疗、物资、其他 |
+| `auditStatus` | `PENDING`、`APPROVED`、`REJECTED` | 待审核、已通过、已驳回 |
+| `metricCode` | `TOTAL_DONATION`、`TOTAL_EXPENSE`、`NET_BALANCE`、`DONATION_COUNT` | 捐赠总额、支出总额、净余额、捐赠笔数 |
+| `dimensionType` | `PROJECT`、`MONTH`、`CAT` | 项目、月份、猫咪 |
+| `unit` | `CNY`、`COUNT` | 人民币、数量 |
+
+金额字段（如 `amount`、`targetAmount`）不得为负；`planEndTime` 必须晚于 `planStartTime`。
+
 ## 2. 接口总览
 
 | 功能 | 方法 | 基础路径 |

@@ -6,7 +6,7 @@ PROMPT ===== Inserting Zhao Qing module demo data =====;
 MERGE INTO SYS_ROLES target
 USING (
     SELECT 'demo-role-volunteer' AS ROLEID,
-           '演示志愿者' AS ROLENAME,
+           'VOLUNTEER' AS ROLENAME,
            '赵晴模块演示数据使用' AS DESCRIPTION,
            'AREA,POINT,SIGHTING,MAINTENANCE' AS PERMISSIONSCOPE
     FROM DUAL
@@ -52,8 +52,8 @@ USING (
            '四平路校区' AS AREANAME,
            '四平路校区' AS CAMPUSNAME,
            CAST(NULL AS VARCHAR2(36)) AS PARENTAREAID,
-           '校区' AS AREATYPE,
-           '低' AS RISKLEVEL
+           'CAMPUS' AS AREATYPE,
+           'LOW' AS RISKLEVEL
     FROM DUAL
 ) source
 ON (target.AREAID = source.AREAID)
@@ -75,8 +75,8 @@ USING (
            '图书馆周边' AS AREANAME,
            '四平路校区' AS CAMPUSNAME,
            'demo-area-siping' AS PARENTAREAID,
-           '公共区域' AS AREATYPE,
-           '低' AS RISKLEVEL
+           'PUBLIC_AREA' AS AREATYPE,
+           'LOW' AS RISKLEVEL
     FROM DUAL
 ) source
 ON (target.AREAID = source.AREAID)
@@ -122,10 +122,10 @@ USING (
     SELECT 'demo-point-library-east' AS POINTID,
            'demo-area-library' AS AREAID,
            '图书馆东侧投喂点' AS POINTNAME,
-           '喂食点' AS POINTTYPE,
+           'FEEDING' AS POINTTYPE,
            121.50650000 AS LONGITUDE,
            31.28210000 AS LATITUDE,
-           '正常' AS FACILITYSTATUS,
+           'ACTIVE' AS FACILITYSTATUS,
            TO_DATE('2026-07-20 08:00:00', 'YYYY-MM-DD HH24:MI:SS') AS DEPLOYTIME
     FROM DUAL
 ) source
@@ -149,10 +149,10 @@ USING (
     SELECT 'demo-point-library-nest' AS POINTID,
            'demo-area-library' AS AREAID,
            '图书馆北侧猫窝' AS POINTNAME,
-           '猫窝' AS POINTTYPE,
+           'NEST' AS POINTTYPE,
            121.50630000 AS LONGITUDE,
            31.28240000 AS LATITUDE,
-           '需定期巡查' AS FACILITYSTATUS,
+           'MAINTENANCE' AS FACILITYSTATUS,
            TO_DATE('2026-07-20 08:30:00', 'YYYY-MM-DD HH24:MI:SS') AS DEPLOYTIME
     FROM DUAL
 ) source
@@ -175,11 +175,11 @@ MERGE INTO NEST_MAINTENANCERECORDS target
 USING (
     SELECT 'demo-maintenance-001' AS MAINTENANCEID,
            'demo-point-library-nest' AS POINTID,
-           '保温箱' AS MATERIALTYPE,
+           'INSULATION_BOX' AS MATERIALTYPE,
            TO_DATE('2026-07-21 09:00:00', 'YYYY-MM-DD HH24:MI:SS') AS CHECKTIME,
-           '晴' AS WEATHERCONDITION,
-           '轻微' AS DAMAGELEVEL,
-           '清理' AS ACTIONTYPE,
+           'SUNNY' AS WEATHERCONDITION,
+           'MINOR' AS DAMAGELEVEL,
+           'CLEAN' AS ACTIONTYPE,
            'demo-user-zhaoqing' AS OPERATORUSERID,
            TO_DATE('2026-07-28 09:00:00', 'YYYY-MM-DD HH24:MI:SS') AS NEXTCHECKTIME,
            '已更换垫材' AS REMARK

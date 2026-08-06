@@ -9,7 +9,7 @@ import { useAuthStore } from '../../../stores/auth.store';
 import { useNavigate } from 'react-router-dom';
 import { catsService } from '../../../services/cats.service';
 import { emptyCatForm } from '../../../types/cats';
-import type { CampusArea, CatFormState, CatSummary, CatWritePayload } from '../../../types/cats';
+import type { CampusArea, CatArchiveStatus, CatFormState, CatLifeStatus, CatSummary, CatWritePayload, BinaryFlag } from '../../../types/cats';
 
 const lifeOptions = [
   { key: '', label: '全部生活状态' },
@@ -72,8 +72,8 @@ export function CatsPage() {
   const [cats, setCats] = useState<CatSummary[]>([]);
   const [areas, setAreas] = useState<CampusArea[]>([]);
   const [search, setSearch] = useState('');
-  const [lifeStatus, setLifeStatus] = useState('');
-  const [archiveStatus, setArchiveStatus] = useState('');
+  const [lifeStatus, setLifeStatus] = useState<CatLifeStatus | ''>('');
+  const [archiveStatus, setArchiveStatus] = useState<CatArchiveStatus | ''>('');
   const [areaID, setAreaID] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -91,7 +91,7 @@ export function CatsPage() {
     setLoading(true);
     setError('');
     try {
-      setCats(await catsService.list({ mainAreaId: areaID, lifeStatus, archiveStatus }));
+      setCats(await catsService.list({ mainAreaId: areaID, lifeStatus: lifeStatus || undefined, archiveStatus: archiveStatus || undefined }));
     } catch (loadError) {
       setError(readError(loadError));
     } finally {
@@ -170,7 +170,7 @@ export function CatsPage() {
     setEditing(cat);
     setForm({
       catName: cat.catName || '', gender: cat.gender || 'UNKNOWN', breed: cat.breed || '', colorPattern: cat.colorPattern || '',
-      sterilizedFlag: String(cat.sterilizedFlag ?? 0), earTipFlag: String(cat.earTipFlag ?? 0), personalityTags: cat.personalityTags || '',
+      sterilizedFlag: String(cat.sterilizedFlag ?? 0) as BinaryFlag, earTipFlag: String(cat.earTipFlag ?? 0) as BinaryFlag, personalityTags: cat.personalityTags || '',
       mainAreaId: cat.mainAreaId || '', lifeStatus: cat.lifeStatus || 'ON_CAMPUS', archiveStatus: cat.archiveStatus || 'DRAFT',
     });
     setError('');
@@ -232,7 +232,7 @@ export function CatsPage() {
     <section className="feature-page cats-page">
       <PageHeader kicker="CAT ARCHIVE" title="猫咪档案" icon="icon-critterpedia" actions={canManage && <Button type="primary" onClick={openCreate}><Icon name="icon-diy" size={16} />新增猫咪</Button>} />
       <div className="cats-summary-row"><Card color="app-teal" className="cats-summary-card"><Icon name="icon-critterpedia" size={23} /><span><small>当前筛选结果</small><strong>{visibleCats.length} <em>只</em></strong></span></Card><Card color="app-yellow" className="cats-summary-card"><Icon name="icon-camera" size={23} /><span><small>已完成绝育</small><strong>{cats.filter((cat) => cat.sterilizedFlag === 1).length} <em>只</em></strong></span></Card><Card color="app-green" className="cats-summary-card"><Icon name="icon-map" size={23} /><span><small>已关联区域</small><strong>{cats.filter((cat) => cat.mainAreaId).length} <em>只</em></strong></span></Card></div>
-      <Card className="cats-filter-card"><div className="cats-filter-heading"><div><strong>档案索引</strong></div>{notice && <Tag color="app-green" variant="soft">{notice}</Tag>}</div><div className="cats-filter-grid"><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索名称、编号或花色" allowClear prefix={<Icon name="icon-critterpedia" size={15} />} /><Select options={areaOptions} value={areaID} onChange={setAreaID} aria-label="按区域筛选" /><Select options={lifeOptions} value={lifeStatus} onChange={setLifeStatus} aria-label="按生活状态筛选" /><Select options={archiveOptions} value={archiveStatus} onChange={setArchiveStatus} aria-label="按档案状态筛选" /><Button type="default" onClick={() => { setSearch(''); setAreaID(''); setLifeStatus(''); setArchiveStatus(''); }}>重置</Button></div></Card>
+      <Card className="cats-filter-card"><div className="cats-filter-heading"><div><strong>档案索引</strong></div>{notice && <Tag color="app-green" variant="soft">{notice}</Tag>}</div><div className="cats-filter-grid"><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索名称、编号或花色" allowClear prefix={<Icon name="icon-critterpedia" size={15} />} /><Select options={areaOptions} value={areaID} onChange={setAreaID} aria-label="按区域筛选" /><Select options={lifeOptions} value={lifeStatus} onChange={(value) => setLifeStatus(value as CatLifeStatus | '')} aria-label="按生活状态筛选" /><Select options={archiveOptions} value={archiveStatus} onChange={(value) => setArchiveStatus(value as CatArchiveStatus | '')} aria-label="按档案状态筛选" /><Button type="default" onClick={() => { setSearch(''); setAreaID(''); setLifeStatus(''); setArchiveStatus(''); }}>重置</Button></div></Card>
       {error && <div className="cats-alert" role="alert"><Icon name="icon-camera" size={17} /><span>{error}</span><Button type="text" size="small" onClick={() => setError('')}>知道了</Button></div>}
       {loading || visibleCats.length > 0 ? <Card className="cats-table-card"><div key={page} className="cats-table-page"><Table columns={columns} dataSource={pageCats as unknown as Record<string, unknown>[]} rowKey="catID" loading={loading} emptyText="没有符合条件的猫咪档案" scroll={{ x: 900 }} /></div><div className="cats-pagination"><span>第 {page} / {pageCount} 页 · 共 {visibleCats.length} 条</span><div><Button className="cats-page-button" type="default" size="small" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>上一页</Button><Button className="cats-page-button" type="default" size="small" disabled={page >= pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>下一页</Button></div></div></Card> : <EmptyState icon="icon-critterpedia" title="岛上还没有猫咪档案" description={canManage ? '先录入第一只校园小邻居，后续照片、目击和医疗记录都可以从这里延伸。' : '管理员或志愿者录入档案后，这里会展示校园猫咪。'} action={canManage ? <Button type="primary" onClick={openCreate}>新增第一只猫咪</Button> : undefined} />}
       <Modal open={modalOpen} className={modalClosing ? 'cat-modal-closing' : 'cat-modal-opening'} maskStyle={{ animation: modalClosing ? 'cats-modal-mask-out .22s var(--animal-motion-ease) both' : undefined }} title={editing ? '编辑猫咪档案' : '新增猫咪档案'} width={680} typewriter={false} onClose={closeModal} footer={<div className="cat-modal-footer"><Button type="default" onClick={() => closeModal()} disabled={saving}>取消</Button><Button type="primary" onClick={() => void submit()} loading={saving}>{editing ? '保存修改' : '加入档案'}</Button></div>}>

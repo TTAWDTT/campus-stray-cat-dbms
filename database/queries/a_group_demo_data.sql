@@ -4,7 +4,7 @@ SET DEFINE OFF;
 -- 状态契约（API 与库一致，仅使用英文）：
 --   SYS_USERS.STATUS: ACTIVE | DISABLED
 --   SYS_USERS.VERIFYSTATUS: VERIFIED | UNVERIFIED
---   SYS_ROLES.ROLENAME: ADMIN | VOLUNTEER | USER
+--   SYS_ROLES.ROLENAME: ADMIN | VOLUNTEER | USER | VET
 -- 演示登录密码（四类账号相同）：Passw0rd!
 -- PASSWORDHASH 为 ASP.NET Core Identity PasswordHasher V3（PBKDF2-HMAC-SHA512）格式。
 
@@ -108,11 +108,11 @@ PROMPT A-group member1 demo users ready. Login password: Passw0rd!
 -- =====================================================
 MERGE INTO USER_BLACKLIST target
 USING (
-    SELECT 'bl-001-a-group' AS BLACKLISTID, 'user-normal-a-group' AS USERID, '违规领养' AS REASONTYPE, '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL, NULL AS RELATEDAPPLICATIONID, 'user-admin-a-group' AS CREATEUSERID, SYSDATE AS CREATETIME, 'ACTIVE' AS BLACKLISTSTATUS, NULL AS RELEASETIME, NULL AS RELEASEDBY FROM DUAL
+    SELECT 'bl-001-a-group' AS BLACKLISTID, 'user-normal-a-group' AS USERID, 'ABANDONMENT' AS REASONTYPE, '多次领养后弃养猫咪，造成猫咪身心伤害' AS REASONDETAIL, NULL AS RELATEDAPPLICATIONID, 'user-admin-a-group' AS CREATEUSERID, SYSDATE AS CREATETIME, 'ACTIVE' AS BLACKLISTSTATUS, NULL AS RELEASETIME, NULL AS RELEASEDBY FROM DUAL
     UNION ALL
-    SELECT 'bl-002-a-group', 'user-disabled-a-group', '恶意行为', '在校园内恶意伤害流浪猫', NULL, 'user-admin-a-group', SYSDATE-5, 'ACTIVE', NULL, NULL FROM DUAL
+    SELECT 'bl-002-a-group', 'user-disabled-a-group', 'ANIMAL_ABUSE', '在校园内恶意伤害流浪猫', NULL, 'user-admin-a-group', SYSDATE-5, 'ACTIVE', NULL, NULL FROM DUAL
     UNION ALL
-    SELECT 'bl-003-a-group', 'user-volunteer-a-group', '虚假信息', '提供虚假领养申请信息', NULL, 'user-admin-a-group', SYSDATE-30, 'RELEASED', SYSDATE-15, 'user-admin-a-group' FROM DUAL
+    SELECT 'bl-003-a-group', 'user-volunteer-a-group', 'FALSE_INFORMATION', '提供虚假领养申请信息', NULL, 'user-admin-a-group', SYSDATE-30, 'RELEASED', SYSDATE-15, 'user-admin-a-group' FROM DUAL
 ) source
 ON (target.BLACKLISTID = source.BLACKLISTID)
 WHEN MATCHED THEN UPDATE SET

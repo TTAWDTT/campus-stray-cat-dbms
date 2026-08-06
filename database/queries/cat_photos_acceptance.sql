@@ -27,7 +27,7 @@ BEGIN
     END IF;
 
     INSERT INTO SYS_ROLES (ROLEID, ROLENAME)
-    VALUES ('test-photo-role', 'Photo Test Role');
+    VALUES ('test-photo-role', 'USER');
 
     INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, STATUS)
     VALUES ('test-photo-user', 'test-photo-role', 'photo_acceptance_user', 'TEST_ONLY', 'ACTIVE');

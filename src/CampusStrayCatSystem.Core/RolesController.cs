@@ -67,6 +67,13 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("角色数据为空，无法创建角色。");
             }
 
+            if (!RoleCodes.IsValid(role.RoleName))
+            {
+                return BadRequest($"角色名必须是 {string.Join("、", RoleCodes.Allowed)}。");
+            }
+
+            role.RoleName = role.RoleName.Trim().ToUpperInvariant();
+
             await _roleRepository.CreateRole(role);
             return Ok(role);
         }
@@ -86,6 +93,13 @@ namespace CampusStrayCatSystem.Core
             {
                 return BadRequest("URL 中的 ID 与请求体中的 ID 不匹配。");
             }
+
+            if (!RoleCodes.IsValid(role.RoleName))
+            {
+                return BadRequest($"角色名必须是 {string.Join("、", RoleCodes.Allowed)}。");
+            }
+
+            role.RoleName = role.RoleName.Trim().ToUpperInvariant();
 
             var existing = await _roleRepository.GetByIdRole(id);
             if (existing == null)

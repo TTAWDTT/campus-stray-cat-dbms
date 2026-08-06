@@ -52,7 +52,10 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("by-metric/{metricCode}")]
         public async Task<ActionResult<IEnumerable<RptStatisticsSnapshot>>> GetByMetric(string metricCode)
         {
-            var snapshots = await _snapshotRepository.GetByMetric(metricCode);
+            if (string.IsNullOrWhiteSpace(metricCode) || !StatisticCodes.MetricCodes.Contains(metricCode.Trim()))
+                return BadRequest($"指标代码必须是 {string.Join("、", StatisticCodes.MetricCodes)}。");
+
+            var snapshots = await _snapshotRepository.GetByMetric(metricCode.Trim().ToUpperInvariant());
             return Ok(snapshots ?? new List<RptStatisticsSnapshot>());
         }
 
@@ -60,7 +63,12 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("by-dimension/{dimensionType}/{dimensionValue}")]
         public async Task<ActionResult<IEnumerable<RptStatisticsSnapshot>>> GetByDimension(string dimensionType, string dimensionValue)
         {
-            var snapshots = await _snapshotRepository.GetByDimension(dimensionType, dimensionValue);
+            if (string.IsNullOrWhiteSpace(dimensionType) || !StatisticCodes.DimensionTypes.Contains(dimensionType.Trim()))
+                return BadRequest($"维度类型必须是 {string.Join("、", StatisticCodes.DimensionTypes)}。");
+            if (string.IsNullOrWhiteSpace(dimensionValue))
+                return BadRequest("维度值不能为空。");
+
+            var snapshots = await _snapshotRepository.GetByDimension(dimensionType.Trim().ToUpperInvariant(), dimensionValue.Trim());
             return Ok(snapshots ?? new List<RptStatisticsSnapshot>());
         }
 

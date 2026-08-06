@@ -15,23 +15,6 @@ namespace CampusStrayCatSystem.Core
     [Authorize]
     public class EmergencyReportsController : ControllerBase
     {
-        private static readonly HashSet<string> AllowedUrgencyLevels = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "LOW",
-            "MEDIUM",
-            "HIGH",
-            "CRITICAL"
-        };
-
-        private static readonly HashSet<string> AllowedProcessStatuses = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "SUBMITTED",
-            "ASSIGNED",
-            "PROCESSING",
-            "RESOLVED",
-            "CLOSED"
-        };
-
         private readonly IEmergencyReportRepository _reportRepository;
         private readonly IUserRepository _userRepository;
 
@@ -95,17 +78,20 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("区域 ID 不能为空。");
             }
 
-            if (string.IsNullOrWhiteSpace(report.AnimalType))
+            if (string.IsNullOrWhiteSpace(report.AnimalType) || !AnimalTypes.IsValid(report.AnimalType))
             {
-                return BadRequest("动物类型不能为空。");
+                return BadRequest("动物类型必须是 CAT、DOG 或 OTHER。");
             }
 
             if (string.IsNullOrWhiteSpace(report.UrgencyLevel) ||
-                !AllowedUrgencyLevels.Contains(report.UrgencyLevel))
+                !EmergencyUrgencyLevels.IsValid(report.UrgencyLevel))
             {
                 return BadRequest("紧急等级必须是 LOW、MEDIUM、HIGH 或 CRITICAL。");
             }
 
+            report.AnimalType = report.AnimalType.Trim().ToUpperInvariant();
+            report.UrgencyLevel = report.UrgencyLevel.Trim().ToUpperInvariant();
+            report.ProcessStatus = EmergencyProcessStatuses.Submitted;
             await _reportRepository.Create(report);
             return CreatedAtAction(nameof(GetById), new { reportId = report.ReportID }, report);
         }
@@ -164,7 +150,7 @@ namespace CampusStrayCatSystem.Core
             }
 
             if (string.IsNullOrWhiteSpace(report.ProcessStatus) ||
-                !AllowedProcessStatuses.Contains(report.ProcessStatus))
+                !EmergencyProcessStatuses.IsValid(report.ProcessStatus))
             {
                 return BadRequest("处理状态必须是 SUBMITTED、ASSIGNED、PROCESSING、RESOLVED 或 CLOSED。");
             }
@@ -184,7 +170,7 @@ namespace CampusStrayCatSystem.Core
 
             // 这里调用的是 Oracle Package，ExecuteNonQuery 的返回值不代表包内 UPDATE 行数。
             // 报告不存在和非法状态由 Package 抛错，接口只在调用成功后返回 204。
-            await _reportRepository.UpdateStatus(reportId, report.ProcessStatus, report.ProcessResult);
+            await _reportRepository.UpdateStatus(reportId, report.ProcessStatus.Trim().ToUpperInvariant(), report.ProcessResult);
             return NoContent();
         }
     }

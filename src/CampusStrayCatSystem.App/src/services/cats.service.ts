@@ -1,5 +1,5 @@
 import { http } from './http';
-import type { CampusArea, CatFilters, CatPhoto, CatSummary, CatWritePayload } from '../types/cats';
+import type { CampusArea, CatFilters, CatPhoto, CatSummary, CatWritePayload, CatGender, CatLifeStatus, CatArchiveStatus } from '../types/cats';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -9,7 +9,7 @@ const value = <T>(data: ApiRecord, camel: string, pascal: string): T | undefined
 const toCat = (data: ApiRecord): CatSummary => ({
   catID: value<string>(data, 'catID', 'CatID') || '',
   catName: value<string | null>(data, 'catName', 'CatName'),
-  gender: value<string | null>(data, 'gender', 'Gender'),
+  gender: value<CatGender | null>(data, 'gender', 'Gender'),
   breed: value<string | null>(data, 'breed', 'Breed'),
   colorPattern: value<string | null>(data, 'colorPattern', 'ColorPattern'),
   sterilizedFlag: value<number | null>(data, 'sterilizedFlag', 'SterilizedFlag'),
@@ -17,8 +17,8 @@ const toCat = (data: ApiRecord): CatSummary => ({
   personalityTags: value<string | null>(data, 'personalityTags', 'PersonalityTags'),
   mainAreaId: value<string | null>(data, 'mainAreaId', 'MainAreaId'),
   mainAreaName: value<string | null>(data, 'mainAreaName', 'MainAreaName'),
-  lifeStatus: value<string | null>(data, 'lifeStatus', 'LifeStatus'),
-  archiveStatus: value<string | null>(data, 'archiveStatus', 'ArchiveStatus'),
+  lifeStatus: value<CatLifeStatus | null>(data, 'lifeStatus', 'LifeStatus'),
+  archiveStatus: value<CatArchiveStatus | null>(data, 'archiveStatus', 'ArchiveStatus'),
   primaryPhotoUrl: value<string | null>(data, 'primaryPhotoUrl', 'PrimaryPhotoUrl'),
 });
 

@@ -10,7 +10,9 @@
 | 时间格式 | ISO 8601，例如 `2026-08-04T10:20:30Z` |
 | 用户状态 | `ACTIVE`、`DISABLED` |
 | 验证状态 | `VERIFIED`、`UNVERIFIED` |
+| 角色编码 | `ADMIN`、`VOLUNTEER`、`USER`、`VET` |
 | 黑名单状态 | `ACTIVE`、`RELEASED` |
+| 黑名单原因类型 | `ABANDONMENT`、`ANIMAL_ABUSE`、`FALSE_INFORMATION`、`OTHER` |
 
 登录成功后将响应中的 `token` 放入后续请求的 `Authorization` 请求头。用户 ID、角色 ID 和密码哈希由服务端或数据库生成，接口不接受客户端伪造当前操作人身份。
 

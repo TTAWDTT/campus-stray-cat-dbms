@@ -1,5 +1,5 @@
 import { http } from '../../../services/http';
-import type { CampusArea, CatSighting, ServicePoint, SightingFilters, SightingWritePayload } from '../types/campus';
+import type { AreaType, CampusArea, CatSighting, FacilityStatus, PointType, RiskLevel, ServicePoint, SightingFilters, SightingWritePayload } from '../types/campus';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -11,8 +11,8 @@ const toArea = (data: ApiRecord): CampusArea => ({
   areaName: value<string | null>(data, 'areaName', 'AreaName'),
   campusName: value<string | null>(data, 'campusName', 'CampusName'),
   parentAreaID: value<string | null>(data, 'parentAreaID', 'ParentAreaID') || value<string | null>(data, 'parentAreaId', 'ParentAreaId'),
-  areaType: value<string | null>(data, 'areaType', 'AreaType'),
-  riskLevel: value<string | null>(data, 'riskLevel', 'RiskLevel'),
+  areaType: value<AreaType | null>(data, 'areaType', 'AreaType'),
+  riskLevel: value<RiskLevel | null>(data, 'riskLevel', 'RiskLevel'),
   geoBoundary: value<string | null>(data, 'geoBoundary', 'GeoBoundary'),
 });
 
@@ -21,10 +21,10 @@ const toPoint = (data: ApiRecord): ServicePoint => ({
   areaID: value<string | null>(data, 'areaID', 'AreaID') || value<string | null>(data, 'areaId', 'AreaId'),
   areaName: value<string | null>(data, 'areaName', 'AreaName'),
   pointName: value<string | null>(data, 'pointName', 'PointName'),
-  pointType: value<string | null>(data, 'pointType', 'PointType'),
+  pointType: value<PointType | null>(data, 'pointType', 'PointType'),
   longitude: value<number | null>(data, 'longitude', 'Longitude'),
   latitude: value<number | null>(data, 'latitude', 'Latitude'),
-  facilityStatus: value<string | null>(data, 'facilityStatus', 'FacilityStatus'),
+  facilityStatus: value<FacilityStatus | null>(data, 'facilityStatus', 'FacilityStatus'),
 });
 
 const toSighting = (data: ApiRecord): CatSighting => ({

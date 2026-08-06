@@ -12,6 +12,23 @@
 | 猫咪档案状态 | `DRAFT`、`PUBLISHED`、`ARCHIVED` |
 | 命名投票 | 候选名最多 50 个 UTF-8 字节；同一用户不可重复投票 |
 
+### 字段编码字典
+
+接口请求和响应中的枚举字段只使用下列英文编码；中文仅用于界面显示。
+
+| 字段 | 合法值 | 中文含义 |
+|---|---|---|
+| `gender` | `UNKNOWN`、`MALE`、`FEMALE` | 未知、公猫、母猫 |
+| `lifeStatus` | `ON_CAMPUS`、`MISSING`、`ADOPTED`、`DECEASED` | 在校园、失踪、已领养、已离世 |
+| `archiveStatus` | `DRAFT`、`PUBLISHED`、`ARCHIVED` | 草稿、已发布、已归档 |
+| `areaType` | `CAMPUS`、`PUBLIC_AREA`、`ACTIVITY_AREA`、`GREENBELT`、`GATE` | 校区、公共区域、活动区域、绿地、出入口 |
+| `riskLevel` | `LOW`、`MEDIUM`、`HIGH` | 低、中、高风险 |
+| `pointType` | `FEEDING`、`NEST`、`ACTIVITY` | 投喂点、猫窝、活动点 |
+| `facilityStatus` | `ACTIVE`、`INACTIVE`、`MAINTENANCE` | 正常、暂停维护、维护中 |
+| `sterilizedFlag`、`earTipFlag`、`isPrimary` | `0`、`1` | 否、是 |
+
+猫窝维护记录中的编码为：`materialType`=`INSULATION_BOX`、`FOOD_BOWL`、`WATER_BOWL`、`OTHER`；`weatherCondition`=`SUNNY`、`CLOUDY`、`RAINY`、`SNOWY`、`OTHER`；`damageLevel`=`NONE`、`MINOR`、`MAJOR`；`actionType`=`CLEAN`、`REPAIR`、`REPLACE`、`OTHER`。
+
 校园区域的正式接口是 `/api/campus-areas`；代码中遗留的 `/api/areas` 仅提供旧版列表/详情查询，不作为本组测试入口。
 
 ## 2. 接口总览

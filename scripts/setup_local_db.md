@@ -17,12 +17,13 @@
 已有业务数据时，不执行 `drop_tables.sql`，依次执行：
 
 1. `database/create_tables.sql`
-2. `database/queries/cat_photos_oracle_programming.sql`
-3. `database/queries/a_group_advanced.sql`
-4. `database/queries/task_17_18_19_oracle_programming.sql`
-5. `database/queries/rescue_care_oracle_programming.sql`
-6. `database/queries/a_group_demo_data.sql`（可选演示账号）
-7. `database/insert_demo_data.sql`（可选校园数据）
+2. `database/queries/field_contract_constraints.sql`
+3. `database/queries/cat_photos_oracle_programming.sql`
+4. `database/queries/a_group_advanced.sql`
+5. `database/queries/task_17_18_19_oracle_programming.sql`
+6. `database/queries/rescue_care_oracle_programming.sql`
+7. `database/queries/a_group_demo_data.sql`（可选演示账号）
+8. `database/insert_demo_data.sql`（可选校园数据）
 
 演示账号密码统一为 `Passw0rd!`，只用于本地联调。
 

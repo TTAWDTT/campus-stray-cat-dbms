@@ -117,6 +117,16 @@ namespace CampusStrayCatSystem.Core
                 return $"关联区域 {point.AreaID.Trim()} 不存在。";
             }
 
+            if (!string.IsNullOrWhiteSpace(point.PointType) && !ServicePointTypes.IsValid(point.PointType))
+            {
+                return $"点位类型必须是 {string.Join("、", ServicePointTypes.Allowed)}。";
+            }
+
+            if (!string.IsNullOrWhiteSpace(point.FacilityStatus) && !FacilityStatuses.IsValid(point.FacilityStatus))
+            {
+                return $"设施状态必须是 {string.Join("、", FacilityStatuses.Allowed)}。";
+            }
+
             return ValidateCoordinates(point.Longitude, point.Latitude);
         }
 
@@ -144,8 +154,8 @@ namespace CampusStrayCatSystem.Core
         {
             point.PointName = point.PointName.Trim();
             point.AreaID = NormalizeOptional(point.AreaID);
-            point.PointType = NormalizeOptional(point.PointType);
-            point.FacilityStatus = NormalizeOptional(point.FacilityStatus);
+            point.PointType = ServicePointTypes.Normalize(point.PointType);
+            point.FacilityStatus = FacilityStatuses.Normalize(point.FacilityStatus);
         }
 
         private static string? NormalizeOptional(string? value)

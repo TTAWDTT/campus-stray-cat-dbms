@@ -20,11 +20,11 @@ PROMPT ===== Demo data for task 20 & 21 =====;
 
 -- 角色：管理员、志愿者、普通用户
 INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
-VALUES ('role-admin-0001', '管理员', '系统管理员', 'ALL');
+VALUES ('role-admin-0001', 'ADMIN', '系统管理员', 'ALL');
 INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
-VALUES ('role-volunteer-01', '志愿者', '投喂与救助志愿者', 'FEEDING,TNR,RESCUE');
+VALUES ('role-volunteer-01', 'VOLUNTEER', '投喂与救助志愿者', 'FEEDING,TNR,RESCUE');
 INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
-VALUES ('role-user-0001', '普通用户', '普通注册用户', 'VIEW,DONATE');
+VALUES ('role-user-0001', 'USER', '普通注册用户', 'VIEW,DONATE');
 
 -- 用户：3 个测试账号（密码哈希仅作占位，实际应由应用层加密）
 INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, STATUS, VERIFYSTATUS)
@@ -42,13 +42,13 @@ VALUES ('area-east-0001', '东区花园', '同济大学', 'GREENBELT', 'LOW');
 
 -- 猫咪档案（2 只，用于众筹）
 INSERT INTO CAT_CATS (CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG, LIFESTATUS, ARCHIVESTATUS)
-VALUES ('cat-orange-0001', '小橘', 'MALE', '中华田园猫', '橘色', 0, 'ALIVE', 'ACTIVE');
+VALUES ('cat-orange-0001', '小橘', 'MALE', '中华田园猫', '橘色', 0, 'ON_CAMPUS', 'PUBLISHED');
 INSERT INTO CAT_CATS (CATID, CATNAME, GENDER, BREED, COLORPATTERN, STERILIZEDFLAG, LIFESTATUS, ARCHIVESTATUS)
-VALUES ('cat-white-0002', '小白', 'FEMALE', '中华田园猫', '白色', 0, 'ALIVE', 'ACTIVE');
+VALUES ('cat-white-0002', '小白', 'FEMALE', '中华田园猫', '白色', 0, 'ON_CAMPUS', 'PUBLISHED');
 
 -- 投喂点（服务点位）
 INSERT INTO MAP_SERVICEPOINTS (POINTID, AREAID, POINTNAME, POINTTYPE, FACILITYSTATUS, DEPLOYTIME)
-VALUES ('point-feed-0001', 'area-east-0001', '东区花园投喂点A', 'FEEDING', 'NORMAL', SYSDATE);
+VALUES ('point-feed-0001', 'area-east-0001', '东区花园投喂点A', 'FEEDING', 'ACTIVE', SYSDATE);
 
 -- =============================================================================
 -- 功能点 20：投喂记录与交接记录

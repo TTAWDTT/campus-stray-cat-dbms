@@ -120,6 +120,29 @@ namespace CampusStrayCatSystem.Core
                 return "维护动作不能为空。";
             }
 
+            if (!string.IsNullOrWhiteSpace(record.MaterialType)
+                && !NestMaintenanceCodes.MaterialTypes.Contains(record.MaterialType.Trim()))
+            {
+                return "材料类型必须是 INSULATION_BOX、FOOD_BOWL、WATER_BOWL 或 OTHER。";
+            }
+
+            if (!string.IsNullOrWhiteSpace(record.WeatherCondition)
+                && !NestMaintenanceCodes.WeatherConditions.Contains(record.WeatherCondition.Trim()))
+            {
+                return "天气情况必须是 SUNNY、CLOUDY、RAINY、SNOWY 或 OTHER。";
+            }
+
+            if (!string.IsNullOrWhiteSpace(record.DamageLevel)
+                && !NestMaintenanceCodes.DamageLevels.Contains(record.DamageLevel.Trim()))
+            {
+                return "损坏程度必须是 NONE、MINOR 或 MAJOR。";
+            }
+
+            if (!NestMaintenanceCodes.ActionTypes.Contains(record.ActionType.Trim()))
+            {
+                return "维护动作必须是 CLEAN、REPAIR、REPLACE 或 OTHER。";
+            }
+
             if (!string.IsNullOrWhiteSpace(record.OperatorUserID)
                 && await _maintenanceRepository.UserExistsAsync(record.OperatorUserID.Trim()) == false)
             {
@@ -145,11 +168,18 @@ namespace CampusStrayCatSystem.Core
             record.ActionType = NormalizeOptional(record.ActionType);
             record.OperatorUserID = NormalizeOptional(record.OperatorUserID);
             record.Remark = NormalizeOptional(record.Remark);
+            record.MaterialType = UpperOptional(record.MaterialType);
+            record.WeatherCondition = UpperOptional(record.WeatherCondition);
+            record.DamageLevel = UpperOptional(record.DamageLevel);
+            record.ActionType = UpperOptional(record.ActionType);
         }
 
         private static string? NormalizeOptional(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
+
+        private static string? UpperOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
     }
 }

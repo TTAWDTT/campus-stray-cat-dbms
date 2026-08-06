@@ -175,6 +175,11 @@ IS
 BEGIN
     SAVEPOINT SP_ADD_USER_BLACKLIST_START;
 
+    IF UPPER(TRIM(p_ReasonType)) NOT IN ('ABANDONMENT', 'ANIMAL_ABUSE', 'FALSE_INFORMATION', 'OTHER') THEN
+        p_Result := '拉黑原因类型必须是 ABANDONMENT、ANIMAL_ABUSE、FALSE_INFORMATION 或 OTHER';
+        RETURN;
+    END IF;
+
     SELECT COUNT(1) INTO v_ActiveCount FROM SYS_USERS WHERE USERID = p_UserID;
     IF v_ActiveCount = 0 THEN
         p_Result := '用户不存在';
@@ -223,7 +228,7 @@ BEGIN
         BLACKLISTID, USERID, REASONTYPE, REASONDETAIL, RELATEDAPPLICATIONID,
         CREATEUSERID, CREATETIME, BLACKLISTSTATUS
     ) VALUES (
-        v_BlacklistID, p_UserID, p_ReasonType, p_ReasonDetail, p_ApplicationID,
+        v_BlacklistID, p_UserID, UPPER(TRIM(p_ReasonType)), p_ReasonDetail, p_ApplicationID,
         p_CreatedBy, SYSDATE, 'ACTIVE'
     );
 

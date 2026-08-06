@@ -28,7 +28,7 @@ BEGIN
     SAVEPOINT rescue_care_acceptance_start;
 
     INSERT INTO SYS_ROLES (ROLEID, ROLENAME, DESCRIPTION, PERMISSIONSCOPE)
-    VALUES ('role-rescue-demo', 'Rescue Demo Role', 'Demo role for rescue care acceptance', 'RESCUE');
+    VALUES ('role-rescue-demo', 'VOLUNTEER', 'Demo role for rescue care acceptance', 'RESCUE');
 
     INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, REALNAME, VERIFYSTATUS, STATUS)
     VALUES ('user-rescue-reporter', 'role-rescue-demo', 'rescue_reporter_demo', 'demo-password-hash', 'Demo Reporter', 'VERIFIED', 'ACTIVE');

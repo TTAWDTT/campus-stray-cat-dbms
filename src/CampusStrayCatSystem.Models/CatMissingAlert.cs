@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CampusStrayCatSystem.Models
 {
     /// <summary>
@@ -10,6 +12,7 @@ namespace CampusStrayCatSystem.Models
         public string CatID { get; set; } = string.Empty;
         public string? LastSightingID { get; set; }
         public DateTime? LastSightingTime { get; set; }
+        [Range(1, 3650, ErrorMessage = "阈值天数必须在 1 到 3650 之间。")]
         public int? ThresholdDays { get; set; }
         public DateTime? AlertTime { get; set; }
         public string AlertStatus { get; set; } = "PROCESSING";

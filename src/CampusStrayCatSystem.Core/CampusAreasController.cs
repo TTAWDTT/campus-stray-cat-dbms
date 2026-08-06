@@ -135,6 +135,16 @@ namespace CampusStrayCatSystem.Core
                 return "区域名称不能超过 100 个字符。";
             }
 
+            if (!string.IsNullOrWhiteSpace(area.AreaType) && !AreaTypes.IsValid(area.AreaType))
+            {
+                return $"区域类型必须是 {string.Join("、", AreaTypes.Allowed)}。";
+            }
+
+            if (!string.IsNullOrWhiteSpace(area.RiskLevel) && !RiskLevels.IsValid(area.RiskLevel))
+            {
+                return $"风险等级必须是 {string.Join("、", RiskLevels.Allowed)}。";
+            }
+
             if (string.IsNullOrWhiteSpace(area.ParentAreaID))
             {
                 return null;
@@ -177,8 +187,8 @@ namespace CampusStrayCatSystem.Core
             area.AreaName = area.AreaName.Trim();
             area.CampusName = NormalizeOptional(area.CampusName);
             area.ParentAreaID = NormalizeOptional(area.ParentAreaID);
-            area.AreaType = NormalizeOptional(area.AreaType);
-            area.RiskLevel = NormalizeOptional(area.RiskLevel);
+            area.AreaType = AreaTypes.Normalize(area.AreaType);
+            area.RiskLevel = RiskLevels.Normalize(area.RiskLevel);
             area.GeoBoundary = NormalizeOptional(area.GeoBoundary);
         }
 

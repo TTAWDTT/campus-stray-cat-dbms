@@ -1,7 +1,12 @@
+export type CatGender = 'UNKNOWN' | 'MALE' | 'FEMALE';
+export type CatLifeStatus = 'ON_CAMPUS' | 'MISSING' | 'ADOPTED' | 'DECEASED';
+export type CatArchiveStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+export type BinaryFlag = '0' | '1';
+
 export interface CatSummary {
   catID: string;
   catName?: string | null;
-  gender?: string | null;
+  gender?: CatGender | null;
   breed?: string | null;
   colorPattern?: string | null;
   sterilizedFlag?: number | null;
@@ -9,8 +14,8 @@ export interface CatSummary {
   personalityTags?: string | null;
   mainAreaId?: string | null;
   mainAreaName?: string | null;
-  lifeStatus?: string | null;
-  archiveStatus?: string | null;
+  lifeStatus?: CatLifeStatus | null;
+  archiveStatus?: CatArchiveStatus | null;
   primaryPhotoUrl?: string | null;
 }
 
@@ -25,15 +30,15 @@ export interface CatPhoto {
 
 export interface CatWritePayload {
   catName: string;
-  gender: string;
+  gender: CatGender;
   breed: string;
   colorPattern: string;
   sterilizedFlag: number;
   earTipFlag: number;
   personalityTags: string;
   mainAreaId: string;
-  lifeStatus: string;
-  archiveStatus?: string;
+  lifeStatus: CatLifeStatus;
+  archiveStatus?: CatArchiveStatus;
 }
 
 export interface CampusArea {
@@ -43,21 +48,21 @@ export interface CampusArea {
 
 export interface CatFilters {
   mainAreaId?: string;
-  lifeStatus?: string;
-  archiveStatus?: string;
+  lifeStatus?: CatLifeStatus;
+  archiveStatus?: CatArchiveStatus;
 }
 
 export interface CatFormState {
   catName: string;
-  gender: string;
+  gender: CatGender;
   breed: string;
   colorPattern: string;
-  sterilizedFlag: string;
-  earTipFlag: string;
+  sterilizedFlag: BinaryFlag;
+  earTipFlag: BinaryFlag;
   personalityTags: string;
   mainAreaId: string;
-  lifeStatus: string;
-  archiveStatus: string;
+  lifeStatus: CatLifeStatus;
+  archiveStatus: CatArchiveStatus;
 }
 
 export const emptyCatForm: CatFormState = {

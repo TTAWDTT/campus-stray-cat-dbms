@@ -11,6 +11,7 @@ import type { CampusArea, CatSighting, ServicePoint, SightingWritePayload } from
 import { catsService } from '../../../services/cats.service';
 import type { CatSummary } from '../../../types/cats';
 
+const areaTypeLabel: Record<string, string> = { CAMPUS: '校区', PUBLIC_AREA: '公共区域', ACTIVITY_AREA: '活动区域', GREENBELT: '绿地', GATE: '出入口' };
 const pointLabel: Record<string, string> = { FEEDING: '投喂点', NEST: '猫窝', ACTIVITY: '活动点' };
 const statusLabel: Record<string, string> = { ACTIVE: '正常', INACTIVE: '暂停维护', MAINTENANCE: '维护中' };
 const tongjiCenter: L.LatLngExpression = [31.2848, 121.5064];
@@ -180,7 +181,7 @@ export function CampusPage() {
         icon: L.divIcon({ className: area.areaID === areaId ? 'campus-map-marker selected' : 'campus-map-marker', html: `<span>${index + 1}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }),
         title: name,
       });
-      marker.bindTooltip(`<strong>${escapeHtml(name)}</strong><small>${escapeHtml(area.areaType || '活动区域')}</small>`, { direction: 'top', offset: [0, -12], className: 'campus-map-tooltip' });
+      marker.bindTooltip(`<strong>${escapeHtml(name)}</strong><small>${escapeHtml(areaTypeLabel[area.areaType || ''] || '活动区域')}</small>`, { direction: 'top', offset: [0, -12], className: 'campus-map-tooltip' });
       marker.on('click', () => setAreaId(area.areaID));
       marker.addTo(layer);
     });

@@ -140,6 +140,12 @@ namespace CampusStrayCatSystem.Core
             if (!record.Amount.HasValue || record.Amount.Value <= 0)
                 return "金额 Amount 必须为正数。";
 
+            if (!string.IsNullOrWhiteSpace(record.RecordType) && !FinanceRecordTypes.IsValid(record.RecordType))
+                return $"财务记录类型必须是 {string.Join("、", FinanceRecordTypes.Allowed)}。";
+
+            if (!string.IsNullOrWhiteSpace(record.RecordType))
+                record.RecordType = record.RecordType.Trim().ToUpperInvariant();
+
             return null; // 校验通过
         }
     }
