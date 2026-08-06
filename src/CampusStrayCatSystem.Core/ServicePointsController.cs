@@ -7,7 +7,6 @@ namespace CampusStrayCatSystem.Core
 {
     [Route("api/service-points")]
     [ApiController]
-    [Authorize(Roles = "ADMIN,VOLUNTEER")]
     public class ServicePointsController : ControllerBase
     {
         private readonly IServicePointRepository _pointRepository;
@@ -38,6 +37,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<ServicePoint>> CreatePoint([FromBody] ServicePoint point)
         {
             var validationError = await ValidatePointAsync(point);
@@ -54,6 +54,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdatePoint(string id, [FromBody] ServicePoint point)
         {
             if (!string.IsNullOrWhiteSpace(point.PointID)
@@ -80,6 +81,7 @@ namespace CampusStrayCatSystem.Core
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> DeletePoint(string id)
         {
             if (await _pointRepository.GetByIdAsync(id) == null)

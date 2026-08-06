@@ -11,7 +11,7 @@ const navItems = [
   { label: '救助中心', to: '/rescue', icon: 'icon-camera' as const },
   { label: '领养与志愿者', to: '/adoption', icon: 'icon-chat' as const },
   { label: '财务公示', to: '/finance', icon: 'icon-shopping' as const },
-  { label: '系统管理', to: '/system', icon: 'icon-design' as const },
+  { label: '系统管理', to: '/system', icon: 'icon-design' as const, roles: ['ADMIN'] },
 ];
 
 export function MainLayout() {
@@ -21,6 +21,7 @@ export function MainLayout() {
   const profileName = user?.realName || user?.username || '用户';
   const profileRole = user?.roleName || '普通用户';
   const profileInitial = profileName.slice(0, 1);
+  const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(profileRole.toUpperCase()));
 
   return (
     <div className={sidebarCollapsed ? 'shell sidebar-collapsed' : 'shell'}>
@@ -40,7 +41,7 @@ export function MainLayout() {
           <span className="sidebar-toggle-glyph" aria-hidden="true" />
         </button>
         <nav className="sidebar-nav" aria-label="主菜单">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => isActive ? 'shell-link active' : 'shell-link'}>
               <Icon name={item.icon} size={19} className="shell-link-icon" />
               <span className="shell-link-label">{item.label}</span>
@@ -68,7 +69,7 @@ export function MainLayout() {
       </div>
 
       <nav className="mobile-bottom-nav" aria-label="移动端主菜单">
-        {navItems.slice(0, 4).map((item) => (
+        {visibleNavItems.slice(0, 4).map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => isActive ? 'mobile-shell-link active' : 'mobile-shell-link'}>
             <Icon name={item.icon} size={20} /><span>{item.label}</span>
           </NavLink>
