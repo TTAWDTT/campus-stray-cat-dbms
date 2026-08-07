@@ -486,3 +486,497 @@ button { font: inherit; }
   .login-logo { width: 120px; height: 120px; transform: none; }
   .login-card { padding: 25px 20px !important; }
 }
+
+/* ===== 财务管理模块 ===== */
+.finance-hub { padding-bottom: 24px; }
+
+/* 顶部两张英雄卡片 */
+.finance-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.finance-hero-card {
+  min-height: 210px;
+  border: 0 !important;
+}
+
+.finance-hero-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.finance-hero-card-inner h2 {
+  margin: 0;
+  color: var(--animal-text-color);
+  font-size: 22px;
+  letter-spacing: -.03em;
+}
+
+.finance-hero-card-inner p {
+  flex: 1;
+  margin: 0;
+  color: var(--animal-text-color-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 300px;
+}
+
+.finance-hero-icon {
+  display: grid;
+  place-items: center;
+  width: 51px;
+  height: 51px;
+  border-radius: 18px;
+  color: var(--animal-text-color);
+  background: rgba(255, 255, 255, .56);
+}
+
+.finance-hero-card-inner .animal-button {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* 项目清单卡片 */
+.finance-project-list-card {
+  border: 1px solid var(--animal-border-color-light) !important;
+  margin-bottom: 18px;
+}
+
+.finance-project-subtitle {
+  margin: 5px 0 0;
+  color: var(--animal-text-color-secondary);
+  font-size: 12px;
+}
+
+.finance-project-items {
+  margin: 8px 0 0;
+}
+
+.finance-project-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 4px;
+}
+
+.finance-project-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--animal-text-color);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.finance-project-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--animal-text-color-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.finance-project-meta em {
+  font-style: normal;
+  opacity: .45;
+}
+
+.finance-empty-projects {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 32px 20px;
+  color: var(--animal-text-color-secondary);
+  text-align: center;
+}
+
+.finance-empty-projects p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.finance-empty-projects small {
+  font-size: 11px;
+}
+
+.finance-project-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--animal-border-color-light);
+}
+
+.finance-bottom-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.finance-project-page,
+.finance-records-page {
+  padding-bottom: 24px;
+}
+
+/* Collapse 内详情行 — 每字段独占一行，字号适中 */
+.collapse-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 表格内的 Collapse — 问文本横排、小字号 */
+.table-collapse {
+  font-size: 12px;
+}
+
+/* 覆盖 animal-island-ui Collapse 的问文本（CSS Module 哈希固定） */
+.table-collapse [class*="questionText"] {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── 统计快照卡片 ── */
+.snapshot-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.snapshot-group-card {
+  padding: 16px;
+}
+
+.snapshot-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+.snapshot-group-header strong {
+  font-size: 16px;
+  color: var(--text-primary, #222);
+}
+
+.snapshot-group-dim {
+  background: var(--app-yellow, #f0c040);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.snapshot-group-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.snapshot-group-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.snapshot-metric-label {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+
+.snapshot-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.snapshot-metric-value.is-positive {
+  color: var(--app-green, #2ecc71);
+}
+
+.snapshot-metric-value.is-negative {
+  color: var(--app-red, #e74c3c);
+}
+
+/* ── 项目明细抽屉 ── */
+.detail-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-metric {
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-metric-label {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+
+.detail-metric-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-metric-value.is-positive {
+  color: var(--app-green, #2ecc71);
+}
+
+.detail-metric-value.is-negative {
+  color: var(--app-red, #e74c3c);
+}
+
+.detail-section {
+  margin-bottom: 8px;
+}
+
+.detail-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.detail-section-header h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.detail-section-count {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.detail-info-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-info-grid > div > span {
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+
+.detail-info-grid > div > strong {
+  font-size: 14px;
+}
+
+.detail-empty {
+  text-align: center;
+  padding: 16px;
+  color: #aaa;
+  font-size: 13px;
+}
+
+/* 问按钮整体缩小内边距 */
+.table-collapse [class*="questionHeader"] {
+  padding: 6px 10px;
+}
+
+.finance-project-table-name {
+  color: var(--animal-text-color);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ── 财务公示摘要卡片 ── */
+.finance-summary-card {
+  border: 1px solid var(--animal-border-color-light) !important;
+  margin-bottom: 18px;
+}
+
+.finance-summary-header {
+  margin-bottom: 8px;
+}
+
+.finance-summary-header h2 {
+  margin: 0 0 4px;
+  color: var(--animal-text-color);
+  font-size: 18px;
+  letter-spacing: -.02em;
+}
+
+.finance-summary-header p {
+  margin: 0;
+  color: var(--animal-text-color-secondary);
+  font-size: 12px;
+}
+
+.finance-summary-loading,
+.finance-summary-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 20px;
+  color: var(--animal-text-color-secondary);
+  font-size: 13px;
+}
+
+.finance-summary-empty {
+  flex-direction: column;
+}
+
+.finance-summary-empty p {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.finance-summary-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.finance-summary-item {
+  padding: 8px 0;
+}
+
+/* 项目标题行 */
+.fsi-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.fsi-project-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--animal-text-color);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* 三大核心指标 */
+.fsi-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.fsi-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--animal-bg-card, #f8f8f8);
+}
+
+.fsi-metric-label {
+  color: var(--animal-text-color-secondary);
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.fsi-metric-value {
+  color: var(--animal-text-color);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 指标颜色区分 */
+.fsi-metric--raised .fsi-metric-value {
+  color: #0ea371; /* 绿色：收入 */
+}
+
+.fsi-metric--expense .fsi-metric-value {
+  color: #d94a4a; /* 红色：支出 */
+}
+
+.fsi-metric--balance .fsi-metric-value {
+  color: var(--animal-text-color);
+}
+
+/* 辅助信息行 */
+.fsi-aux {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--animal-text-color-secondary);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.fsi-aux strong {
+  color: var(--animal-text-color);
+  font-weight: 700;
+}
+
+/* 进度条 */
+.fsi-progress-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--animal-border-color-light);
+  overflow: hidden;
+}
+
+.fsi-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #0ea371, #34d399);
+  transition: width .4s ease;
+}
+
+/* 财务模块响应式 */
+@media (max-width: 650px) {
+  .finance-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-hero-card {
+    min-height: auto;
+  }
+
+  .finance-hero-card-inner p {
+    max-width: none;
+  }
+
+  .finance-project-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .finance-project-title {
+    flex: 1 1 100%;
+  }
+
+  .fsi-metrics {
+    grid-template-columns: 1fr;
+  }
+}
