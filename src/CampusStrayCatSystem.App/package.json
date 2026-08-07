@@ -11,13 +11,15 @@
   "dependencies": {
     "@types/leaflet": "^1.9.22",
     "animal-island-ui": "^1.4.0",
-    "axios": "^1.7.9",
+    "antd": "^6.5.3",
+    "axios": "^1.19.0",
     "classnames": "^2.5.1",
+    "dayjs": "^1.11.21",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.1.1",
-    "zustand": "^5.0.3"
+    "react-router-dom": "^7.18.2",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
