@@ -145,6 +145,7 @@ export function RecordsPage() {
     // 当前用户
     const user = useAuthStore((s) => s.user)
     const isAdmin = user?.roleName?.toUpperCase() === 'ADMIN'
+    const canManageExpenses = ['ADMIN', 'VOLUNTEER'].includes((user?.roleName || '').toUpperCase())
 
     // 我的捐赠 = 当前用户的捐款记录
     const myDonations = useMemo(
@@ -167,22 +168,29 @@ export function RecordsPage() {
                 // 模拟 500ms 网络延迟
                 await new Promise((r) => setTimeout(r, 500))
                 setSummary(mockDisclosureSummary)
-                if (isAdmin) {
+                if (canManageExpenses) {
                     setExpenses(mockExpenses)
-                    setDonations(mockDonations)
                 } else {
                     setExpenses([])
+                }
+                if (isAdmin) {
+                    setDonations(mockDonations)
+                } else {
                     const donorId = user?.userId
                     setDonations(donorId ? mockDonations.filter((d) => d.DonorUserID === donorId) : [])
                 }
             } else {
+                if (canManageExpenses) {
+                    const exp = await financeService.listExpenses()
+                    setExpenses(exp)
+                } else {
+                    setExpenses([])
+                }
                 if (isAdmin) {
-                    const [exp, don, sum] = await Promise.all([
-                        financeService.listExpenses(),
+                    const [don, sum] = await Promise.all([
                         financeService.listDonations(),
                         financeService.getDisclosureSummary(),
                     ])
-                    setExpenses(exp)
                     setDonations(don)
                     setSummary(sum)
                 } else {
@@ -191,7 +199,6 @@ export function RecordsPage() {
                         donorId ? financeService.getDonationsByDonor(donorId) : Promise.resolve([]),
                         financeService.getDisclosureSummary(),
                     ])
-                    setExpenses([])
                     setDonations(don)
                     setSummary(sum)
                 }
@@ -330,8 +337,8 @@ export function RecordsPage() {
                     activeKey={activeKey}
                     onChange={setActiveKey}
                     items={[
-                        // 管理员：支出记录、捐款记录、待审核
-                        ...(isAdmin
+                        // 管理员/志愿者：支出记录
+                        ...(canManageExpenses
                             ? [
                                 {
                                     key: 'payment',
@@ -346,6 +353,11 @@ export function RecordsPage() {
                                         />
                                     ),
                                 } as const,
+                            ]
+                            : []),
+                        // 管理员：捐款记录、待审核
+                        ...(isAdmin
+                            ? [
                                 {
                                     key: 'donation',
                                     label: '捐款记录',
@@ -391,7 +403,7 @@ export function RecordsPage() {
                     ]}
                 />
 
-                {isAdmin && activeKey !== 'check' && activeKey !== 'myDonations' && (
+                {((canManageExpenses && activeKey === 'payment') || (isAdmin && activeKey === 'donation')) && (
                     <Button type="default" size="small" onClick={() => setDrawerOpen(true)}>
                         <span>+ 新建{activeKey === 'payment' ? '支出记录' : '捐款记录'}</span>
                     </Button>

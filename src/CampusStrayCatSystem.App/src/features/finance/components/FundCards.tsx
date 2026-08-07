@@ -88,8 +88,6 @@ export function FundCards({ onProjectCreated }: Props) {
                     <h2>发起众筹</h2>
                     <p>为校园猫咪发起一个新的众筹项目，设定目标金额和截止日期，让更多人参与帮助。</p>
                     <Button type="default" size="middle" onClick={() => {
-                        console.log('[FundCards] isAdmin:', isAdmin)
-                        console.log('[FundCards] Notification:', Notification)
                         if (isAdmin) {
                             setDrawerOpen(true)
                         } else {
