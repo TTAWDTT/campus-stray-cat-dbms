@@ -98,6 +98,7 @@ export interface CreateProjectPayload {
 }
 
 export interface UpdateProjectPayload {
+    ProjectID?: string
     Title?: string
     CatID?: string | null
     TargetAmount?: number | null

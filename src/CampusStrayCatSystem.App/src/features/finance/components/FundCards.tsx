@@ -1,9 +1,10 @@
-import { Button, Card, Icon, Drawer, Form, FormItem, useForm, Input } from 'animal-island-ui'
+import { Button, Card, Icon, Drawer, Form, FormItem, useForm, Input,Notification } from 'animal-island-ui'
 import { DatePicker } from 'antd'
 import { useState } from 'react'
 import { financeService, type CrowdfundingProject } from '../../../services/finance.service'
 import dayjs from 'dayjs'
 import {useNavigate} from "react-router-dom";
+import { useAuthStore } from '../../../stores/auth.store'
 //本组件包含“我要捐款”和“发起众筹”两个卡片，分别用于跳转到捐款页面和打开创建众筹项目的抽屉表单。
 type Props = {
     onProjectCreated?: (project: CrowdfundingProject) => void
@@ -14,6 +15,8 @@ export function FundCards({ onProjectCreated }: Props) {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
     const [form] = useForm()
+    const user = useAuthStore((s) => s.user)
+    const isAdmin=user?.roleName?.toUpperCase() === 'ADMIN'
     const navigate=useNavigate()
 
     const resetForm = () => {
@@ -84,12 +87,19 @@ export function FundCards({ onProjectCreated }: Props) {
                     </span>
                     <h2>发起众筹</h2>
                     <p>为校园猫咪发起一个新的众筹项目，设定目标金额和截止日期，让更多人参与帮助。</p>
-                    <Button type="default" size="middle" onClick={() => setDrawerOpen(true)}>
+                    <Button type="default" size="middle" onClick={() => {
+                        console.log('[FundCards] isAdmin:', isAdmin)
+                        console.log('[FundCards] Notification:', Notification)
+                        if (isAdmin) {
+                            setDrawerOpen(true)
+                        } else {
+                            Notification.error('权限不足：管理员才能发起众筹项目')
+                        }
+                    }}>
                         <span>🙋‍♂️ 发起众筹</span>
                     </Button>
                 </div>
             </Card>
-
             <Card color="app-blue" className="finance-hero-card">
                 <div className="finance-hero-card-inner">
                     <span className="finance-hero-icon">

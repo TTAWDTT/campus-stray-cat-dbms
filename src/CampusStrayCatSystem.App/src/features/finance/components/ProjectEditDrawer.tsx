@@ -46,6 +46,7 @@ export function ProjectEditDrawer({ open, project, onClose, onSubmit }: Props) {
         try {
             const values = form.getFieldsValue()
             const payload: UpdateProjectPayload = {}
+            payload.ProjectID = project.ProjectID
 
             const title = String(values.title ?? '').trim()
             if (!title) { setError('项目标题不能为空'); setSubmitting(false); return }

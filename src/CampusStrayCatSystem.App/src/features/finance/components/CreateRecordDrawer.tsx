@@ -40,7 +40,7 @@ type Props = {
 }
 
 const expenseInit = { projectID: '', recordType: 'FOOD', amount: 0, invoiceUrl: '' }
-const donationInit = { projectID: '匿名', donorUserID: '', amount: 0, payMethod: '', payTime: undefined as dayjs.Dayjs | undefined, publicFlag: 0 }
+const donationInit = { projectID: '', donorUserID: '', amount: 0, payMethod: '', payTime: undefined as dayjs.Dayjs | undefined, publicFlag: 0 }
 
 export function CreateRecordDrawer({ open, activeKey, onClose, onCreateExpense, onCreateDonation, lockedProjectID, lockedDonorUserID }: Props) {
     const [form] = useForm()
