@@ -12,14 +12,12 @@
 | 接口文档版本 | C组_救助TNR与医疗接口文档.md v1 |
 | 后端地址 | `http://localhost:5047` |
 | Oracle 环境 | 本地开发环境 |
-| 测试账号/角色 | ADMIN、VOLUNTEER、VET、已登录用户 |
+| 测试账号/角色 | ADMIN |
 | 是否使用演示数据 | 是 |
 
 ## 2. 接口核验结果
 
 状态统一填写：`未测`、`通过`、`不通过`、`阻塞`。出现问题时再补问题详情。
-
-### 2.1 TNR案例相关接口 (C-01 ~ C-06)
 
 | 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 | 备注 |
 |---|---|---|---|---|---|---|---|
@@ -29,42 +27,22 @@
 | C-04 | 更新 TNR 案例 | PUT | `/api/TnrCases/{id}` | ADMIN/VOLUNTEER/VET | **通过** | - | 使用新建案例 ID `16705851-8737-4b29-865b-b6e3493562b6`，保持 `currentStatus=DISCOVERED`，修改医院名称和费用后返回 204，更新成功 |
 | C-05 | 更新 TNR 状态 | PUT | `/api/TnrCases/{id}/status` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 200，状态已从 DISCOVERED 更新为 CAPTURED |
 | C-06 | 查询 TNR 状态日志 | GET | `/api/TnrStatusLogs/case/{caseId}` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 200，已查到对应状态流转日志 |
-
-### 2.2 医疗记录相关接口 (C-07 ~ C-11)
-
-| 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 | 备注 |
-|---|---|---|---|---|---|---|---|
 | C-07 | 查询医疗记录列表 | GET | `/api/MedHealthRecords` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 200，当前数据为空数组 [] |
 | C-08 | 按猫查询医疗记录 | GET | `/api/MedHealthRecords/cat/{catId}` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `demo-cat-campus-001`，返回 200，结果为空数组 [] |
 | C-09 | 查询医疗记录详情 | GET | `/api/MedHealthRecords/{id}` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `1d3e891e-bd90-4dbc-b15f-c69015a2cc37`，返回 200 |
 | C-10 | 新增医疗记录 | POST | `/api/MedHealthRecords` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 201，`recordID=1d3e891e-bd90-4dbc-b15f-c69015a2cc37` |
 | C-11 | 编辑医疗记录 | PUT | `/api/MedHealthRecords/{id}` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `1d3e891e-bd90-4dbc-b15f-c69015a2cc37`，返回 204 |
-
-### 2.3 医疗提醒相关接口 (C-12 ~ C-17)
-
-| 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 | 备注 |
-|---|---|---|---|---|---|---|---|
 | C-12 | 查询待处理提醒 | GET | `/api/MedReminder` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 200，已有提醒记录，sendStatus 为 `PENDING` |
 | C-13 | 按猫查询提醒 | GET | `/api/MedReminder/cat/{catId}` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `demo-cat-campus-001`，返回 200，查到 1 条提醒，`sendStatus=PENDING` |
 | C-14 | 新增医疗提醒 | POST | `/api/MedReminder` | ADMIN/VOLUNTEER/VET | 通过 | - | 返回 201，`reminderID=8aaca705605d4e938b18754b4b70f82e` |
 | C-15 | 查询提醒详情 | GET | `/api/MedReminder/{reminderId}` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `8aaca705605d4e938b18754b4b70f82e`，返回 200 |
 | C-16 | 标记提醒已发送 | PUT | `/api/MedReminder/{reminderId}/sent` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `8aaca705605d4e938b18754b4b70f82e`，返回 204 |
 | C-17 | 标记提醒已完成 | PUT | `/api/MedReminder/{reminderId}/complete` | ADMIN/VOLUNTEER/VET | 通过 | - | 传入 `8aaca705605d4e938b18754b4b70f82e`，返回 204 |
-
-### 2.4 紧急救助上报相关接口 (C-18 ~ C-22)
-
-| 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 | 备注 |
-|---|---|---|---|---|---|---|---|
 | C-18 | 查询紧急上报列表 | GET | `/api/EmergencyReports` | 已登录 | 通过 | - | 返回 200，结果为空数组 [] |
 | C-19 | 查询紧急上报详情 | GET | `/api/EmergencyReports/{reportId}` | 已登录 | 通过 | - | 返回 200，成功查询 reportID=43e693dc8fe54341add77853d589c902 的紧急上报详情 |
 | C-20 | 提交紧急上报 | POST | `/api/EmergencyReports` | 已登录 | 通过 | - | 返回 201，成功创建紧急上报，生成 reportID=43e693dc8fe54341add77853d589c902 |
 | C-21 | 分配紧急上报处理人 | PUT | `/api/EmergencyReports/{reportId}/assign` | ADMIN/VOLUNTEER | 通过 | - | 返回 204，成功将处理人分配为 user-volunteer-a-group |
 | C-22 | 更新紧急上报状态 | PUT | `/api/EmergencyReports/{reportId}/status` | ADMIN/当前处理人 | 通过 | - | 返回 204，成功将 processStatus 从 SUBMITTED 更新为 PROCESSING |
-
-### 2.5 失踪预警相关接口 (C-23 ~ C-28)
-
-| 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 | 备注 |
-|---|---|---|---|---|---|---|---|
 | C-23 | 查询失踪预警列表 | GET | `/api/MissingAlerts` | 已登录 | 通过 | - | 返回 200，当前结果为空数组 [] |
 | C-24 | 按猫查询失踪预警 | GET | `/api/MissingAlerts/cat/{catId}` | 已登录 | 通过 | - | 使用 catId=demo-cat-campus-001，返回 200，当前结果为空数组 [] |
 | C-25 | 查询失踪预警详情 | GET | `/api/MissingAlerts/{alertId}` | 已登录 | 通过 | - | 使用 alertID=7df416e4710641cf9ae3eb46daaf466a，返回 200，成功查询到失踪预警详情 |
@@ -114,16 +92,3 @@
 - [√] 28 个接口均已填写状态（其中 18 个通过，10 个阻塞）。
 - [√] 已记录阻塞原因：当前运行环境未暴露登录接口，无法继续验证需要 JWT 的接口。
 - [√] 已隐藏 Token、密码、数据库账号和服务器凭据。
-
-## 5. 综合评估
-
-| 维度 | 评分 | 说明 |
-|---|---|---|
-| 功能完整性 | ⭐⭐⭐⭐⭐ | 28个接口全部实现，功能覆盖完整 |
-| 代码质量 | ⭐⭐⭐⭐⭐ | 错误处理完善，业务逻辑清晰 |
-| 文档规范 | ⭐⭐⭐⭐⭐ | 文档详细准确，API约定明确 |
-| 权限控制 | ⭐⭐⭐⭐⭐ | 权限验证机制有效 |
-| 数据验证 | ⭐⭐⭐⭐⭐ | 参数验证全面，错误提示明确 |
-
-**总体结论**：C 组已完成 C-01 ~ C-28 的现场核验。
-
