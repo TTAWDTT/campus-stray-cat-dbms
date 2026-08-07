@@ -11,6 +11,7 @@ import { FinanceSummaryCard } from '../components/FinanceSummaryCard'
 import { CreateRecordDrawer } from '../components/CreateRecordDrawer'
 import { mockExpenses, mockDonations, mockDisclosureSummary, USE_MOCK } from '../test/mockData'
 import { useAuthStore } from '../../../stores/auth.store'
+import { PageHeader } from '../../../shared/components/PageHeader'
 //本页面用于展示所有的捐款与支出记录，管理员可以审核支出记录，普通用户可以查看自己的捐款记录。页面提供了一个财务公示卡片，显示总收入、总支出和当前余额，并使用表格展示详细的记录信息。
 const readError = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
@@ -307,20 +308,7 @@ export function RecordsPage() {
 
     return (
         <section className="feature-page finance-records-page">
-            <div className="feature-page-header">
-                <div className="feature-page-heading">
-                    <Button type="text" size="small" onClick={() => navigate('/finance')}>
-                        <Icon name="icon-miles" size={15} />
-                        <span style={{ marginLeft: 4 }}>返回</span>
-                    </Button>
-                    <div className="feature-page-title-row" style={{ marginTop: 12 }}>
-                        <span className="feature-page-icon"><Icon name="icon-camera" size={21} /></span>
-                        <p className="kicker">FINANCE · RECORDS</p>
-                    </div>
-                    <h1>财务记录</h1>
-                    <p>查看所有的捐款与支出记录，追踪每一笔资金的来源与去向。</p>
-                </div>
-            </div>
+            <PageHeader kicker="FINANCE · RECORDS" title="财务记录" icon="icon-camera" actions={<Button type="text" size="small" onClick={() => navigate('/finance')}><Icon name="icon-miles" size={15} />返回</Button>} />
 
             {error && (
                 <div className="cats-alert" role="alert">
@@ -332,7 +320,15 @@ export function RecordsPage() {
 
             <FinanceSummaryCard data={summary} loading={loading} />
 
-            <Card className="cats-table-card">
+            <Card className="cats-table-card finance-records-card">
+                <div className="finance-records-toolbar">
+                    <span className="finance-records-toolbar-title">资金流水</span>
+                    {((canManageExpenses && activeKey === 'payment') || (isAdmin && activeKey === 'donation')) && (
+                        <Button type="default" size="small" onClick={() => setDrawerOpen(true)}>
+                            <span>新建{activeKey === 'payment' ? '支出' : '捐款'}</span>
+                        </Button>
+                    )}
+                </div>
                 <Tabs
                     activeKey={activeKey}
                     onChange={setActiveKey}
@@ -403,12 +399,6 @@ export function RecordsPage() {
                     ]}
                 />
 
-                {((canManageExpenses && activeKey === 'payment') || (isAdmin && activeKey === 'donation')) && (
-                    <Button type="default" size="small" onClick={() => setDrawerOpen(true)}>
-                        <span>+ 新建{activeKey === 'payment' ? '支出记录' : '捐款记录'}</span>
-                    </Button>
-                )}
-
                 <CreateRecordDrawer
                     open={drawerOpen}
                     activeKey={activeKey}
@@ -418,7 +408,7 @@ export function RecordsPage() {
                 />
 
                 {isAdmin && (
-                    <div className="finance-bottom-actions" style={{ marginTop: 16 }}>
+                    <div className="finance-bottom-actions finance-records-actions">
                         <Button type="default" size="small" onClick={() => navigate('/finance/statistics')}>
                             <Icon name="icon-design" size={15} />
                             统计报表

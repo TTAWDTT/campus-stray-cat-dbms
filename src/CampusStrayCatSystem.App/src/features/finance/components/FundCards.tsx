@@ -1,9 +1,9 @@
-import { Button, Card, Icon, Drawer, Form, FormItem, useForm, Input,Notification } from 'animal-island-ui'
+import { Button, Card, Icon, Modal, Form, FormItem, useForm, Input, Notification } from 'animal-island-ui'
 import { DatePicker } from 'antd'
-import { useState } from 'react'
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import { financeService, type CrowdfundingProject } from '../../../services/finance.service'
 import dayjs from 'dayjs'
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../../stores/auth.store'
 //本组件包含“我要捐款”和“发起众筹”两个卡片，分别用于跳转到捐款页面和打开创建众筹项目的抽屉表单。
 type Props = {
@@ -11,7 +11,9 @@ type Props = {
 }
 
 export function FundCards({ onProjectCreated }: Props) {
-    const [drawerOpen, setDrawerOpen] = useState(false)
+    const [modalOpen, setModalOpen] = useState(false)
+    const [modalClosing, setModalClosing] = useState(false)
+    const closeTimer = useRef<number | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
     const [form] = useForm()
@@ -24,9 +26,43 @@ export function FundCards({ onProjectCreated }: Props) {
         setError('')
     }
 
-    const handleClose = () => {
+    const handleClose = (force = false) => {
         resetForm()
-        setDrawerOpen(false)
+        if (force) {
+            setModalOpen(false)
+            setModalClosing(false)
+            return
+        }
+        setModalClosing(true)
+        closeTimer.current = window.setTimeout(() => {
+            setModalOpen(false)
+            setModalClosing(false)
+            closeTimer.current = null
+        }, 220)
+    }
+
+    useEffect(() => () => {
+        if (closeTimer.current) window.clearTimeout(closeTimer.current)
+    }, [])
+
+    const openProjectModal = () => {
+        if (!isAdmin) {
+            Notification.error('权限不足：管理员才能发起众筹项目')
+            return
+        }
+        if (closeTimer.current) {
+            window.clearTimeout(closeTimer.current)
+            closeTimer.current = null
+        }
+        setModalClosing(false)
+        setModalOpen(true)
+    }
+
+    const activateCard = (action: () => void) => (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            action()
+        }
     }
 
     const handleSubmit = async () => {
@@ -80,6 +116,7 @@ export function FundCards({ onProjectCreated }: Props) {
 
     return (
         <div className="finance-hero-grid">
+            <div className="finance-hero-card-hit" role="button" tabIndex={0} aria-label="发起众筹项目" onClick={openProjectModal} onKeyDown={activateCard(openProjectModal)}>
             <Card color="app-teal" className="finance-hero-card">
                 <div className="finance-hero-card-inner">
                     <span className="finance-hero-icon">
@@ -87,17 +124,10 @@ export function FundCards({ onProjectCreated }: Props) {
                     </span>
                     <h2>发起众筹</h2>
                     <p>为校园猫咪发起一个新的众筹项目，设定目标金额和截止日期，让更多人参与帮助。</p>
-                    <Button type="default" size="middle" onClick={() => {
-                        if (isAdmin) {
-                            setDrawerOpen(true)
-                        } else {
-                            Notification.error('权限不足：管理员才能发起众筹项目')
-                        }
-                    }}>
-                        <span>🙋‍♂️ 发起众筹</span>
-                    </Button>
                 </div>
             </Card>
+            </div>
+            <div className="finance-hero-card-hit" role="button" tabIndex={0} aria-label="浏览众筹项目并捐款" onClick={() => navigate('/finance/projects')} onKeyDown={activateCard(() => navigate('/finance/projects'))}>
             <Card color="app-blue" className="finance-hero-card">
                 <div className="finance-hero-card-inner">
                     <span className="finance-hero-icon">
@@ -105,13 +135,11 @@ export function FundCards({ onProjectCreated }: Props) {
                     </span>
                     <h2>我要捐款</h2>
                     <p>选择你关心的猫咪或项目，献出一份爱心。你的每一笔捐赠都将透明公示。</p>
-                    <Button type="default" size="middle" onClick={()=>navigate('/finance/projects')}>
-                        <span>❤️ 我要捐款</span>
-                    </Button>
                 </div>
             </Card>
+            </div>
 
-            <Drawer open={drawerOpen} onClose={handleClose} title="发起众筹项目" width={480}>
+            <Modal open={modalOpen} className={modalClosing ? 'finance-modal-closing' : 'finance-modal-opening'} maskStyle={{ animation: modalClosing ? 'cats-modal-mask-out .22s var(--animal-motion-ease) both' : undefined }} title="发起众筹项目" width={560} typewriter={false} onClose={handleClose} footer={<div className="cat-modal-footer"><Button type="default" onClick={() => handleClose()} disabled={submitting}>取消</Button><Button type="primary" onClick={() => void form.submit()} loading={submitting}>提交项目</Button></div>}>
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>
                     <FormItem label="关联猫咪 ID" name="catID" required>
                         <Input placeholder="请输入猫咪 ID" />
@@ -142,18 +170,8 @@ export function FundCards({ onProjectCreated }: Props) {
                         </div>
                     )}
 
-                    <FormItem>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <Button type="primary" size="middle" onClick={() => form.submit()} loading={submitting}>
-                                <span>提交</span>
-                            </Button>
-                            <Button type="default" size="middle" onClick={handleClose}>
-                                <span>取消</span>
-                            </Button>
-                        </div>
-                    </FormItem>
                 </Form>
-            </Drawer>
+            </Modal>
         </div>
     )
 }
