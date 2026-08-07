@@ -117,7 +117,7 @@ export interface FinancialDisclosureSummary {
 }
 
 const toDisclosureSummary = (data: ApiRecord): FinancialDisclosureSummary => {
-    const projectData = data.Project as ApiRecord | undefined
+    const projectData = (data.Project ?? data.project) as ApiRecord | undefined
     return {
         Project: projectData ? toProject(projectData) : { ProjectID: '', CatID: null, Title: '', TargetAmount: null, RaisedAmount: null, StartTime: null, EndTime: null, ProjectStatus: 'ACTIVE' },
         TargetAmount: value<number | null>(data, 'targetAmount', 'TargetAmount') ?? null,
@@ -141,7 +141,7 @@ export interface FinancialDisclosureDetail {
 }
 
 const toDisclosureDetail = (data: ApiRecord): FinancialDisclosureDetail => {
-    const projectData = data.Project as ApiRecord | undefined
+    const projectData = (data.Project ?? data.project) as ApiRecord | undefined
     const donations = (data.Donations ?? data.donations) as ApiRecord[] | undefined
     const expenses = (data.Expenses ?? data.expenses) as ApiRecord[] | undefined
     return {

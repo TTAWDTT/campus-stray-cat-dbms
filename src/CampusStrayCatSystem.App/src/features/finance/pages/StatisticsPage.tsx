@@ -2,10 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Card, Icon, Table, type TableColumn, Tag } from 'animal-island-ui'
 import { useEffect, useMemo, useState } from 'react'
 import { financeService, type SnapshotRecord, metricLabels, dimensionLabels } from '../../../services/finance.service'
-import { mockSnapshots } from '../test/mockData'
+import { mockSnapshots, USE_MOCK } from '../test/mockData'
 import { useAuthStore } from '../../../stores/auth.store'
-
-const USE_MOCK = true
 
 const castSnapshot = (row: Record<string, unknown>) => row as unknown as SnapshotRecord
 

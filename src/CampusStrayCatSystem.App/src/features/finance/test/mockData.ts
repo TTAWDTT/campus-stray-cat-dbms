@@ -4,8 +4,11 @@
  * 数据完全按照 finance.service.ts 中导出的接口定义构造：
  *   CrowdfundingProject / ExpenseRecord / DonationRecord / FinancialDisclosureSummary
  *
- * 将页面顶部 USE_MOCK 设为 true 即可使用此数据预览。
+ * 将 USE_MOCK 设为 true 即可使用此数据预览，设为 false 则调用真实 API。
  */
+
+/** 财务管理模块 Mock 开关 — 统一设为 true 或 false 即可切换所有页面的数据来源 */
+export const USE_MOCK = true
 
 import type {
     CrowdfundingProject,

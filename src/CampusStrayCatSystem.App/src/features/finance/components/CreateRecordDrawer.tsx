@@ -40,7 +40,7 @@ type Props = {
 }
 
 const expenseInit = { projectID: '', recordType: 'FOOD', amount: 0, invoiceUrl: '' }
-const donationInit = { projectID: '', donorUserID: '', amount: 0, payMethod: '', payTime: dayjs('666-06-06'), publicFlag: 0 }
+const donationInit = { projectID: '匿名', donorUserID: '', amount: 0, payMethod: '', payTime: undefined as dayjs.Dayjs | undefined, publicFlag: 0 }
 
 export function CreateRecordDrawer({ open, activeKey, onClose, onCreateExpense, onCreateDonation, lockedProjectID, lockedDonorUserID }: Props) {
     const [form] = useForm()
@@ -53,7 +53,7 @@ export function CreateRecordDrawer({ open, activeKey, onClose, onCreateExpense, 
     useEffect(() => {
         if (open) {
             setError('')
-            const base = isPayment ? expenseInit : donationInit
+            const base = isPayment ? expenseInit : { ...donationInit, payTime: dayjs() }
             form.setFieldsValue({
                 ...base,
                 ...(lockedProjectID ? { projectID: lockedProjectID } : {}),
@@ -127,7 +127,7 @@ export function CreateRecordDrawer({ open, activeKey, onClose, onCreateExpense, 
                     </>
                 ) : (
                     <>
-                        <FormItem label="捐赠人 ID" name="donorUserID" required>
+                        <FormItem label="捐赠人 ID" name="donorUserID">
                             <Input placeholder="请输入捐赠人 ID" disabled={!!lockedDonorUserID} />
                         </FormItem>
                         <FormItem label="金额" name="amount" required>

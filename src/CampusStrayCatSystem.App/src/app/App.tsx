@@ -25,9 +25,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/preview/shared" element={<SharedComponentsPreview />} />
-          <Route element={<AuthLayout />}>
+         {/* <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
-          </Route>
+          </Route> */}
         <Route element={<RouteGuard />}>
           <Route element={<MainLayout />}>
             <Route index element={<DashboardPage />} />

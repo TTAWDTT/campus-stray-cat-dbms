@@ -4,15 +4,13 @@ import { useEffect, useState } from 'react'
 import { StatusTag } from '../../../shared/components/StatusTag'
 import { financeService } from '../../../services/finance.service'
 import type { CrowdfundingProject, UpdateProjectPayload } from '../../../services/finance.service'
-import { mockProjects } from '../test/mockData'
+import { mockProjects, USE_MOCK } from '../test/mockData'
 import { ProjectEditDrawer } from '../components/ProjectEditDrawer'
 import { CreateRecordDrawer } from '../components/CreateRecordDrawer'
 import { ProjectDetailDrawer } from '../components/ProjectDetailDrawer'
 import type { CreateDonationPayload } from '../../../services/finance.service'
 import { useAuthStore } from '../../../stores/auth.store'
 //本页面用于展示所有众筹项目的列表，并提供编辑和捐款功能。用户可以查看项目的详细信息，编辑项目信息，或者为进行中的项目捐款。
-const USE_MOCK = true
-
 const statusOrder: Record<string, number> = {
     ACTIVE: 0,
     CANCELLED: 1,
@@ -157,7 +155,7 @@ export function ProjectPage() {
         },
         {
             title: '操作',
-            width: 80,
+            width: 210,
             render: (_value, row) => {
                 const project = castProject(row)
                 return (

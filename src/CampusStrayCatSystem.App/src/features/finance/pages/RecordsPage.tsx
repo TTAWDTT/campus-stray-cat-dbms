@@ -9,11 +9,9 @@ import { financeService } from '../../../services/finance.service'
 import type { ExpenseRecord, DonationRecord, CreateExpensePayload, CreateDonationPayload, FinancialDisclosureSummary } from '../../../services/finance.service'
 import { FinanceSummaryCard } from '../components/FinanceSummaryCard'
 import { CreateRecordDrawer } from '../components/CreateRecordDrawer'
-import { mockExpenses, mockDonations, mockDisclosureSummary } from '../test/mockData'
+import { mockExpenses, mockDonations, mockDisclosureSummary, USE_MOCK } from '../test/mockData'
 import { useAuthStore } from '../../../stores/auth.store'
 //本页面用于展示所有的捐款与支出记录，管理员可以审核支出记录，普通用户可以查看自己的捐款记录。页面提供了一个财务公示卡片，显示总收入、总支出和当前余额，并使用表格展示详细的记录信息。
-const USE_MOCK = true
-
 const readError = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
         const msg = error.response?.data
@@ -168,18 +166,35 @@ export function RecordsPage() {
             if (USE_MOCK) {
                 // 模拟 500ms 网络延迟
                 await new Promise((r) => setTimeout(r, 500))
-                setExpenses(mockExpenses)
-                setDonations(mockDonations)
                 setSummary(mockDisclosureSummary)
+                if (isAdmin) {
+                    setExpenses(mockExpenses)
+                    setDonations(mockDonations)
+                } else {
+                    setExpenses([])
+                    const donorId = user?.userId
+                    setDonations(donorId ? mockDonations.filter((d) => d.DonorUserID === donorId) : [])
+                }
             } else {
-                const [exp, don, sum] = await Promise.all([
-                    financeService.listExpenses(),
-                    financeService.listDonations(),
-                    financeService.getDisclosureSummary(),
-                ])
-                setExpenses(exp)
-                setDonations(don)
-                setSummary(sum)
+                if (isAdmin) {
+                    const [exp, don, sum] = await Promise.all([
+                        financeService.listExpenses(),
+                        financeService.listDonations(),
+                        financeService.getDisclosureSummary(),
+                    ])
+                    setExpenses(exp)
+                    setDonations(don)
+                    setSummary(sum)
+                } else {
+                    const donorId = user?.userId
+                    const [don, sum] = await Promise.all([
+                        donorId ? financeService.getDonationsByDonor(donorId) : Promise.resolve([]),
+                        financeService.getDisclosureSummary(),
+                    ])
+                    setExpenses([])
+                    setDonations(don)
+                    setSummary(sum)
+                }
             }
         } catch (e) {
             setError(readError(e))
@@ -229,7 +244,7 @@ export function RecordsPage() {
         },
         {
             title: '操作',
-            width: 160,
+            width: 200,
             render: (_v, row) => {
                 const r = castExpense(row)
                 return (

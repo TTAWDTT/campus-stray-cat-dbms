@@ -3,12 +3,10 @@ import { Button, Icon } from 'animal-island-ui'
 import { useEffect, useState } from 'react'
 import { financeService } from '../../../services/finance.service'
 import type { CrowdfundingProject } from '../../../services/finance.service'
-import { mockProjects } from '../test/mockData'
+import { mockProjects, USE_MOCK } from '../test/mockData'
 import { FundCards } from '../components/FundCards'
 import { ProjectPreviewList } from '../components/ProjectPreviewList'
 //本页面用于展示财务管理的概览，包括发起众筹项目和查看近期众筹项目的预览列表。用户可以通过点击“发起众筹”按钮创建新的众筹项目，或者点击“查看更多”按钮进入详细的项目列表页面。
-const USE_MOCK = true
-
 export function FinancePage() {
     const navigate = useNavigate()
     const [projects, setProjects] = useState<CrowdfundingProject[]>([])
