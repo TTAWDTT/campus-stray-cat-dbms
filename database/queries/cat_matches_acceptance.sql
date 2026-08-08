@@ -86,7 +86,7 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('PASS: all CAT_MATCHRECORDS constraints exist.');
 
     INSERT INTO SYS_ROLES (ROLEID, ROLENAME)
-    VALUES ('test-match-role', 'Match Acceptance Role');
+    VALUES ('test-match-role', 'USER');
 
     INSERT INTO SYS_USERS (USERID, ROLEID, USERNAME, PASSWORDHASH, STATUS)
     VALUES ('test-match-user', 'test-match-role', 'match_acceptance_user', 'TEST_ONLY', 'ACTIVE');
