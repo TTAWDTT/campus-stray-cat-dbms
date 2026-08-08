@@ -1,0 +1,142 @@
+{
+  "info": {
+    "_postman_id": "7fd3e4ed-36a0-4a86-9d1b-0f41670cd0a1",
+    "name": "Campus Stray Cat - B组猫咪匹配记录",
+    "description": "先执行数据库演示脚本，再运行登录请求。确认请求会把演示记录改为 CONFIRMED；需要重新开始时再次执行 cat_matches_demo_data.sql。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5047" },
+    { "key": "username", "value": "a_group_volunteer" },
+    { "key": "password", "value": "Passw0rd!" },
+    { "key": "token", "value": "" },
+    { "key": "catId", "value": "demo-cat-campus-001" },
+    { "key": "sourcePhotoId", "value": "demo-match-source-001" },
+    { "key": "candidateCatId", "value": "demo-cat-match-002" },
+    { "key": "matchId", "value": "demo-match-record-001" }
+  ],
+  "item": [
+    {
+      "name": "01 登录志愿者账号",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('登录成功', function () { pm.response.to.have.status(200); });",
+            "pm.collectionVariables.set('token', pm.response.json().token);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "02 查询来源照片的全部匹配",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{sourcePhotoId}}/matches"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('返回匹配数组并按排名排序', function () { const body = pm.response.json(); pm.response.to.have.status(200); pm.expect(body).to.be.an('array'); pm.expect(body[0].rankNo).to.eql(1); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "03 按候选猫和状态筛选",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/cats/{{catId}}/photos/{{sourcePhotoId}}/matches?candidateCatId={{candidateCatId}}&confirmStatus=PENDING",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "cats", "{{catId}}", "photos", "{{sourcePhotoId}}", "matches"],
+          "query": [
+            { "key": "candidateCatId", "value": "{{candidateCatId}}" },
+            { "key": "confirmStatus", "value": "PENDING" }
+          ]
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('筛选返回目标候选', function () { const body = pm.response.json(); pm.response.to.have.status(200); pm.expect(body).to.have.lengthOf(1); pm.expect(body[0].candidateCatID).to.eql(pm.collectionVariables.get('candidateCatId')); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "04 查询单条匹配详情",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cat-matches/{{matchId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('详情返回正确记录', function () { const body = pm.response.json(); pm.response.to.have.status(200); pm.expect(body.matchID).to.eql(pm.collectionVariables.get('matchId')); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "05 确认匹配结果",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"confirmStatus\": \"CONFIRMED\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/cat-matches/{{matchId}}/confirmation"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('匹配确认成功', function () { pm.response.to.have.status(204); });"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "06 查询已确认结果",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{sourcePhotoId}}/matches?confirmStatus=CONFIRMED"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('确认状态筛选成功', function () { const body = pm.response.json(); pm.response.to.have.status(200); pm.expect(body).to.have.lengthOf(1); pm.expect(body[0].confirmStatus).to.eql('CONFIRMED'); });"
+          ]
+        }
+      }]
+    }
+  ]
+}

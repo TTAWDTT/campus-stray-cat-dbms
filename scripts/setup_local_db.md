@@ -19,11 +19,14 @@
 1. `database/create_tables.sql`
 2. `database/queries/field_contract_constraints.sql`
 3. `database/queries/cat_photos_oracle_programming.sql`
-4. `database/queries/a_group_advanced.sql`
-5. `database/queries/task_17_18_19_oracle_programming.sql`
-6. `database/queries/rescue_care_oracle_programming.sql`
-7. `database/queries/a_group_demo_data.sql`（可选演示账号）
-8. `database/insert_demo_data.sql`（可选校园数据）
+4. `database/queries/cat_matches_oracle_programming.sql`
+5. `database/queries/a_group_schema_upgrade.sql`
+6. `database/queries/a_group_advanced.sql`
+7. `database/queries/task_17_18_19_oracle_programming.sql`
+8. `database/queries/rescue_care_oracle_programming.sql`
+9. `database/queries/a_group_demo_data.sql`（可选演示账号）
+10. `database/insert_demo_data.sql`（可选校园数据）
+11. `database/queries/cat_matches_demo_data.sql`（可选匹配演示数据）
 
 演示账号密码统一为 `Passw0rd!`，只用于本地联调。
 

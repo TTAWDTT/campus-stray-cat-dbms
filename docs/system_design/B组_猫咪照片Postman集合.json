@@ -2,20 +2,51 @@
   "info": {
     "_postman_id": "e34224d8-9a36-4201-98d6-5dad42f4977f",
     "name": "Campus Stray Cat - B组猫咪照片模块",
-    "description": "猫咪照片上传、查询、静态文件、主图切换、特征读取和删除回归测试。请先执行 database/insert_demo_data.sql，并从仓库根目录运行或在 Postman 中重新选择 logo.png。",
+    "description": "猫咪照片上传、查询、静态文件、主图切换、特征读取和删除回归测试。请先执行 A 组账号与 B 组演示数据脚本，再运行登录请求。上传用户由 JWT 身份确定；从仓库根目录运行或在 Postman 中重新选择 logo.png。",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:5047" },
     { "key": "catId", "value": "demo-cat-campus-001" },
-    { "key": "userId", "value": "demo-user-zhaoqing" },
+    { "key": "username", "value": "a_group_volunteer" },
+    { "key": "password", "value": "Passw0rd!" },
+    { "key": "token", "value": "" },
     { "key": "photoId", "value": "" },
     { "key": "secondPhotoId", "value": "" },
     { "key": "photoUrl", "value": "" }
   ],
   "item": [
     {
-      "name": "01 查询初始照片列表",
+      "name": "01 登录志愿者账号",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('登录成功', function () { pm.response.to.have.status(200); });",
+            "pm.collectionVariables.set('token', pm.response.json().token);"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "02 查询初始照片列表",
       "request": {
         "method": "GET",
         "header": [],
@@ -33,7 +64,7 @@
       ]
     },
     {
-      "name": "02 上传首张照片并自动设为主图",
+      "name": "03 上传首张照片并自动设为主图",
       "request": {
         "method": "POST",
         "header": [],
@@ -41,7 +72,6 @@
           "mode": "formdata",
           "formdata": [
             { "key": "file", "type": "file", "src": "logo.png" },
-            { "key": "uploadUserID", "value": "{{userId}}", "type": "text" },
             { "key": "isPrimary", "value": "0", "type": "text" }
           ]
         },
@@ -59,7 +89,7 @@
       ]
     },
     {
-      "name": "03 获取静态照片文件",
+      "name": "04 获取静态照片文件",
       "request": {
         "method": "GET",
         "header": [],
@@ -77,7 +107,7 @@
       ]
     },
     {
-      "name": "04 查询单张照片元数据",
+      "name": "05 查询单张照片元数据",
       "request": {
         "method": "GET",
         "header": [],
@@ -95,7 +125,7 @@
       ]
     },
     {
-      "name": "05 读取尚未生成的照片特征",
+      "name": "06 读取尚未生成的照片特征",
       "request": {
         "method": "GET",
         "header": [],
@@ -113,7 +143,7 @@
       ]
     },
     {
-      "name": "06 上传第二张普通照片",
+      "name": "07 上传第二张普通照片",
       "request": {
         "method": "POST",
         "header": [],
@@ -121,7 +151,6 @@
           "mode": "formdata",
           "formdata": [
             { "key": "file", "type": "file", "src": "logo.png" },
-            { "key": "uploadUserID", "value": "{{userId}}", "type": "text" },
             { "key": "isPrimary", "value": "0", "type": "text" }
           ]
         },
@@ -139,7 +168,7 @@
       ]
     },
     {
-      "name": "07 将第二张照片设为主图",
+      "name": "08 将第二张照片设为主图",
       "request": {
         "method": "PUT",
         "header": [],
@@ -157,7 +186,7 @@
       ]
     },
     {
-      "name": "08 验证唯一主图与排序",
+      "name": "09 验证唯一主图与排序",
       "request": {
         "method": "GET",
         "header": [],
@@ -175,7 +204,7 @@
       ]
     },
     {
-      "name": "09 删除当前主图",
+      "name": "10 删除当前主图",
       "request": {
         "method": "DELETE",
         "header": [],
@@ -193,7 +222,7 @@
       ]
     },
     {
-      "name": "10 验证剩余照片自动接替主图",
+      "name": "11 验证剩余照片自动接替主图",
       "request": {
         "method": "GET",
         "header": [],
@@ -211,7 +240,7 @@
       ]
     },
     {
-      "name": "11 清理首张照片",
+      "name": "12 清理首张照片",
       "request": {
         "method": "DELETE",
         "header": [],

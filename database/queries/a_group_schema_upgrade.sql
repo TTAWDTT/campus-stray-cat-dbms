@@ -1,0 +1,61 @@
+SET DEFINE OFF;
+SET SERVEROUTPUT ON;
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+PROMPT ===== A-group schema upgrade =====;
+
+DECLARE
+    column_count NUMBER;
+    foreign_key_count NUMBER;
+    orphan_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO column_count
+    FROM USER_TAB_COLUMNS
+    WHERE TABLE_NAME = 'USER_BLACKLIST'
+      AND COLUMN_NAME = 'RELEASEDBY';
+
+    IF column_count = 0 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE USER_BLACKLIST ADD (RELEASEDBY VARCHAR2(36))';
+        DBMS_OUTPUT.PUT_LINE('Added USER_BLACKLIST.RELEASEDBY.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('USER_BLACKLIST.RELEASEDBY already exists.');
+    END IF;
+
+    EXECUTE IMMEDIATE
+        'SELECT COUNT(*) FROM USER_BLACKLIST b ' ||
+        'WHERE b.RELEASEDBY IS NOT NULL ' ||
+        'AND NOT EXISTS (SELECT 1 FROM SYS_USERS u WHERE u.USERID = b.RELEASEDBY)'
+        INTO orphan_count;
+    IF orphan_count > 0 THEN
+        RAISE_APPLICATION_ERROR(
+            -20040,
+            'USER_BLACKLIST.RELEASEDBY contains values without a matching SYS_USERS row.'
+        );
+    END IF;
+
+    SELECT COUNT(*)
+    INTO foreign_key_count
+    FROM USER_CONSTRAINTS c
+    JOIN USER_CONS_COLUMNS cc
+      ON cc.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+     AND cc.TABLE_NAME = c.TABLE_NAME
+    JOIN USER_CONSTRAINTS parent_c
+      ON parent_c.CONSTRAINT_NAME = c.R_CONSTRAINT_NAME
+    WHERE c.TABLE_NAME = 'USER_BLACKLIST'
+      AND c.CONSTRAINT_TYPE = 'R'
+      AND cc.COLUMN_NAME = 'RELEASEDBY'
+      AND parent_c.TABLE_NAME = 'SYS_USERS';
+
+    IF foreign_key_count = 0 THEN
+        EXECUTE IMMEDIATE
+            'ALTER TABLE USER_BLACKLIST ADD CONSTRAINT FK_USER_BLACKLIST_RELEASEDBY ' ||
+            'FOREIGN KEY (RELEASEDBY) REFERENCES SYS_USERS(USERID)';
+        DBMS_OUTPUT.PUT_LINE('Added FK_USER_BLACKLIST_RELEASEDBY.');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('USER_BLACKLIST.RELEASEDBY foreign key already exists.');
+    END IF;
+END;
+/
+
+PROMPT ===== A-group schema upgrade complete =====;

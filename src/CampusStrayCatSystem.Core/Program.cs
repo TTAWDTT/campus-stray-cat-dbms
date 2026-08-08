@@ -86,6 +86,7 @@ builder.Services.AddScoped<ITnrStatusLogRepository, TnrStatusLogRepository>();
 builder.Services.AddScoped<IMedHealthRecordRepository, MedHealthRecordRepository>();
 builder.Services.AddScoped<ICatRepository, CatRepository>();
 builder.Services.AddScoped<ICatPhotoRepository, CatPhotoRepository>();
+builder.Services.AddScoped<ICatMatchRepository, CatMatchRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserBlacklistRepository, UserBlacklistRepository>();
 builder.Services.AddScoped<ICampusAreaRepository, CampusAreaRepository>();
