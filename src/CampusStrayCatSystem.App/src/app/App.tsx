@@ -16,6 +16,10 @@ import { ProjectPage } from '../features/finance/pages/ProjectPage'
 import { RecordsPage } from '../features/finance/pages/RecordsPage'
 import { StatisticsPage } from '../features/finance/pages/StatisticsPage'
 import { AdoptionPage} from '../features/adoption/pages/AdoptionPage'
+import { VolunteerPage } from '../features/volunteer/pages/VolunteerPage'
+import { VisitPage } from '../features/volunteer/pages/VisitPage'
+import { AdoptionCheckPage } from '../features/volunteer/pages/AdoptionCheckPage'
+
 function AdminOnly({ children }: { children: ReactNode }) {
   const role = useAuthStore((state) => state.user?.roleName?.toUpperCase());
   return role === 'ADMIN' ? children : <Navigate to="/" replace />;
@@ -26,11 +30,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/preview/shared" element={<SharedComponentsPreview />} />
-          
+         { /*
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<LoginPage />} />
             </Route> 
-          
+*/}
         <Route element={<RouteGuard />}>
           <Route element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
@@ -43,6 +47,9 @@ export default function App() {
             <Route path="finance/projects" element={<ProjectPage />} />
             <Route path="finance/records" element={<RecordsPage />} />
             <Route path="finance/statistics" element={<StatisticsPage />} />
+            <Route path='volunteer' element={<VolunteerPage/>}/>
+            <Route path="volunteer/visits" element={<VisitPage/>} />
+            <Route path="volunteer/adoptions" element={<AdoptionCheckPage/>} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

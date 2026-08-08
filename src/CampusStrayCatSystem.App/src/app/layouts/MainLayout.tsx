@@ -21,7 +21,16 @@ export function MainLayout() {
   const profileName = user?.realName || user?.username || '用户';
   const profileRole = user?.roleName || '普通用户';
   const profileInitial = profileName.slice(0, 1);
-  const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(profileRole.toUpperCase()));
+  const privilegedRoles = ['ADMIN', 'VOLUNTEER'];
+  const isPrivileged = true;//改为true测试非普通用户界面
+  const visibleNavItems = navItems
+    .map((item) => {
+      if (item.label === '领养与志愿者') {
+        return { ...item, to: isPrivileged ? '/volunteer' : '/adoption' };
+      }
+      return item;
+    })
+    .filter((item) => !item.roles || item.roles.includes(profileRole.toUpperCase()));
 
   return (
     <div className={sidebarCollapsed ? 'shell sidebar-collapsed' : 'shell'}>

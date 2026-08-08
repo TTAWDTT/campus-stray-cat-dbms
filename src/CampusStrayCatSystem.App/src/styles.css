@@ -839,6 +839,32 @@ button { font: inherit; }
   font-weight: 800;
 }
 
+/* ── 志愿者页面待审核徽章 ── */
+.volunteer-pending-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .48);
+  backdrop-filter: blur(6px);
+}
+
+.volunteer-pending-badge strong {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.volunteer-pending-badge small {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: .85;
+}
+
 /* ── 领养提示卡片 ── */
 .adoption-tip {
   border: 1px solid rgba(49, 176, 164, .18) !important;
