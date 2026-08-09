@@ -3,6 +3,47 @@ import type { CatSummary } from '../../types/cats'
 /** 设为 true 则使用 Mock 数据，false 则调用真实接口 */
 export const USE_MOCK = true
 
+type ApiRecord = Record<string, unknown>
+
+export const MOCK_APPLICATIONS: ApiRecord[] = [
+  {
+    ApplicationId: 'APP24001',
+    CatId: 'mock-001',
+    CatName: '芝麻',
+    ApplicantUserId: 'U1001',
+    ApplicantName: '张三',
+    ApplyTime: '2026-08-05T10:30:00',
+    CurrentStatus: 'PENDING',
+    ReviewerUserId: null,
+    AgreementNo: null,
+    ConfirmTime: null,
+  },
+  {
+    ApplicationId: 'APP24002',
+    CatId: 'mock-002',
+    CatName: '橘子',
+    ApplicantUserId: 'U1001',
+    ApplicantName: '张三',
+    ApplyTime: '2026-08-03T14:00:00',
+    CurrentStatus: 'APPROVED',
+    ReviewerUserId: 'U2001',
+    AgreementNo: 'AGR2026001',
+    ConfirmTime: '2026-08-04T09:00:00',
+  },
+  {
+    ApplicationId: 'APP24003',
+    CatId: 'mock-003',
+    CatName: '花花',
+    ApplicantUserId: 'U1001',
+    ApplicantName: '张三',
+    ApplyTime: '2026-08-01T08:00:00',
+    CurrentStatus: 'REJECTED',
+    ReviewerUserId: 'U2002',
+    AgreementNo: null,
+    ConfirmTime: '2026-08-02T16:00:00',
+  },
+]
+
 export const MOCK_CATS: CatSummary[] = [
   {
     catID: 'mock-001',

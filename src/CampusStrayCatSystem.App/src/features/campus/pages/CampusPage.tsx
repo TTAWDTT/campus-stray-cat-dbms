@@ -248,7 +248,7 @@ export function CampusPage() {
 
   return (
     <section className="feature-page campus-page">
-      <PageHeader kicker="CAMPUS TRACK" title="校园地图与目击" icon="icon-map" description="从区域和点位开始，记录每一次与校园小邻居的相遇。" actions={<Button type="primary" icon={<Icon name="icon-camera" size={16} />} onClick={openModal}>记录目击</Button>} />
+      <PageHeader kicker="CAMPUS TRACK" title="校园地图与目击" icon="icon-map" actions={<Button type="primary" icon={<Icon name="icon-camera" size={16} />} onClick={openModal}>记录目击</Button>} />
       {error && <div className="cats-alert" role="alert"><Icon name="icon-camera" size={17} /><span>{error}</span><Button type="text" size="small" onClick={() => setError('')}>知道了</Button></div>}
       {notice && <div className="campus-notice" role="status" aria-live="polite"><Icon name="icon-miles" size={15} /><span>{notice}</span><Button type="text" size="small" onClick={() => setNotice('')}>知道了</Button></div>}
       <div className="campus-overview-grid">

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="B组_A组接口完整互测" tests="104" time="1.315">
+  <testsuite name="A-01 用户登录 / A-01-01 管理员登录成功 [200]" id="1c4b7a75-1b3d-4ce7-9014-448b40c1e3fc" timestamp="2026-08-08T14:38:42.129Z" tests="3" failures="0" errors="0" time="0.082">
+    <testcase name="A-01-01 状态码为 200" time="0.082" classname="A01A0101200"/>
+    <testcase name="返回管理员资料与非空 Token" time="0.082" classname="A01A0101200"/>
+    <testcase name="响应不暴露密码哈希" time="0.082" classname="A01A0101200"/>
+  </testsuite>
+  <testsuite name="A-01 用户登录 / A-01-02 错误密码被拒绝 [401]" id="5bb69083-c46d-4992-b7f1-8fff631775c7" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.053">
+    <testcase name="A-01-02 状态码为 401" time="0.053" classname="A01A0102401"/>
+    <testcase name="响应消息符合文档" time="0.053" classname="A01A0102401"/>
+  </testsuite>
+  <testsuite name="A-01 用户登录 / A-01-03 空用户名和密码 [400]" id="b5758c92-76bd-4efa-9a42-624b6309d431" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="1" errors="0" time="0.003">
+    <testcase name="A-01-03 状态码为 400" time="0.003" classname="A01A0103400"/>
+    <testcase name="响应消息符合文档" time="0.003" classname="A01A0103400">
+      <failure type="AssertionFailure" message="expected undefined to deeply equal 'Username 与 Password 均为必填。'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: c4b20e44-70df-4f76-bc25-9d2e6791e508.]]>
+        <![CDATA[Collection name: B组_A组接口完整互测.]]>
+        <![CDATA[Request name: A-01 用户登录 / A-01-03 空用户名和密码 [400].]]>
+        <![CDATA[Test description: 响应消息符合文档.]]>
+        <![CDATA[Error message: expected undefined to deeply equal 'Username 与 Password 均为必填。'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected undefined to deeply equal 'Username 与 Password 均为必填。'
+   at Object.eval sandbox-script.js:2:3).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-01 用户登录 / A-01-04 停用账号被拒绝 [403]" id="aa06355d-4a81-4dcc-8e0d-12bc4f843147" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-01-04 状态码为 403" time="0.006" classname="A01A0104403"/>
+    <testcase name="响应消息符合文档" time="0.006" classname="A01A0104403"/>
+  </testsuite>
+  <testsuite name="A-01 用户登录 / A-01-05 获取志愿者测试 Token [200]" id="747adf4d-00cc-459f-8275-85e94c4759c9" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.055">
+    <testcase name="A-01-05 状态码为 200" time="0.055" classname="A01A0105Token200"/>
+    <testcase name="志愿者角色正确" time="0.055" classname="A01A0105Token200"/>
+  </testsuite>
+  <testsuite name="A-01 用户登录 / A-01-06 获取普通用户测试 Token [200]" id="5aa4f25a-3569-419c-af45-c00047ee4ec9" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.052">
+    <testcase name="A-01-06 状态码为 200" time="0.052" classname="A01A0106Token200"/>
+    <testcase name="普通用户角色正确" time="0.052" classname="A01A0106Token200"/>
+  </testsuite>
+  <testsuite name="A-02 获取当前用户 / A-02-01 管理员查询本人 [200]" id="3b678f34-b09b-4f4b-b481-b7324aca6c52" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="A-02-01 状态码为 200" time="0.010" classname="A02A0201200"/>
+    <testcase name="返回当前管理员且不含密码哈希" time="0.010" classname="A02A0201200"/>
+  </testsuite>
+  <testsuite name="A-02 获取当前用户 / A-02-02 缺少 Token [401]" id="59e65591-be36-4b48-b678-32c5e93e7812" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="A-02-02 状态码为 401" time="0.004" classname="A02A0202Token401"/>
+  </testsuite>
+  <testsuite name="A-03 登录状态校验 / A-03-01 有效登录状态 [200]" id="2fff8a7c-c29d-4b5b-84fb-7934d81211c4" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="A-03-01 状态码为 200" time="0.008" classname="A03A0301200"/>
+    <testcase name="authenticated=true 且用户正确" time="0.008" classname="A03A0301200"/>
+  </testsuite>
+  <testsuite name="A-03 登录状态校验 / A-03-02 缺少 Token [401]" id="9d0d1b99-a945-4147-8814-dff05e53d6a4" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="1" errors="0" time="0.002">
+    <testcase name="A-03-02 状态码为 401" time="0.002" classname="A03A0302Token401"/>
+    <testcase name="文档约定返回 authenticated=false" time="0.002" classname="A03A0302Token401">
+      <failure type="AssertionFailure" message="expected null to deeply equal false">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: c4b20e44-70df-4f76-bc25-9d2e6791e508.]]>
+        <![CDATA[Collection name: B组_A组接口完整互测.]]>
+        <![CDATA[Request name: A-03 登录状态校验 / A-03-02 缺少 Token [401].]]>
+        <![CDATA[Test description: 文档约定返回 authenticated=false.]]>
+        <![CDATA[Error message: expected null to deeply equal false.]]>
+        <![CDATA[Stacktrace: AssertionError: expected null to deeply equal false
+   at Object.eval sandbox-script.js:2:10).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-04 退出登录 / A-04-01 已登录退出 [200]" id="fe66c28c-b143-4e85-8df7-d60429862b1e" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-04-01 状态码为 200" time="0.006" classname="A04A0401200"/>
+    <testcase name="返回退出说明" time="0.006" classname="A04A0401200"/>
+  </testsuite>
+  <testsuite name="A-04 退出登录 / A-04-02 缺少 Token [401]" id="22f40ec5-1ccb-475c-9d60-fbd15318b33c" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-04-02 状态码为 401" time="0.002" classname="A04A0402Token401"/>
+  </testsuite>
+  <testsuite name="A-05 查询用户列表 / A-05-01 管理员按用户名状态角色筛选 [200]" id="6d31e7e4-17f3-4034-a673-19398820d8a9" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.029">
+    <testcase name="A-05-01 状态码为 200" time="0.029" classname="A05A0501200"/>
+    <testcase name="筛选结果仅包含活动管理员" time="0.029" classname="A05A0501200"/>
+  </testsuite>
+  <testsuite name="A-05 查询用户列表 / A-05-02 非法用户状态 [400]" id="3093af8d-0ece-43e5-a5dd-6c65c8858edf" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-05-02 状态码为 400" time="0.006" classname="A05A0502400"/>
+    <testcase name="响应消息符合文档" time="0.006" classname="A05A0502400"/>
+  </testsuite>
+  <testsuite name="A-05 查询用户列表 / A-05-03 缺少 Token [401]" id="e3982edf-2ed2-4225-86ff-d211deb16786" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-05-03 状态码为 401" time="0.002" classname="A05A0503Token401"/>
+  </testsuite>
+  <testsuite name="A-05 查询用户列表 / A-05-04 普通用户越权查询 [403]" id="e36602a9-d859-4cd4-a1cb-156a43fc50b8" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-05-04 状态码为 403" time="0.007" classname="A05A0504403"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-01 管理员查询普通用户 [200]" id="68cf8671-f3b3-43b0-ab57-4645871e8178" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-06-01 状态码为 200" time="0.006" classname="A06A0601200"/>
+    <testcase name="用户详情正确且无密码哈希" time="0.006" classname="A06A0601200"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-02 普通用户查询本人 [200]" id="9d864e7c-cb1f-44b0-93fa-1aa10b25e130" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-06-02 状态码为 200" time="0.006" classname="A06A0602200"/>
+    <testcase name="返回本人资料" time="0.006" classname="A06A0602200"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-03 空白用户 ID [400]" id="17b69be5-b61d-4284-ba99-6d0b24d541a6" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-06-03 状态码为 400" time="0.005" classname="A06A0603Id400"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-04 缺少 Token [401]" id="3a57b407-c963-48e1-bd22-c0b7d8728d32" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-06-04 状态码为 401" time="0.002" classname="A06A0604Token401"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-05 普通用户越权查询管理员 [403]" id="92f14dc1-b237-4f83-81d0-0bdb0145ba49" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-06-05 状态码为 403" time="0.007" classname="A06A0605403"/>
+  </testsuite>
+  <testsuite name="A-06 查询用户详情 / A-06-06 用户不存在 [404]" id="b536d544-0aa5-41b4-8ab9-d0bbe4a7fb62" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.008">
+    <testcase name="A-06-06 状态码为 404" time="0.008" classname="A06A0606404"/>
+  </testsuite>
+  <testsuite name="A-07 新增用户 / A-07-01 管理员新增测试用户 [201]" id="8dbce4a5-255e-4603-9e0a-dd862a6c1889" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.099">
+    <testcase name="A-07-01 状态码为 201" time="0.099" classname="A07A0701201"/>
+    <testcase name="服务端生成用户 ID 并忽略伪造字段" time="0.099" classname="A07A0701201"/>
+  </testsuite>
+  <testsuite name="A-07 新增用户 / A-07-02 角色 ID 非法 [400]" id="e09b5e74-be12-4258-99c3-c69b490028f6" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.011">
+    <testcase name="A-07-02 状态码为 400" time="0.011" classname="A07A0702Id400"/>
+  </testsuite>
+  <testsuite name="A-07 新增用户 / A-07-03 缺少 Token [401]" id="9f782dab-0a50-420b-8234-6c1ef5439255" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-07-03 状态码为 401" time="0.002" classname="A07A0703Token401"/>
+  </testsuite>
+  <testsuite name="A-07 新增用户 / A-07-04 普通用户越权新增 [403]" id="188dba57-2a90-4694-85c9-23ca0adaf26e" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-07-04 状态码为 403" time="0.006" classname="A07A0704403"/>
+  </testsuite>
+  <testsuite name="A-07 新增用户 / A-07-05 用户名重复 [409]" id="4347c380-9317-46df-946e-2b3a56d75e57" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.009">
+    <testcase name="A-07-05 状态码为 409" time="0.009" classname="A07A0705409"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-01 管理员编辑测试用户 [204]" id="21f797ca-881f-4fab-9288-e873d1ed9152" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.045">
+    <testcase name="A-08-01 状态码为 204" time="0.045" classname="A08A0801204"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-02 非法角色 ID [400]" id="3dbf21fc-cb15-43ae-9e62-fe2d66556488" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.009">
+    <testcase name="A-08-02 状态码为 400" time="0.009" classname="A08A0802Id400"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-03 缺少 Token [401]" id="2caaa920-aec2-4427-90a2-f81e45cfaf23" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-08-03 状态码为 401" time="0.002" classname="A08A0803Token401"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-04 普通用户越权编辑 [403]" id="1fe27da7-c917-49a8-8a69-2ad01d47ceaa" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-08-04 状态码为 403" time="0.006" classname="A08A0804403"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-05 用户不存在 [404]" id="dfcd14df-0eab-42aa-b54b-969aa7a9eff9" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-08-05 状态码为 404" time="0.005" classname="A08A0805404"/>
+  </testsuite>
+  <testsuite name="A-08 编辑用户 / A-08-06 回查编辑结果 [200]" id="be1c5e74-dd2c-4a18-aa23-c3ffaf90cf68" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="A-08-06 状态码为 200" time="0.010" classname="A08A0806200"/>
+    <testcase name="编辑已持久化且用户名未被改写" time="0.010" classname="A08A0806200"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-01 非法状态 [400]" id="6f756c0b-5df8-463e-b70a-ec109c1cf148" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.010">
+    <testcase name="A-09-01 状态码为 400" time="0.010" classname="A09A0901400"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-02 缺少 Token [401]" id="0f8fc935-76c1-4276-a23f-7c3dcfbd78a5" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.003">
+    <testcase name="A-09-02 状态码为 401" time="0.003" classname="A09A0902Token401"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-03 普通用户越权修改 [403]" id="fa65d331-0a69-406e-9ae5-c68cba808013" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-09-03 状态码为 403" time="0.006" classname="A09A0903403"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-04 用户不存在 [404]" id="5d72969e-88c6-4edd-a91a-e05f9895926b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-09-04 状态码为 404" time="0.007" classname="A09A0904404"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-05 停用测试用户 [204]" id="530215b9-c7cd-4410-bb61-d2ce5de39a2d" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.045">
+    <testcase name="A-09-05 状态码为 204" time="0.045" classname="A09A0905204"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-06 回查停用状态 [200]" id="635d2fa4-a97e-4d03-8f34-eed5058b25a6" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="A-09-06 状态码为 200" time="0.008" classname="A09A0906200"/>
+    <testcase name="状态已变为 DISABLED" time="0.008" classname="A09A0906200"/>
+  </testsuite>
+  <testsuite name="A-09 启用或停用用户 / A-09-07 重新启用测试用户 [204]" id="a1594d29-a137-47db-8670-ab9fec9e603b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.047">
+    <testcase name="A-09-07 状态码为 204" time="0.047" classname="A09A0907204"/>
+  </testsuite>
+  <testsuite name="A-10 查询角色列表 / A-10-01 管理员查询角色列表 [200]" id="6189ec0c-9e76-4fc1-8503-616c616400b2" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="A-10-01 状态码为 200" time="0.011" classname="A10A1001200"/>
+    <testcase name="返回角色数组且包含 ADMIN" time="0.011" classname="A10A1001200"/>
+  </testsuite>
+  <testsuite name="A-10 查询角色列表 / A-10-02 缺少 Token [401]" id="73ac88c0-67c1-46c2-acfc-8db1f5dd9582" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-10-02 状态码为 401" time="0.002" classname="A10A1002Token401"/>
+  </testsuite>
+  <testsuite name="A-10 查询角色列表 / A-10-03 普通用户越权查询 [403]" id="93570089-935a-4109-876e-2ed8313ab5cd" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-10-03 状态码为 403" time="0.007" classname="A10A1003403"/>
+  </testsuite>
+  <testsuite name="A-11 查询角色详情 / A-11-01 管理员查询 ADMIN 角色 [200]" id="0e2a9cfc-5e16-42b9-8621-6d98fea37f66" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.006">
+    <testcase name="A-11-01 状态码为 200" time="0.006" classname="A11A1101Admin200"/>
+    <testcase name="ADMIN 角色字段正确" time="0.006" classname="A11A1101Admin200"/>
+  </testsuite>
+  <testsuite name="A-11 查询角色详情 / A-11-02 角色不存在 [404]" id="17f6634e-44e3-416c-a7a0-a74986e63261" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-11-02 状态码为 404" time="0.007" classname="A11A1102404"/>
+  </testsuite>
+  <testsuite name="A-11 查询角色详情 / A-11-03 缺少 Token [401]" id="a9e89d74-df3d-44c9-8543-0809146657ef" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-11-03 状态码为 401" time="0.002" classname="A11A1103Token401"/>
+  </testsuite>
+  <testsuite name="A-11 查询角色详情 / A-11-04 普通用户越权查询 [403]" id="be2571cd-1f47-4e77-a783-c76d0b437f52" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-11-04 状态码为 403" time="0.007" classname="A11A1104403"/>
+  </testsuite>
+  <testsuite name="A-12 新增角色 / A-12-01 管理员新增 VET 测试角色 [200]" id="76bda99a-1594-4129-a4e2-3cfc62f1183f" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.041">
+    <testcase name="A-12-01 状态码为 200" time="0.041" classname="A12A1201Vet200"/>
+    <testcase name="新增角色响应契约正确" time="0.041" classname="A12A1201Vet200"/>
+  </testsuite>
+  <testsuite name="A-12 新增角色 / A-12-02 非法角色名 [400]" id="9df09901-588a-490e-b97c-2c49bd8a1254" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.008">
+    <testcase name="A-12-02 状态码为 400" time="0.008" classname="A12A1202400"/>
+  </testsuite>
+  <testsuite name="A-12 新增角色 / A-12-03 角色名冲突 [409]" id="14194a30-6a0e-4b73-bcbf-461b5e627f35" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="1" errors="0" time="0.014">
+    <testcase name="A-12-03 状态码为 409" time="0.014" classname="A12A1203409">
+      <failure type="AssertionFailure" message="expected response to have status code 409 but got 200">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: c4b20e44-70df-4f76-bc25-9d2e6791e508.]]>
+        <![CDATA[Collection name: B组_A组接口完整互测.]]>
+        <![CDATA[Request name: A-12 新增角色 / A-12-03 角色名冲突 [409].]]>
+        <![CDATA[Test description: A-12-03 状态码为 409.]]>
+        <![CDATA[Error message: expected response to have status code 409 but got 200.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 409 but got 200
+   at Object.eval sandbox-script.js:1:50).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-12 新增角色 / A-12-04 缺少 Token [401]" id="aaceedd5-142c-414e-8083-8363afc8fefd" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-12-04 状态码为 401" time="0.002" classname="A12A1204Token401"/>
+  </testsuite>
+  <testsuite name="A-12 新增角色 / A-12-05 普通用户越权新增 [403]" id="2681d9a0-f4e2-4afc-b335-a3eb50900e68" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-12-05 状态码为 403" time="0.007" classname="A12A1205403"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-01 管理员编辑 VET 测试角色 [204]" id="6ef410bb-6876-4501-97d0-3c09ac2db70b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.045">
+    <testcase name="A-13-01 状态码为 204" time="0.045" classname="A13A1301Vet204"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-02 URL 与请求体角色 ID 不一致 [400]" id="9a0595cb-4c35-4144-99e9-f3f548690fe5" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-13-02 状态码为 400" time="0.007" classname="A13A1302UrlId400"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-03 缺少 Token [401]" id="da9dea81-5615-45b8-a9eb-c17827fec57b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.001">
+    <testcase name="A-13-03 状态码为 401" time="0.001" classname="A13A1303Token401"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-04 普通用户越权编辑 [403]" id="b3c379f9-09d1-495c-86b0-28f4af961c41" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-13-04 状态码为 403" time="0.007" classname="A13A1304403"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-05 角色不存在 [404]" id="5882a52a-e0ab-44ef-ba9d-bd073e27ba44" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-13-05 状态码为 404" time="0.007" classname="A13A1305404"/>
+  </testsuite>
+  <testsuite name="A-13 编辑角色 / A-13-06 回查编辑结果 [200]" id="22c6bf41-8f60-43a6-9637-fd83d53d7718" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="A-13-06 状态码为 200" time="0.008" classname="A13A1306200"/>
+    <testcase name="角色编辑已持久化" time="0.008" classname="A13A1306200"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-01 拒绝删除正在使用的 ADMIN 角色 [409]" id="953615af-2fa2-4342-9bf8-2d9a87e28f24" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.012">
+    <testcase name="A-14-01 状态码为 409" time="0.012" classname="A14A1401Admin409"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-02 缺少 Token [401]" id="c8a68e38-360a-4088-90f6-fa24c40ff8d5" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-14-02 状态码为 401" time="0.002" classname="A14A1402Token401"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-03 普通用户越权删除 [403]" id="5f5410bd-40f0-4cbf-99ad-66c642c559ae" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-14-03 状态码为 403" time="0.007" classname="A14A1403403"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-04 角色不存在 [404]" id="c51b1848-03df-4cb8-995c-b946bb68586d" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-14-04 状态码为 404" time="0.007" classname="A14A1404404"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-05 删除未使用的 VET 测试角色 [204]" id="f3e3bf74-735a-4cce-b306-9953cda956fd" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.019">
+    <testcase name="A-14-05 状态码为 204" time="0.019" classname="A14A1405Vet204"/>
+  </testsuite>
+  <testsuite name="A-14 删除角色 / A-14-06 回查已删除角色 [404]" id="cf755554-a24b-4180-ab09-6de50c65fd90" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.010">
+    <testcase name="A-14-06 状态码为 404" time="0.010" classname="A14A1406404"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-01 给测试用户分配志愿者角色 [204]" id="9eb42d3e-b94d-4f33-b57c-d1160a333d69" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.018">
+    <testcase name="A-15-01 状态码为 204" time="0.018" classname="A15A1501204"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-02 空用户和角色 ID [400]" id="179e4fa1-7c40-457b-8381-834f427b5c9b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-15-02 状态码为 400" time="0.005" classname="A15A1502Id400"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-03 缺少 Token [401]" id="66fbd670-662c-471a-9620-ac48729063f7" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-15-03 状态码为 401" time="0.002" classname="A15A1503Token401"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-04 普通用户越权分配 [403]" id="3a99f41b-946a-400a-b591-26ee827a48fb" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-15-04 状态码为 403" time="0.006" classname="A15A1504403"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-05 用户不存在 [404]" id="6dfe359a-de5a-4230-b77f-e409b3295224" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.009">
+    <testcase name="A-15-05 状态码为 404" time="0.009" classname="A15A1505404"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-06 角色不存在 [404]" id="a7635a8c-eb17-4487-bf6a-5b52915bc21c" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.008">
+    <testcase name="A-15-06 状态码为 404" time="0.008" classname="A15A1506404"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-07 回查角色分配结果 [200]" id="b6c66c96-c066-4c06-874e-8b955d8f0196" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.009">
+    <testcase name="A-15-07 状态码为 200" time="0.009" classname="A15A1507200"/>
+    <testcase name="测试用户已成为 VOLUNTEER" time="0.009" classname="A15A1507200"/>
+  </testsuite>
+  <testsuite name="A-15 给用户分配角色 / A-15-08 恢复测试用户普通角色 [204]" id="ac0b3e5e-8e71-4022-9742-7479c4f399ca" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.015">
+    <testcase name="A-15-08 状态码为 204" time="0.015" classname="A15A1508204"/>
+  </testsuite>
+  <testsuite name="A-16 查询黑名单列表 / A-16-01 管理员分页筛选有效黑名单 [200]" id="bd89e90b-d398-4a5e-9ecd-ea5a361eb708" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.033">
+    <testcase name="A-16-01 状态码为 200" time="0.033" classname="A16A1601200"/>
+    <testcase name="分页结构和有效状态正确" time="0.033" classname="A16A1601200"/>
+  </testsuite>
+  <testsuite name="A-16 查询黑名单列表 / A-16-02 缺少 Token [401]" id="3037eb79-5596-45a2-abb2-0c298539488d" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-16-02 状态码为 401" time="0.002" classname="A16A1602Token401"/>
+  </testsuite>
+  <testsuite name="A-16 查询黑名单列表 / A-16-03 普通用户越权查询 [403]" id="929d9abd-43f6-4553-abfb-017050b80eaf" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="A-16-03 状态码为 403" time="0.004" classname="A16A1603403"/>
+  </testsuite>
+  <testsuite name="A-17 查询黑名单详情 / A-17-01 管理员查询有效黑名单 [200]" id="ab46c834-e005-4a85-a56f-23deb0c9c84a" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.012">
+    <testcase name="A-17-01 状态码为 200" time="0.012" classname="A17A1701200"/>
+    <testcase name="黑名单详情字段正确" time="0.012" classname="A17A1701200"/>
+  </testsuite>
+  <testsuite name="A-17 查询黑名单详情 / A-17-02 黑名单记录不存在 [404]" id="2bc57ff0-823c-411d-8f81-b7bb649426fd" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.008">
+    <testcase name="A-17-02 状态码为 404" time="0.008" classname="A17A1702404"/>
+  </testsuite>
+  <testsuite name="A-17 查询黑名单详情 / A-17-03 缺少 Token [401]" id="0afa3ffa-da73-4c47-b536-a57c03086306" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-17-03 状态码为 401" time="0.002" classname="A17A1703Token401"/>
+  </testsuite>
+  <testsuite name="A-17 查询黑名单详情 / A-17-04 普通用户越权查询 [403]" id="16195491-6ff9-4366-be01-9b3f61c1d65d" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-17-04 状态码为 403" time="0.006" classname="A17A1704403"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-01 非法黑名单原因类型 [400]" id="67683e72-9e13-4fb7-881a-e05d9559e257" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-18-01 状态码为 400" time="0.005" classname="A18A1801400"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-02 用户不存在 [404]" id="9d9cd611-01b3-4961-b041-e85ab9623fe7" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.010">
+    <testcase name="A-18-02 状态码为 404" time="0.010" classname="A18A1802404"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-03 关联领养申请不存在 [404]" id="75c03fa6-7437-4fdd-8f16-12b868fe3c32" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.011">
+    <testcase name="A-18-03 状态码为 404" time="0.011" classname="A18A1803404"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-04 缺少 Token [401]" id="b1717e02-8be7-4a68-9fa9-a642d0088026" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-18-04 状态码为 401" time="0.002" classname="A18A1804Token401"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-05 普通用户越权加入 [403]" id="fa86aa36-bf2e-4194-a090-30fa5b8e4f6f" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-18-05 状态码为 403" time="0.006" classname="A18A1805403"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-06A 省略文档标为可选的 applicationId [201]" id="1b918d57-03eb-4085-a5a8-2cedd2cca85b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="1" errors="0" time="0.005">
+    <testcase name="A-18-06A 状态码为 201" time="0.005" classname="A18A1806AApplicationId201">
+      <failure type="AssertionFailure" message="expected response to have status code 201 but got 400">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: c4b20e44-70df-4f76-bc25-9d2e6791e508.]]>
+        <![CDATA[Collection name: B组_A组接口完整互测.]]>
+        <![CDATA[Request name: A-18 加入黑名单 / A-18-06A 省略文档标为可选的 applicationId [201].]]>
+        <![CDATA[Test description: A-18-06A 状态码为 201.]]>
+        <![CDATA[Error message: expected response to have status code 201 but got 400.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 201 but got 400
+   at Object.eval sandbox-script.js:1:85).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-06 管理员将测试用户加入黑名单 [201]" id="ff92efa1-44ce-4776-8df4-4eeaf8c029f9" timestamp="2026-08-08T14:38:42.129Z" tests="3" failures="1" errors="0" time="0.056">
+    <testcase name="A-18-06 状态码为 201" time="0.056" classname="A18A1806201"/>
+    <testcase name="响应包含文档约定的黑名单 ID 和用户 ID" time="0.056" classname="A18A1806201">
+      <failure type="AssertionFailure" message="expected undefined to be a string">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: c4b20e44-70df-4f76-bc25-9d2e6791e508.]]>
+        <![CDATA[Collection name: B组_A组接口完整互测.]]>
+        <![CDATA[Request name: A-18 加入黑名单 / A-18-06 管理员将测试用户加入黑名单 [201].]]>
+        <![CDATA[Test description: 响应包含文档约定的黑名单 ID 和用户 ID.]]>
+        <![CDATA[Error message: expected undefined to be a string.]]>
+        <![CDATA[Stacktrace: AssertionError: expected undefined to be a string
+   at Object.eval sandbox-script.js:2:86).]]>
+      </failure>
+    </testcase>
+    <testcase name="Location 可定位新建记录" time="0.056" classname="A18A1806201"/>
+  </testsuite>
+  <testsuite name="A-18 加入黑名单 / A-18-07 重复加入有效黑名单 [409]" id="c6030945-801e-4244-a5e6-900a28470379" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.011">
+    <testcase name="A-18-07 状态码为 409" time="0.011" classname="A18A1807409"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-01 解除说明超过长度限制 [400]" id="f7764436-0b0a-4ae5-9db8-04f6853705ef" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-19-01 状态码为 400" time="0.006" classname="A19A1901400"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-02 缺少 Token [401]" id="9b89e9bd-a792-4025-a2cc-a197f5bb4b8c" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-19-02 状态码为 401" time="0.002" classname="A19A1902Token401"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-03 普通用户越权解除 [403]" id="d97532a3-bef5-4792-906a-7e94dd358c5c" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="A-19-03 状态码为 403" time="0.004" classname="A19A1903403"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-04 黑名单记录不存在 [404]" id="95bc788a-3aae-46a9-9d95-2478728bb117" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.010">
+    <testcase name="A-19-04 状态码为 404" time="0.010" classname="A19A1904404"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-05 管理员解除测试黑名单 [200]" id="519a384a-ac9b-48d7-a96d-83612f45e12c" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.017">
+    <testcase name="A-19-05 状态码为 200" time="0.017" classname="A19A1905200"/>
+    <testcase name="解除响应字段正确" time="0.017" classname="A19A1905200"/>
+  </testsuite>
+  <testsuite name="A-19 解除黑名单 / A-19-06 重复解除已释放记录 [409]" id="51a2702a-64b7-4137-8e59-914e7dadc2e7" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.008">
+    <testcase name="A-19-06 状态码为 409" time="0.008" classname="A19A1906409"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-01 管理员查询有效黑名单用户 [200]" id="0080a876-b1ed-4246-bc39-f66be9c3dad3" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="A-20-01 状态码为 200" time="0.013" classname="A20A2001200"/>
+    <testcase name="返回有效黑名单状态" time="0.013" classname="A20A2001200"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-02 志愿者查询有效黑名单用户 [200]" id="9b528c41-c84d-47cc-98a6-27b59ed7cd06" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="A-20-02 状态码为 200" time="0.010" classname="A20A2002200"/>
+    <testcase name="志愿者可读取黑名单状态" time="0.010" classname="A20A2002200"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-03 查询已解除的测试用户 [200]" id="69f1c2ee-7c76-492b-9f7b-c19d07e99cef" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.011">
+    <testcase name="A-20-03 状态码为 200" time="0.011" classname="A20A2003200"/>
+    <testcase name="解除后不存在有效黑名单" time="0.011" classname="A20A2003200"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-04 空白用户 ID [400]" id="f7183409-0972-458a-8349-f48f44a72c4e" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-20-04 状态码为 400" time="0.005" classname="A20A2004Id400"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-05 缺少 Token [401]" id="6c37ad98-b573-4096-83aa-f510f9e2435b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.003">
+    <testcase name="A-20-05 状态码为 401" time="0.003" classname="A20A2005Token401"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-06 普通用户角色不足 [403]" id="21fb93c9-ff83-432d-86ca-df5dcb1a6679" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-20-06 状态码为 403" time="0.006" classname="A20A2006403"/>
+  </testsuite>
+  <testsuite name="A-20 查询用户黑名单状态 / A-20-07 用户不存在 [404]" id="23bad915-ad7b-46d6-8006-070b6b674385" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="A-20-07 状态码为 404" time="0.006" classname="A20A2007404"/>
+  </testsuite>
+  <testsuite name="A-21 批量解除黑名单 / A-21-01 空 ID 列表 [400]" id="357a5bf1-6d01-4b91-b92e-99aaad30a64b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="A-21-01 状态码为 400" time="0.007" classname="A21A2101Id400"/>
+  </testsuite>
+  <testsuite name="A-21 批量解除黑名单 / A-21-02 缺少 Token [401]" id="493eb504-1b64-4d34-9635-56d439233c2b" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.002">
+    <testcase name="A-21-02 状态码为 401" time="0.002" classname="A21A2102Token401"/>
+  </testsuite>
+  <testsuite name="A-21 批量解除黑名单 / A-21-03 普通用户越权批量解除 [403]" id="fbc6d7a3-a3c6-4e16-a175-a23ed9e63786" timestamp="2026-08-08T14:38:42.129Z" tests="1" failures="0" errors="0" time="0.005">
+    <testcase name="A-21-03 状态码为 403" time="0.005" classname="A21A2103403"/>
+  </testsuite>
+  <testsuite name="A-21 批量解除黑名单 / A-21-04 混合处理有效、已解除和不存在记录 [200]" id="a8ef2426-9283-42b4-9cc0-23bf0485a8e9" timestamp="2026-08-08T14:38:42.129Z" tests="2" failures="0" errors="0" time="0.018">
+    <testcase name="A-21-04 状态码为 200" time="0.018" classname="A21A2104200"/>
+    <testcase name="批量结果分别记录成功和失败" time="0.018" classname="A21A2104200"/>
+  </testsuite>
+</testsuites>

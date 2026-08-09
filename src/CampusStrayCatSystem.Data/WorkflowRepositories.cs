@@ -8,6 +8,8 @@ namespace CampusStrayCatSystem.Data
     {
         // 领养流程的查询和写入操作。
         Task<IEnumerable<AdoptionPendingAppDto>> GetPendingApplicationsAsync();
+        Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByStatusAsync(string status);
+        Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByApplicantAsync(string applicantUserId);
         Task<int> SubmitApplicationAsync(AdoptionApplicationCreateRequest request);
         Task<int> ReviewApplicationAsync(string applicationId, AdoptionApplicationReviewRequest request);
         Task<int> CreateVisitAsync(string applicationId, AdoptionVisitCreateRequest request);
@@ -46,6 +48,50 @@ namespace CampusStrayCatSystem.Data
                 ORDER BY APPLYTIME DESC NULLS LAST, APPLICATIONID";
 
             return await QueryAsync<AdoptionPendingAppDto>(sql);
+        }
+
+        public async Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByStatusAsync(string status)
+        {
+            const string sql = @"
+                SELECT a.APPLICATIONID AS ApplicationId,
+                       a.CATID AS CatId,
+                       c.CATNAME AS CatName,
+                       a.APPLICANTUSERID AS ApplicantUserId,
+                       u.USERNAME AS ApplicantName,
+                       a.APPLYTIME AS ApplyTime,
+                       a.CURRENTSTATUS AS CurrentStatus,
+                       a.REVIEWERUSERID AS ReviewerUserId,
+                       a.AGREEMENTNO AS AgreementNo,
+                       a.CONFIRMTIME AS ConfirmTime
+                FROM ADOPT_APPLICATIONS a
+                LEFT JOIN CAT_CATS c ON c.CATID = a.CATID
+                LEFT JOIN SYS_USERS u ON u.USERID = a.APPLICANTUSERID
+                WHERE a.CURRENTSTATUS = :Status
+                ORDER BY a.CONFIRMTIME DESC NULLS LAST, a.APPLYTIME DESC NULLS LAST, a.APPLICATIONID";
+
+            return await QueryAsync<AdoptionPendingAppDto>(sql, new { Status = status });
+        }
+
+        public async Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByApplicantAsync(string applicantUserId)
+        {
+            const string sql = @"
+                SELECT a.APPLICATIONID AS ApplicationId,
+                       a.CATID AS CatId,
+                       c.CATNAME AS CatName,
+                       a.APPLICANTUSERID AS ApplicantUserId,
+                       u.USERNAME AS ApplicantName,
+                       a.APPLYTIME AS ApplyTime,
+                       a.CURRENTSTATUS AS CurrentStatus,
+                       a.REVIEWERUSERID AS ReviewerUserId,
+                       a.AGREEMENTNO AS AgreementNo,
+                       a.CONFIRMTIME AS ConfirmTime
+                FROM ADOPT_APPLICATIONS a
+                LEFT JOIN CAT_CATS c ON c.CATID = a.CATID
+                LEFT JOIN SYS_USERS u ON u.USERID = a.APPLICANTUSERID
+                WHERE a.APPLICANTUSERID = :ApplicantUserId
+                ORDER BY a.APPLYTIME DESC NULLS LAST, a.APPLICATIONID";
+
+            return await QueryAsync<AdoptionPendingAppDto>(sql, new { ApplicantUserId = applicantUserId });
         }
 
         public async Task<int> SubmitApplicationAsync(AdoptionApplicationCreateRequest request)

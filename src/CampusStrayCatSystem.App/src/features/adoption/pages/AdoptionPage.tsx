@@ -1,15 +1,16 @@
 import {Table,Button,type TableColumn,Notification,Modal,Card,Icon} from 'animal-island-ui'
 import type {CatSummary} from '../../../types/cats'
-import {adoptionService} from '../../../services/adoption.services'
+import {adoptionService,applicationStatusLabels} from '../../../services/adoption.services'
 import {useEffect,useState} from 'react'
 import {StatusTag} from '../../../shared/components/StatusTag'
 import {PageHeader} from '../../../shared/components/PageHeader'
 import {USE_MOCK, MOCK_CATS} from '../../adoption/test'
 import { useAuthStore } from '../../../stores/auth.store'
+
 function handleAdopt(catID:string,userID:string){
     adoptionService.postAdoption(catID,userID).then(()=>{
         Notification.success('领养申请已提交，请等待管理员审核')
-    }).catch(()=>{  
+    }).catch(()=>{
         Notification.error('提交领养申请失败，请稍后再试')
     })
 }
@@ -25,13 +26,22 @@ async function loadCats() {
     throw error;
   }
 }
+
+const statusTagMap: Record<string, {value: string; label: string}> = {
+    PENDING: {value: 'PENDING', label: '待审核'},
+    APPROVED: {value: 'COMPLETED', label: '已通过'},
+    REJECTED: {value: 'REJECTED', label: '已拒绝'},
+}
+
 export function AdoptionPage(){
     const [cats,setCats]=useState<CatSummary[]>([])
     const [loading,setLoading]=useState(false)
     const [visible,setVisible]=useState(false)
     const [CatID,setCatID]=useState<string>('')
+    const [applications, setApplications] = useState<any[]>([])
     const user=useAuthStore((s)=>s.user)
     const userId=user?.userId
+
     useEffect(()=>{
         setLoading(true)
         loadCats().then(data=>{
@@ -42,6 +52,11 @@ export function AdoptionPage(){
             setLoading(false)
         })
     },[])
+
+    useEffect(()=>{
+        adoptionService.getMyApplications().then(setApplications).catch(()=>setApplications([]))
+    },[])
+
     const CatTableColumn:TableColumn[]=[
     {
         title:'猫咪id',
@@ -69,6 +84,22 @@ export function AdoptionPage(){
         }
     }
     ]
+
+    const applicationColumns: TableColumn[] = [
+        { title: '申请编号', dataIndex: 'applicationId' },
+        { title: '猫咪', dataIndex: 'catName' },
+        { title: '申请时间', dataIndex: 'applyTime', render: (t: any) => t ? t.format('YYYY-MM-DD HH:mm') : '-' },
+        {
+            title: '状态', dataIndex: 'currentStatus',
+            render: (t: any) => {
+                const item = statusTagMap[t]
+                return item ? <StatusTag value={item.value} label={item.label} /> : <span>{applicationStatusLabels[t] || t || '-'}</span>
+            },
+        },
+        { title: '协议号', dataIndex: 'agreementNo', render: (t: any) => t || '-' },
+        { title: '审核时间', dataIndex: 'confirmTime', render: (t: any) => t ? t.format('YYYY-MM-DD HH:mm') : '-' },
+    ]
+
     return (
         <>
             <div className='user-page'>
@@ -86,6 +117,13 @@ export function AdoptionPage(){
                         </div>
                     </Card>
                     <Table columns={CatTableColumn} dataSource={cats as unknown as Record<string, unknown>[]} loading={loading}></Table>
+
+                    {applications.length > 0 && (
+                        <div style={{ marginTop: 24 }}>
+                            <h3 style={{ marginBottom: 12 }}>我的申请</h3>
+                            <Table columns={applicationColumns} dataSource={applications} />
+                        </div>
+                    )}
                 </div>
                 <Modal
                     title='确认领养'
