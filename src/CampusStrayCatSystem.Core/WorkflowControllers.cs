@@ -38,6 +38,15 @@ namespace CampusStrayCatSystem.Core
             return Ok(await _repository.GetApplicationsByStatusAsync(targetStatus));
         }
 
+        [HttpGet("my-applications")]
+        public async Task<ActionResult<IEnumerable<AdoptionPendingAppDto>>> GetMyApplications()
+        {
+            var userId = CurrentUserId();
+            if (userId == null) return Unauthorized();
+
+            return Ok(await _repository.GetApplicationsByApplicantAsync(userId));
+        }
+
         [HttpGet("visits")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<IEnumerable<AdoptionVisitSummaryDto>>> GetVisitSummary()

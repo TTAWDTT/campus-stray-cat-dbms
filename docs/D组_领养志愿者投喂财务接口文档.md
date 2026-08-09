@@ -61,7 +61,7 @@
 
 | 接口说明 | 查询待审核申请、指定状态的领养申请或回访汇总 |
 |---|---|
-| HTTP URL | `http://localhost:5047/api/adoption-workflow/pending`；`/applications?status=APPROVED`；`/visits` |
+| HTTP URL | `http://localhost:5047/api/adoption-workflow/pending`；`/applications?status=APPROVED`；`/my-applications`；`/visits` |
 | HTTP Method | `GET` |
 | 权限要求 | 管理员或志愿者 |
 
@@ -73,7 +73,7 @@
 | 401/403 | 未授权或角色不足 | 错误信息 |
 | 400 | `status` 不是 `PENDING`、`APPROVED` 或 `REJECTED` | 错误信息 |
 
-`/pending` 保留为待审核列表；`/applications` 默认查询 `APPROVED`，可通过 `status` 查询 `PENDING`、`APPROVED` 或 `REJECTED`。新增回访前，前端应调用 `/applications?status=APPROVED` 取得申请编号。
+`/pending` 保留为待审核列表；`/applications` 默认查询 `APPROVED`，可通过 `status` 查询 `PENDING`、`APPROVED` 或 `REJECTED`。新增回访前，前端应调用 `/applications?status=APPROVED` 取得申请编号。`/my-applications` 仅返回当前登录用户自己的申请，供普通用户查看申请状态。
 
 ### 请求：提交领养申请
 
