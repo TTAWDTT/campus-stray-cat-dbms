@@ -17,12 +17,15 @@ export function ActivityPage() {
   const [activeKey,setActiveKey]=useState('mine')
 
   const userId = useAuthStore.getState().user?.userId
+  const isAdmin =( useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')||true
   const shiftPriority: Record<string, number> = { IN_PROGRESS: 0, PLANNED: 1, ASSIGNED: 2, COMPLETED: 3, MISSED: 4 }
-  const myShifts = (userId ? data.filter((item: any) => item.volunteerId === userId) : data)
+  const myShifts = (userId ? data.filter((item: any) => item.userId === userId) : data)
     .sort((a: any, b: any) => (shiftPriority[a.shiftStatus] ?? 99) - (shiftPriority[b.shiftStatus] ?? 99))
   const [DrawerOpen, setDrawerOpen] = useState(false)
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [currentShiftId, setCurrentShiftId] = useState('')
   const [form]=useForm()
+  const [createForm]=useForm()
   const [previewUrl, setPreviewUrl] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -69,6 +72,53 @@ export function ActivityPage() {
       loadData().then(setData).catch(() => {})
     } catch {
       Notification.error('签到失败')
+    }
+  }
+
+  const handleCreate = async () => {
+    const values = createForm.getFieldsValue()
+
+    // 校验必填字段
+    if (!values.volunteerId || !values.pointId) {
+      Notification.error('志愿者ID和点位ID不能为空')
+      return
+    }
+    if (!values.planStartTime || !values.planEndTime) {
+      Notification.error('请选择开始时间和结束时间')
+      return
+    }
+
+    const startTime = (values.planStartTime as any)?.toISOString?.() ?? values.planStartTime
+    const endTime = (values.planEndTime as any)?.toISOString?.() ?? values.planEndTime
+    if (values.planEndTime && values.planStartTime &&
+        new Date(endTime) <= new Date(startTime)) {
+      Notification.error('结束时间不得早于开始时间')
+      return
+    }
+
+    // backupVolunteerId 不得与 volunteerId 相同
+    if (values.backupVolunteerId && values.backupVolunteerId === values.volunteerId) {
+      Notification.error('备用志愿者不得与负责人相同')
+      return
+    }
+
+    const payload: Record<string, unknown> = {
+      volunteerId: values.volunteerId,
+      pointId: values.pointId,
+      planStartTime: startTime,
+      planEndTime: endTime,
+      shiftStatus: 'PLANNED',
+    }
+    if (values.backupVolunteerId) payload.backupVolunteerId = values.backupVolunteerId
+
+    try {
+      await VolunteerService.createShift(payload)
+      Notification.success('排班创建成功')
+      setCreateDrawerOpen(false)
+      createForm.resetFields()
+      loadData().then(setData).catch(() => {})
+    } catch {
+      Notification.error('创建失败')
     }
   }
 
@@ -163,6 +213,13 @@ export function ActivityPage() {
               },
             ]}
           />
+          {isAdmin && (
+            <div style={{ marginTop: 12 }}>
+              <Button type="primary" size="small" onClick={() => setCreateDrawerOpen(true)}>
+                新建排班
+              </Button>
+            </div>
+          )}
         </div>
         <div className='activity-page-drawer'>
             <Drawer open={DrawerOpen} onClose={closeDrawer} title="签到(非必填)" >
@@ -188,6 +245,29 @@ export function ActivityPage() {
                             <Button type='primary' style={{marginRight: 8}} onClick={handleSubmit}>提交</Button>
                             <Button type='default' onClick={closeDrawer}>取消</Button>
                         </FormItem>
+                </Form>
+            </Drawer>
+            <Drawer open={createDrawerOpen} onClose={() => { setCreateDrawerOpen(false); createForm.resetFields() }} title="新建排班" >
+                <Form form={createForm} layout='vertical'>
+                    <FormItem label='志愿者ID' name='volunteerId' required>
+                        <Input placeholder='请输入志愿者ID' />
+                    </FormItem>
+                    <FormItem label='点位ID' name='pointId' required>
+                        <Input placeholder='请输入点位ID' />
+                    </FormItem>
+                    <FormItem label='备用志愿者ID' name='backupVolunteerId'>
+                        <Input placeholder='请输入备用志愿者ID（选填）' />
+                    </FormItem>
+                    <FormItem label='开始时间' name='planStartTime' required>
+                        <DatePicker showTime />
+                    </FormItem>
+                    <FormItem label='结束时间' name='planEndTime' required>
+                        <DatePicker showTime />
+                    </FormItem>
+                    <FormItem>
+                        <Button type='primary' style={{ marginRight: 8 }} onClick={handleCreate}>提交</Button>
+                        <Button type='default' onClick={() => { setCreateDrawerOpen(false); createForm.resetFields() }}>取消</Button>
+                    </FormItem>
                 </Form>
             </Drawer>
         </div>

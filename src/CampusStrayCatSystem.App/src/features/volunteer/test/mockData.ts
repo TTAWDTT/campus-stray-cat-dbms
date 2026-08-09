@@ -158,3 +158,54 @@ export const mockActivities: ApiRecord[] = [
         planEndTime: '2026-08-07T12:00:00',
     },
 ]
+
+// ═══════════════════════════════════════════
+// 4. 投喂任务数据（对应 VolShift 实体，字段 PascalCase + ID 后缀）
+// ═══════════════════════════════════════════
+export const mockFeedingTasks: ApiRecord[] = [
+    {
+        ShiftID: 'SHIFT001',
+        VolunteerID: 'V001',
+        PointID: 'P001',
+        BackupVolunteerID: null,
+        PlanStartTime: '2026-08-09T08:00:00',
+        PlanEndTime: '2026-08-09T16:00:00',
+        ShiftStatus: 'IN_PROGRESS',
+    },
+    {
+        ShiftID: 'SHIFT002',
+        VolunteerID: 'V002',
+        PointID: 'P002',
+        BackupVolunteerID: 'V001',
+        PlanStartTime: '2026-08-08T10:00:00',
+        PlanEndTime: '2026-08-08T14:00:00',
+        ShiftStatus: 'COMPLETED',
+    },
+    {
+        ShiftID: 'SHIFT003',
+        VolunteerID: 'V001',
+        PointID: 'P001',
+        BackupVolunteerID: null,
+        PlanStartTime: '2026-08-10T09:00:00',
+        PlanEndTime: '2026-08-10T12:00:00',
+        ShiftStatus: 'ASSIGNED',
+    },
+    {
+        ShiftID: 'SHIFT004',
+        VolunteerID: 'V001',
+        PointID: 'P003',
+        BackupVolunteerID: null,
+        PlanStartTime: '2026-08-12T08:00:00',
+        PlanEndTime: '2026-08-12T16:00:00',
+        ShiftStatus: 'PLANNED',
+    },
+    {
+        ShiftID: 'SHIFT005',
+        VolunteerID: 'V003',
+        PointID: 'P002',
+        BackupVolunteerID: null,
+        PlanStartTime: '2026-08-07T08:00:00',
+        PlanEndTime: '2026-08-07T12:00:00',
+        ShiftStatus: 'MISSED',
+    },
+]

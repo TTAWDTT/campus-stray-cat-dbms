@@ -1,6 +1,6 @@
 import {http} from './http'
 import dayjs from 'dayjs'
-import { USE_MOCK, mockApplications, mockVisits, mockActivities } from '../features/volunteer/test/mockData'
+import { USE_MOCK, mockApplications, mockVisits, mockActivities, mockFeedingTasks } from '../features/volunteer/test/mockData'
 
 type ApiRecord=Record<string,unknown>
 
@@ -55,6 +55,19 @@ const toActivity=(data:ApiRecord)=>{
     }
 }
 
+const toFeedingTasks=(data:ApiRecord)=>{
+    const rawPlanStartTime=value<string>(data,'planStartTime','PlanStartTime')
+    const rawPlanEndTime=value<string>(data,'planEndTime','PlanEndTime')
+    return {
+        shiftID:value<string>(data,'shiftID','ShiftID')||'',
+        volunteerID:value<string>(data,'volunteerID','VolunteerID')||'',
+        pointID:value<string>(data,'pointID','PointID')||'',
+        backupVolunteerID:value<string>(data,'backupVolunteerID','BackupVolunteerID')||'',
+        planStartTime:rawPlanStartTime?dayjs(rawPlanStartTime):undefined,
+        planEndTime:rawPlanEndTime?dayjs(rawPlanEndTime):undefined,
+        shiftStatus:value<string>(data,'shiftStatus','ShiftStatus')||''
+    }
+}
 export const shiftStatusLabels: Record<string, string> = {
     PLANNED: '计划',
     ASSIGNED: '已分配',
@@ -99,6 +112,30 @@ export const VolunteerService={
         const {data}=await http.get('/volunteer-workflow/activity')
         return (data as ApiRecord[]).map(toActivity)
     },
+    //注册志愿者
+    async registerVolunteer(payload: Record<string, unknown>) {
+        if (USE_MOCK) {
+            console.log('[mock] 注册志愿者', payload)
+            return
+        }
+        await http.post('/volunteer-workflow/volunteers', payload)
+    },
+    //新增积分日志
+    async addCreditLog(payload: Record<string, unknown>) {
+        if (USE_MOCK) {
+            console.log('[mock] 新增积分日志', payload)
+            return
+        }
+        await http.post('/volunteer-workflow/credit-logs', payload)
+    },
+    //新建排班
+    async createShift(payload: Record<string, unknown>) {
+        if (USE_MOCK) {
+            console.log('[mock] 新建排班', payload)
+            return
+        }
+        await http.post('/volunteer-workflow/shifts', payload)
+    },
     //签到
     async checkInShift(shiftId: string, payload: Record<string, unknown>) {
         if (USE_MOCK) {
@@ -130,5 +167,34 @@ export const VolunteerService={
             `/adoption-workflow/applications/${encodeURIComponent(applicationId)}/review`,
             payload
         )
+    },
+    //获取投喂任务
+    async getAllFeedingTasks(){
+        if (USE_MOCK) return mockFeedingTasks.map(toFeedingTasks)
+        const {data}=await http.get('/feeding-tasks')
+        return (data as ApiRecord[]).map(toFeedingTasks)
+    },
+    async getFeedingTasksById(id:string){
+        if (USE_MOCK) {
+            const found = mockFeedingTasks.find(t => (t.ShiftID || t.shiftID) === id)
+            return found ? [toFeedingTasks(found)] : []
+        }
+        const {data}=await http.get(`/feeding-tasks/${encodeURIComponent(id)}`)
+        return [toFeedingTasks(data as ApiRecord)]
+    },
+    async getFeedingTasksByVolunteer(volunteerId:string){
+        if (USE_MOCK) return mockFeedingTasks.filter(t => (t.VolunteerID || t.volunteerID) === volunteerId).map(toFeedingTasks)
+        const {data}=await http.get(`/feeding-tasks/by-volunteer/${encodeURIComponent(volunteerId)}`)
+        return (data as ApiRecord[]).map(toFeedingTasks)
+    },
+    async getFeedingTasksByPoint(pointId:string){
+        if (USE_MOCK) return mockFeedingTasks.filter(t => (t.PointID || t.pointID) === pointId).map(toFeedingTasks)
+        const {data}=await http.get(`/feeding-tasks/by-point/${encodeURIComponent(pointId)}`)
+        return (data as ApiRecord[]).map(toFeedingTasks)
+    },
+    async getFeedingTasksByStatus(status:string){
+        if (USE_MOCK) return mockFeedingTasks.filter(t => (t.ShiftStatus || t.shiftStatus) === status).map(toFeedingTasks)
+        const {data}=await http.get(`/feeding-tasks/by-status/${encodeURIComponent(status)}`)
+        return (data as ApiRecord[]).map(toFeedingTasks)
     }
 }
