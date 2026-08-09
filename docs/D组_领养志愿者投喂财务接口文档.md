@@ -57,11 +57,11 @@
 
 ## 3. 领养流程
 
-### 请求：获取待审核申请或回访汇总
+### 请求：获取领养申请或回访汇总
 
-| 接口说明 | 查询待审核领养申请或回访汇总 |
+| 接口说明 | 查询待审核申请、指定状态的领养申请或回访汇总 |
 |---|---|
-| HTTP URL | `http://localhost:5047/api/adoption-workflow/pending`；`/visits` |
+| HTTP URL | `http://localhost:5047/api/adoption-workflow/pending`；`/applications?status=APPROVED`；`/visits` |
 | HTTP Method | `GET` |
 | 权限要求 | 管理员或志愿者 |
 
@@ -71,6 +71,9 @@
 |---|---|---|
 | 200 | 查询成功 | 申请 DTO 数组或回访汇总数组 |
 | 401/403 | 未授权或角色不足 | 错误信息 |
+| 400 | `status` 不是 `PENDING`、`APPROVED` 或 `REJECTED` | 错误信息 |
+
+`/pending` 保留为待审核列表；`/applications` 默认查询 `APPROVED`，可通过 `status` 查询 `PENDING`、`APPROVED` 或 `REJECTED`。新增回访前，前端应调用 `/applications?status=APPROVED` 取得申请编号。
 
 ### 请求：提交领养申请
 
