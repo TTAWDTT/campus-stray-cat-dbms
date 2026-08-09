@@ -1,0 +1,21 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa/assign"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: '"特朗普"'
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 02:17:08 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 处理人必须是有效的管理员或志愿者。
+order: 4169150074413508

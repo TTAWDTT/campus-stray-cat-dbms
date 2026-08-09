@@ -1,0 +1,28 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/4d9cd956-4067-4946-889e-2db2137dc97d"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sat, 08 Aug 2026 13:59:37 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "recordID": "4d9cd956-4067-4946-889e-2db2137dc97d",
+        "catID": "demo-cat-campus-001",
+        "recordType": "VACCINATION",
+        "hospitalName": "校园动物医院",
+        "diagnosis": "猫三联疫苗第一针，无不良反应",
+        "recordDate": "2026-08-03T09:00:00",
+        "nextDueDate": "2026-08-24T09:00:00",
+        "attachmentUrl": "https://example.invalid/vaccine-record.jpg"
+      }
+order: 2284131397707918

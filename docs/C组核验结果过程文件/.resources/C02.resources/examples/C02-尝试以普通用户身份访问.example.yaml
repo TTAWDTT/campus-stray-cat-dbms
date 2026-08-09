@@ -1,0 +1,17 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases/e5aa77bb-2bd6-4d51-ba94-e49fb264795a"
+  method: GET
+  headers:
+    Authorization: Bearer {{userToken}}
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:11:20 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 3029399465009327

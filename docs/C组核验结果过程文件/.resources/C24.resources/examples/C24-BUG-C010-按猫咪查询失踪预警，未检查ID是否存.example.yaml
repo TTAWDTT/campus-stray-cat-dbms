@@ -1,0 +1,19 @@
+$kind: http-example
+name: C24-BUG-C010-按猫咪查询失踪预警，未检查ID是否存在
+request:
+  url: "{{baseUrl}}/api/MissingAlerts/cat/demo-cat-campus-999"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sun, 09 Aug 2026 03:01:20 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: "[]"
+order: 328866796673318

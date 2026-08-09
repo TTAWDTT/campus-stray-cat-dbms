@@ -1,0 +1,32 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sun, 09 Aug 2026 02:59:18 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "alertID": "091444b959764e70a2088a5e29b4f420",
+          "catID": "demo-cat-campus-001",
+          "lastSightingID": "f1dcb713b60b4ccdaade5c671dce27d8",
+          "lastSightingTime": "2026-08-06T18:00:00",
+          "thresholdDays": 7,
+          "alertTime": "2026-08-09T10:51:37",
+          "alertStatus": "PROCESSING",
+          "handlerUserID": null,
+          "closeTime": null,
+          "remark": "图图已超过2天未被目击，请各位留意"
+        }
+      ]
+order: 1786244369332

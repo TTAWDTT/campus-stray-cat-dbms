@@ -1,0 +1,17 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/4d9cd956-4067-4946-889e-2db2137dc97d"
+  method: GET
+  headers:
+    Authorization: Bearer {{userToken}}
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:13:15 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 3064557236357609

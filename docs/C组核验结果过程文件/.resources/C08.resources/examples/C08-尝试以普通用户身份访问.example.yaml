@@ -1,0 +1,17 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/cat/demo-cat-campus-001"
+  method: GET
+  headers:
+    Authorization: Bearer {{userToken}}
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:13:02 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 651662193565070

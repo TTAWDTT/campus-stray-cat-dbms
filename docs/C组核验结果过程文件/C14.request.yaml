@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/MedReminder"
+method: POST
+headers:
+  Authorization: Bearer {{userToken}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"catID\": \"demo-cat-campus-001\",\r
+
+    \    \"reminderType\": \"VACCINATION\",\r
+
+    \    \"receiverUserID\": \"特朗普\",\r
+
+    \    \"reminderTime\": \"2026-08-24T09:00:00Z\"\r
+
+    }"
+examples: .resources/C14.resources/examples
+order: 4503599056007129

@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"responsibleUserID\": \"特朗普\",\r
+
+      \    \"currentStatus\": \"DISCOVERED\",\r
+
+      \    \"hospitalName\": \"校园动物医院\",\r
+
+      \    \"captureTime\": \"2026-08-01T10:00:00Z\",\r
+
+      \    \"surgeryTime\": \"2026-08-02T10:00:00Z\",\r
+
+      \    \"releaseTime\": \"2026-08-05T10:00:00Z\",\r
+
+      \    \"totalCost\": -500.00\r
+
+      }"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 03:13:11 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 负责人 UserID='特朗普' 不存在。
+order: 3719753945918465

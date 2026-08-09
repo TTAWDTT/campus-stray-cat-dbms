@@ -1,0 +1,51 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"responsibleUserID\": \"user-volunteer-a-group\",\r
+
+      \    \"currentStatus\": \"DISCOVERED\",\r
+
+      \    \"hospitalName\": \"校园动物医院\",\r
+
+      \    \"captureTime\": \"2026-08-01T10:00:00Z\",\r
+
+      \    \"surgeryTime\": \"2026-08-02T10:00:00Z\",\r
+
+      \    \"releaseTime\": \"2026-08-05T10:00:00Z\",\r
+
+      \    \"totalCost\": 500.00\r
+
+      }"
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sat, 08 Aug 2026 13:13:21 GMT
+    server: Kestrel
+    location: http://localhost:5047/api/TnrCases/e5aa77bb-2bd6-4d51-ba94-e49fb264795a
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+        "catID": "demo-cat-campus-001",
+        "responsibleUserID": "user-volunteer-a-group",
+        "currentStatus": "DISCOVERED",
+        "hospitalName": "校园动物医院",
+        "captureTime": "2026-08-01T10:00:00Z",
+        "surgeryTime": "2026-08-02T10:00:00Z",
+        "releaseTime": "2026-08-05T10:00:00Z",
+        "totalCost": 500
+      }
+order: 1786194805573

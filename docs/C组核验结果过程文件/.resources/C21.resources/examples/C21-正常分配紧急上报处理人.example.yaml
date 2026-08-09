@@ -1,0 +1,19 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa/assign"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: '"user-volunteer-a-group"'
+response:
+  statusCode: 204
+  statusText: No Content
+  headers:
+    date: Sun, 09 Aug 2026 02:16:31 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 1786241794629

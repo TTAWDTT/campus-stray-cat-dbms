@@ -1,0 +1,29 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases/e5aa77bb-2bd6-4d51-ba94-e49fb264795a"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sat, 08 Aug 2026 13:15:52 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+        "catID": "demo-cat-campus-001",
+        "responsibleUserID": "user-volunteer-a-group",
+        "currentStatus": "DISCOVERED",
+        "hospitalName": "校园动物医院",
+        "captureTime": "2026-08-01T10:00:00",
+        "surgeryTime": "2026-08-02T10:00:00",
+        "releaseTime": "2026-08-05T10:00:00",
+        "totalCost": 500
+      }
+order: 1786194955814

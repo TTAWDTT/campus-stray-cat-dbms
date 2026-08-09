@@ -1,0 +1,8 @@
+$kind: http-request
+name: C24
+url: "{{baseUrl}}/api/MissingAlerts/cat/demo-cat-campus-001"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+examples: .resources/C24.resources/examples
+order: 4503599627368849

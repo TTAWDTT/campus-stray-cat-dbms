@@ -1,0 +1,39 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-999\",\r
+
+      \    \"responsibleUserID\": \"user-volunteer-a-group\",\r
+
+      \    \"currentStatus\": \"DISCOVERED\",\r
+
+      \    \"hospitalName\": \"校园动物医院\",\r
+
+      \    \"captureTime\": \"2026-08-01T10:00:00Z\",\r
+
+      \    \"surgeryTime\": \"2026-08-02T10:00:00Z\",\r
+
+      \    \"releaseTime\": \"2026-08-05T10:00:00Z\",\r
+
+      \    \"totalCost\": 500.00\r
+
+      }"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sat, 08 Aug 2026 13:23:15 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 猫咪 CatID='demo-cat-campus-999' 不存在。
+order: 925347755569103

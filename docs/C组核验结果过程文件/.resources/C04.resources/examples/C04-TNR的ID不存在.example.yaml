@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases/123456"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"caseID\": \"123456\",\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"responsibleUserID\": \"user-volunteer-a-group\",\r
+
+      \    \"currentStatus\": \"DISCOVERED\",\r
+
+      \    \"hospitalName\": \"同济附属动物医院\",\r
+
+      \    \"captureTime\": \"2026-08-01T10:00:00Z\",\r
+
+      \    \"totalCost\": 800.00\r
+
+      }"
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sat, 08 Aug 2026 13:29:34 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到 ID 为 123456 的TNR案例，无法更新。
+order: 698512715470399

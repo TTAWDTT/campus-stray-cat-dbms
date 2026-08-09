@@ -1,0 +1,29 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts/123456/status"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"alertStatus\": \"FOUND\",\r
+
+      \    \"handlerUserID\": \"user-admin-a-group\",\r
+
+      \    \"remark\": \"已在南校区找到图图，状态良好\"\r
+
+      }"
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 03:09:49 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到预警 123456。
+order: 3690487758499584

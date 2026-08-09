@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/TnrStatusLogs/case/e5aa77bb-2bd6-4d51-ba94-e49fb264795a"
+method: GET
+headers:
+  Authorization: Bearer {{userToken}}
+examples: .resources/C06.resources/examples
+order: 4492775797758729

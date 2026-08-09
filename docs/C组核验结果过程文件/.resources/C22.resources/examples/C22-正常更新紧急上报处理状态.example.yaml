@@ -1,0 +1,25 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa/status"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"processStatus\": \"PROCESSING\",\r
+
+      \    \"processResult\": \"已联系校园动物医院，准备前往救助\"\r
+
+      }"
+response:
+  statusCode: 204
+  statusText: No Content
+  headers:
+    date: Sun, 09 Aug 2026 02:20:17 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 1786242020219

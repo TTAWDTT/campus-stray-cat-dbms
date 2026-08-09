@@ -1,0 +1,27 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder/997e25ad750c42c8a4b54aaf474c8ae9"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sun, 09 Aug 2026 01:50:10 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "reminderID": "997e25ad750c42c8a4b54aaf474c8ae9",
+        "recordID": null,
+        "catID": "demo-cat-campus-001",
+        "reminderType": "VACCINATION",
+        "receiverUserID": "user-volunteer-a-group",
+        "reminderTime": "2026-08-24T09:00:00",
+        "sendStatus": "PENDING"
+      }
+order: 1786240219564

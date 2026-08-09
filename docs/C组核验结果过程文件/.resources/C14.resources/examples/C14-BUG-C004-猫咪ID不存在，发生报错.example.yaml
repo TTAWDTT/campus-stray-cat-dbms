@@ -1,0 +1,109 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-999\",\r
+
+      \    \"reminderType\": \"VACCINATION\",\r
+
+      \    \"receiverUserID\": \"user-volunteer-a-group\",\r
+
+      \    \"reminderTime\": \"2026-08-24T09:00:00Z\"\r
+
+      }"
+response:
+  statusCode: 500
+  statusText: Internal Server Error
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 01:47:12 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: "Oracle.ManagedDataAccess.Client.OracleException (0x80004005): ORA-02291: 违反完整约束条件 (CAT_SYSTEM.SYS_C008264) - 未找到父项关键字
+
+      ORA-06512: 在 \"CAT_SYSTEM.PKG_RESCUE_CARE\", line 56
+
+      ORA-06512: 在 line 1\r
+
+      https://docs.oracle.com/error-help/db/ora-02291/\r
+
+      \   at OracleInternal.ServiceObjects.OracleConnectionImpl.VerifyExecution(Int32& cursorId, Boolean bThrowArrayBindRelatedErrors, SqlStatementType sqlStatementType, Int32 arrayBindCount, OracleException& exceptionForArrayBindDML, Boolean& hasMoreRowsInDB, Boolean bFirstIterationDone)\r
+
+      \   at OracleInternal.ServiceObjects.OracleCommandImpl.VerifyExecution(OracleConnectionImpl connectionImpl, Int32& cursorId, Boolean bThrowArrayBindRelatedErrors, OracleException& exceptionForArrayBindDML, Boolean& hasMoreRowsInDB, Boolean bFirstIterationDone)\r
+
+      \   at OracleInternal.ServiceObjects.OracleCommandImpl.ExecuteNonQueryAsync(String commandText, OracleParameterCollection paramColl, CommandType commandType, OracleConnectionImpl connectionImpl, Int32 longFetchSize, Int64 clientInitialLOBFS, OracleDependencyImpl orclDependencyImpl, OracleConnection connection, ENQ_RefAndOutParamArgCtx enq_refOutArgCtx, Boolean isFromEF, Boolean bAsync)\r
+
+      \   at Oracle.ManagedDataAccess.Client.OracleCommand.ExecuteNonQueryInternalAsync(Boolean bAsync, CancellationToken cancellationToken)\r
+
+      \   at Oracle.ManagedDataAccess.Client.OracleCommand.ExecuteNonQueryAsyncHelper(CancellationToken cancellationToken)\r
+
+      \   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 662\r
+
+      \   at CampusStrayCatSystem.Data.BaseRepository`1.ExecuteStoredProcedureAsync(String procedureName, Object param) in C:\\Users\\lifem\\Desktop\\DBCD\\campus-stray-cat-dbms-master\\src\\CampusStrayCatSystem.Data\\BaseRepository.cs:line 73\r
+
+      \   at CampusStrayCatSystem.Data.MedReminderRepository.CreateReminder(MedReminder reminder) in C:\\Users\\lifem\\Desktop\\DBCD\\campus-stray-cat-dbms-master\\src\\CampusStrayCatSystem.Data\\MedReminderRepository.cs:line 78\r
+
+      \   at CampusStrayCatSystem.Core.MedReminderController.Create(MedReminder reminder) in C:\\Users\\lifem\\Desktop\\DBCD\\campus-stray-cat-dbms-master\\src\\CampusStrayCatSystem.Core\\MedReminderController.cs:line 88\r
+
+      \   at lambda_method61(Closure, Object)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableObjectResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\r
+
+      \   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)\r
+
+      \   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\r
+
+      \   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\r
+
+      \   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\r
+
+      \   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\r
+
+      \   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)\r
+
+      \r
+
+      HEADERS\r
+
+      =======\r
+
+      Accept: */*\r
+
+      Connection: keep-alive\r
+
+      Host: localhost:5047\r
+
+      User-Agent: PostmanRuntime/1.9.11\r
+
+      Accept-Encoding: gzip, deflate, br\r
+
+      Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6InVzZXItYWRtaW4tYS1ncm91cCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJhX2dyb3VwX2FkbWluIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQURNSU4iLCJyb2xlSWQiOiJyb2xlLWFkbWluLWEtZ3JvdXAiLCJwZXJtaXNzaW9uU2NvcGUiOiJVU0VSX01BTkFHRSxST0xFX01BTkFHRSxCTEFDS0xJU1RfTUFOQUdFIiwiZXhwIjoxNzg2MjY3MjM2LCJpc3MiOiJDYW1wdXNTdHJheUNhdFN5c3RlbSIsImF1ZCI6IkNhbXB1c1N0cmF5Q2F0U3lzdGVtQ2xpZW50In0.IMZo-SBOh6kmvrJyT4cm22_J2falSEFw34cpwgl9r4M\r
+
+      Content-Type: application/json\r
+
+      Content-Length: 170\r
+
+      Postman-Token: a5455055-0d86-460a-b89f-55da071fcd10\r\n"
+order: 477961100816872

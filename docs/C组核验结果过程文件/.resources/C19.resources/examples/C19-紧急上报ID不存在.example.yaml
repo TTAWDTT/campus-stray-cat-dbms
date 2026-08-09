@@ -1,0 +1,18 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports/123456"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 02:13:45 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到上报 123456。
+order: 1989481886191107

@@ -1,0 +1,28 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases/e5aa77bb-2bd6-4d51-ba94-e49fb264795a/status"
+  method: PUT
+  headers:
+    Authorization: Bearer {{userToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"newStatus\": \"CAPTURED\",\r
+
+      \    \"operatorID\": \"特朗普\",\r
+
+      \    \"remark\": \"已在图书馆附近成功捕捉\"\r
+
+      }"
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:12:28 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 4502519021848172

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/MedReminder/123456"
+method: GET
+headers:
+  Authorization: Bearer {{userToken}}
+examples: .resources/C15.resources/examples
+order: 4503599412660685

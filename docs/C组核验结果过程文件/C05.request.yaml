@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/TnrCases/e5aa77bb-2bd6-4d51-ba94-e49fb264795a/status"
+method: PUT
+headers:
+  Authorization: Bearer {{userToken}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"newStatus\": \"CAPTURED\",\r
+
+    \    \"operatorID\": \"特朗普\",\r
+
+    \    \"remark\": \"已在图书馆附近成功捕捉\"\r
+
+    }"
+examples: .resources/C05.resources/examples
+order: 4449799688618918

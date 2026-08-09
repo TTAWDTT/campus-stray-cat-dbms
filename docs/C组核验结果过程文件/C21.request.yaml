@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa/assign"
+method: PUT
+headers:
+  Authorization: Bearer {{userToken}}
+body:
+  type: json
+  content: '"user-volunteer-a-group"'
+examples: .resources/C21.resources/examples
+order: 4503599627128965

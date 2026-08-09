@@ -1,0 +1,16 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder/997e25ad750c42c8a4b54aaf474c8ae9/complete"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 204
+  statusText: No Content
+  headers:
+    date: Sun, 09 Aug 2026 01:53:36 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 1786240420160

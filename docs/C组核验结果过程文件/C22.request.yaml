@@ -1,0 +1,17 @@
+$kind: http-request
+name: C22
+url: "{{baseUrl}}/api/EmergencyReports/123456/status"
+method: PUT
+headers:
+  Authorization: Bearer {{userToken}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"processStatus\": \"PROCESSING\",\r
+
+    \    \"processResult\": \"已联系校园动物医院，准备前往救助\"\r
+
+    }"
+examples: .resources/C22.resources/examples
+order: 4503599627131535

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/MissingAlerts"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+examples: .resources/C23.resources/examples
+order: 4503599627290610

@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"lastSightingID\": \"f1dcb713b60b4ccdaade5c671dce27d8\",\r
+
+      \    \"lastSightingTime\": \"2026-08-06T18:00:00Z\",\r
+
+      \    \"thresholdDays\": 0,\r
+
+      \    \"remark\": \"图图已超过2天未被目击，请各位留意\"\r
+
+      }"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: application/problem+json; charset=utf-8
+    date: Sun, 09 Aug 2026 02:57:54 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "One or more validation errors occurred.",
+        "status": 400,
+        "errors": {
+          "ThresholdDays": [
+            "阈值天数必须在 1 到 3650 之间。"
+          ]
+        },
+        "traceId": "00-4453629aab8ce100627b80e7aa61cf84-077bef8c10c2865f-00"
+      }
+order: 3991216854159740

@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-999\",\r
+
+      \    \"recordType\": \"VACCINATION\",\r
+
+      \    \"hospitalName\": \"校园动物医院\",\r
+
+      \    \"diagnosis\": \"猫三联疫苗第一针，无不良反应\",\r
+
+      \    \"recordDate\": \"2026-08-03T09:00:00Z\",\r
+
+      \    \"nextDueDate\": \"2026-08-24T09:00:00Z\",\r
+
+      \    \"attachmentUrl\": \"https://example.invalid/vaccine-record.jpg\"\r
+
+      }"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sat, 08 Aug 2026 14:02:51 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 猫咪 CatID='demo-cat-campus-999' 不存在。
+order: 4351061783597660

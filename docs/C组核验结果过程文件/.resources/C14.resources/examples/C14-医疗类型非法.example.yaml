@@ -1,0 +1,31 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"reminderType\": \"abc\",\r
+
+      \    \"receiverUserID\": \"user-volunteer-a-group\",\r
+
+      \    \"reminderTime\": \"2026-08-24T09:00:00Z\"\r
+
+      }"
+response:
+  statusCode: 400
+  statusText: Bad Request
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 01:48:29 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 提醒类型必须是 VACCINATION、CHECKUP、TREATMENT、SURGERY、DEWORMING、EMERGENCY、OTHER。
+order: 2348981381392384

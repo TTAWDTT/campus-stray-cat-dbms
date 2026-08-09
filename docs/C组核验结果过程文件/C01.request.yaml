@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/TnrCases"
+method: GET
+headers:
+  Authorization: Bearer {{userToken}}
+body:
+  type: json
+  content: ""
+examples: .resources/C01.resources/examples
+order: 1786178432691

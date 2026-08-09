@@ -1,0 +1,17 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder/123456"
+  method: GET
+  headers:
+    Authorization: Bearer {{userToken}}
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:14:58 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 4095985969316748

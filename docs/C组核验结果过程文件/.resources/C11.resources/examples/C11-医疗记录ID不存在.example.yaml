@@ -1,0 +1,37 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/123456"
+  method: PUT
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"recordID\": \"123456\",\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"recordType\": \"VACCINATION\",\r
+
+      \    \"hospitalName\": \"同济附属动物医院\",\r
+
+      \    \"diagnosis\": \"猫三联疫苗第一针（加强），状态良好\",\r
+
+      \    \"recordDate\": \"2026-08-03T09:00:00Z\",\r
+
+      \    \"nextDueDate\": \"2026-08-24T09:00:00Z\"\r
+
+      }"
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sun, 09 Aug 2026 01:33:40 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到 ID 为 123456 的医疗记录，无法更新。
+order: 4107191402610646

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/MedReminder/cat/demo-cat-campus-001"
+method: GET
+headers:
+  Authorization: Bearer {{userToken}}
+examples: .resources/C13.resources/examples
+order: 4503592834721075

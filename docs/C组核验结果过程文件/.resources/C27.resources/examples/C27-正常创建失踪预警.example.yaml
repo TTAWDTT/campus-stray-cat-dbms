@@ -1,0 +1,46 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts"
+  method: POST
+  headers:
+    Authorization: Bearer {{adminToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"lastSightingID\": \"f1dcb713b60b4ccdaade5c671dce27d8\",\r
+
+      \    \"lastSightingTime\": \"2026-08-06T18:00:00Z\",\r
+
+      \    \"thresholdDays\": 7,\r
+
+      \    \"remark\": \"图图已超过2天未被目击，请各位留意\"\r
+
+      }"
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Sun, 09 Aug 2026 02:51:36 GMT
+    server: Kestrel
+    location: http://localhost:5047/api/MissingAlerts/091444b959764e70a2088a5e29b4f420
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "alertID": "091444b959764e70a2088a5e29b4f420",
+        "catID": "demo-cat-campus-001",
+        "lastSightingID": "f1dcb713b60b4ccdaade5c671dce27d8",
+        "lastSightingTime": "2026-08-06T18:00:00Z",
+        "thresholdDays": 7,
+        "alertTime": "2026-08-09T10:51:37.1626846+08:00",
+        "alertStatus": "PROCESSING",
+        "handlerUserID": null,
+        "closeTime": null,
+        "remark": "图图已超过2天未被目击，请各位留意"
+      }
+order: 1786243899811

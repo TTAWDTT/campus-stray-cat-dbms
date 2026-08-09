@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+examples: .resources/C19.resources/examples
+order: 4503599625194227

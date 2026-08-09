@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/api/MedHealthRecords/cat/demo-cat-campus-001"
+method: GET
+headers:
+  Authorization: Bearer {{userToken}}
+examples: .resources/C08.resources/examples
+order: 4502987144160304

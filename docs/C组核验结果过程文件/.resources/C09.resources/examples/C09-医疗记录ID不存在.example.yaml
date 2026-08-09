@@ -1,0 +1,18 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/123456"
+  method: GET
+  headers:
+    Authorization: Bearer {{adminToken}}
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Sat, 08 Aug 2026 13:59:06 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到 ID 为 123456 的医疗记录。
+order: 1786197555320

@@ -1,0 +1,26 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports/123456/status"
+  method: PUT
+  headers:
+    Authorization: Bearer {{userToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"processStatus\": \"PROCESSING\",\r
+
+      \    \"processResult\": \"已联系校园动物医院，准备前往救助\"\r
+
+      }"
+response:
+  statusCode: 403
+  statusText: Forbidden
+  headers:
+    content-length: "0"
+    date: Sun, 09 Aug 2026 10:33:12 GMT
+    server: Kestrel
+  body:
+    type: text
+    content: ""
+order: 3453139864357848
