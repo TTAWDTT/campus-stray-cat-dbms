@@ -1,8 +1,6 @@
 import {http} from './http'
 import dayjs from 'dayjs'
-
-// 切换为 true 使用本地 mock 数据，联调后端时改回 false
-const mock_check = true
+import { USE_MOCK, mockApplications, mockVisits, mockActivities } from '../features/volunteer/test/mockData'
 
 type ApiRecord=Record<string,unknown>
 
@@ -25,64 +23,103 @@ const toApplication=(data:ApiRecord)=>{
         confirmTime: rawConfirmTime ? dayjs(rawConfirmTime) : undefined,
     }
 }
+const toVisit=(data:ApiRecord)=>{
+    const rawVisitTime=value<string>(data,'visitTime','VisitTime')
+    return {
+        visitId:value<string>(data,'visitId','VisitId')||'',
+        applicationId:value<string>(data,'applicationId','ApplicationId')||'',
+        catId:value<string>(data,'catId','CatId')||'',
+        visitType:value<string>(data,'visitType','VisitType')||'',
+        visitTime: rawVisitTime ? dayjs(rawVisitTime) : undefined,
+        visitorUserId:value<string>(data,'visitorUserId','VisitorUserId')||'',
+        conclusion:value<string>(data,'conclusion','Conclusion')||'',
+        passFlag:value<number>(data,'passFlag','PassFlag')||0,
+        currentStatus:value<string>(data,'currentStatus','CurrentStatus')||'',
+    }
+}
 
-// ---- mock 数据（原始 API 格式，与后端返回结构一致）----
-let mockApiData: ApiRecord[] = [
-    {
-        applicationId: 'APP24001',
-        catId: 'CAT001',
-        catName: '小橘',
-        applicantUserId: 'U1001',
-        applicantName: '张三',
-        applyTime: '2026-08-06T10:30:00',
-        currentStatus: 'PENDING',
-        reviewerUserId: '',
-        agreementNo: '',
-        confirmTime: null,
-    },
-    {
-        applicationId: 'APP24002',
-        catId: 'CAT002',
-        catName: '大花',
-        applicantUserId: 'U1002',
-        applicantName: '李四',
-        applyTime: '2026-08-07T14:00:00',
-        currentStatus: 'PENDING',
-        reviewerUserId: '',
-        agreementNo: '',
-        confirmTime: null,
-    },
-    {
-        applicationId: 'APP24003',
-        catId: 'CAT003',
-        catName: '黑尾',
-        applicantUserId: 'U1003',
-        applicantName: '王五',
-        applyTime: '2026-08-08T09:15:00',
-        currentStatus: 'PENDING',
-        reviewerUserId: '',
-        agreementNo: '',
-        confirmTime: null,
-    },
-]
+const toActivity=(data:ApiRecord)=>{
+    const rawPlanStartTime = value<string>(data,'planStartTime','PlanStartTime')
+    const rawPlanEndTime = value<string>(data,'planEndTime','PlanEndTime')
+    return {
+        volunteerId:value<string>(data,'volunteerId','VolunteerId')||'',
+        userId:value<string>(data,'userId','UserId')||'',
+        userName:value<string>(data,'userName','UserName')||'',
+        activeStatus:value<string>(data,'activeStatus','ActiveStatus')||'',
+        creditLevel:value<string>(data,'creditLevel','CreditLevel')||'',
+        serviceScore:value<number>(data,'serviceScore','ServiceScore')||0,
+        shiftId:value<string>(data,'shiftId','ShiftId')||'',
+        shiftStatus:value<string>(data,'shiftStatus','ShiftStatus')||'',
+        planStartTime: rawPlanStartTime ? dayjs(rawPlanStartTime) : undefined,
+        planEndTime: rawPlanEndTime ? dayjs(rawPlanEndTime) : undefined,
+    }
+}
+
+export const shiftStatusLabels: Record<string, string> = {
+    PLANNED: '计划',
+    ASSIGNED: '已分配',
+    IN_PROGRESS: '执行中',
+    COMPLETED: '已完成',
+    MISSED: '逾期',
+}
+
+export const visitTypeLabels: Record<string, string> = {
+    INITIAL: '初次回访',
+    FOLLOW_UP: '跟进回访',
+    FINAL: '最终回访',
+}
+
+export const passFlagLabels: Record<number, string> = {
+    0: '未通过',
+    1: '通过',
+}
 
 export const VolunteerService={
     //获取待审核申请列表
     async getPendingApplications(){
-        if (mock_check) {
-            return mockApiData.map(toApplication)
+        if (USE_MOCK) {
+            return mockApplications.map(toApplication)
         }
         const {data}=await http.get('/adoption-workflow/pending')
         return (data as ApiRecord[]).map(toApplication)
     },
+    //获取回访列表
+    async getVisitList(){
+        if (USE_MOCK) {
+            return mockVisits.map(toVisit)
+        }
+        const {data}=await http.get('/adoption-workflow/visits')
+        return (data as ApiRecord[]).map(toVisit)
+    },
+    //获取志愿者活动（排班）列表
+    async getActivity(){
+        if (USE_MOCK) {
+            return mockActivities.map(toActivity)
+        }
+        const {data}=await http.get('/volunteer-workflow/activity')
+        return (data as ApiRecord[]).map(toActivity)
+    },
+    //签到
+    async checkInShift(shiftId: string, payload: Record<string, unknown>) {
+        if (USE_MOCK) {
+            console.log(`[mock] 签到排班 ${shiftId}`, payload)
+            return
+        }
+        await http.post(
+            `/volunteer-workflow/shifts/${encodeURIComponent(shiftId)}/checkins`,
+            payload
+        )
+    },
+    //获取已审核申请列表
     //审核领养申请
     async checkAdoption(applicationId:string,checkStatus:string){
-        if (mock_check) {
+        if (USE_MOCK) {
             // 模拟后端行为：审核后从待审核列表中移除
-            mockApiData = mockApiData.filter(item =>
-                item.applicationId !== applicationId && item.ApplicationId !== applicationId
+            const idx = mockApplications.findIndex(item =>
+                item.applicationId === applicationId || item.ApplicationId === applicationId
             )
-            console.log(`[mock] 审核申请 ${applicationId}，结果: ${checkStatus}，剩余 ${mockApiData.length} 条待审核`)
+            if (idx >= 0) mockApplications.splice(idx, 1)
+            console.log(`[mock] 审核申请 ${applicationId}，结果: ${checkStatus}，剩余 ${mockApplications.length} 条待审核`)
             return
         }
         const payload={

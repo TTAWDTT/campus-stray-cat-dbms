@@ -19,6 +19,7 @@ import { AdoptionPage} from '../features/adoption/pages/AdoptionPage'
 import { VolunteerPage } from '../features/volunteer/pages/VolunteerPage'
 import { VisitPage } from '../features/volunteer/pages/VisitPage'
 import { AdoptionCheckPage } from '../features/volunteer/pages/AdoptionCheckPage'
+import { ActivityPage } from '../features/volunteer/pages/ActivityPage'
 
 function AdminOnly({ children }: { children: ReactNode }) {
   const role = useAuthStore((state) => state.user?.roleName?.toUpperCase());
@@ -50,6 +51,7 @@ export default function App() {
             <Route path='volunteer' element={<VolunteerPage/>}/>
             <Route path="volunteer/visits" element={<VisitPage/>} />
             <Route path="volunteer/adoptions" element={<AdoptionCheckPage/>} />
+            <Route path="volunteer/activity" element={<ActivityPage/>} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
