@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="B组_A组补充问题互测" tests="7" time="0.158">
+  <testsuite name="01 管理员真实登录" id="cc65a6af-02c4-4745-a390-b097b3ba3e36" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="0" errors="0" time="0.059">
+    <testcase name="登录返回 200" time="0.059" classname="01"/>
+    <testcase name="登录响应包含 Token" time="0.059" classname="01"/>
+  </testsuite>
+  <testsuite name="02 动态取得已有角色 ID" id="4ebb2bd1-7a59-4106-960e-65c27006f36a" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="0" errors="0" time="0.010">
+    <testcase name="角色列表返回 200" time="0.010" classname="02Id"/>
+    <testcase name="至少存在一个角色" time="0.010" classname="02Id"/>
+  </testsuite>
+  <testsuite name="03 动态取得已解除黑名单 ID" id="aaee3a93-b175-44aa-af5e-6ca65177ec54" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="0" errors="0" time="0.020">
+    <testcase name="已解除黑名单列表返回 200" time="0.020" classname="03Id"/>
+    <testcase name="至少存在一条已解除记录" time="0.020" classname="03Id"/>
+  </testsuite>
+  <testsuite name="A-12 补充1 重复 roleID 应返回409" id="e6da46e6-ce82-485f-8b85-fefa2706a9ec" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="2" errors="0" time="0.042">
+    <testcase name="重复 roleID 返回 409" time="0.042" classname="A121RoleId409">
+      <failure type="AssertionFailure" message="expected response to have status code 409 but got 500">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-12 补充1 重复 roleID 应返回409.]]>
+        <![CDATA[Test description: 重复 roleID 返回 409.]]>
+        <![CDATA[Error message: expected response to have status code 409 but got 500.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 409 but got 500
+   at Object.eval sandbox-script.js:1:4).]]>
+      </failure>
+    </testcase>
+    <testcase name="响应不泄露 Oracle 异常" time="0.042" classname="A121RoleId409">
+      <failure type="AssertionFailure" message="expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-12 补充1 重复 roleID 应返回409.]]>
+        <![CDATA[Test description: 响应不泄露 Oracle 异常.]]>
+        <![CDATA[Error message: expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'
+   at Object.eval sandbox-script.js:2:4).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-12 补充2 省略 roleID 应返回400" id="e7d434db-f960-4bd4-b48d-43786bb0e3e6" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="2" errors="0" time="0.013">
+    <testcase name="省略 roleID 返回 400" time="0.013" classname="A122RoleId400">
+      <failure type="AssertionFailure" message="expected response to have status code 400 but got 500">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-12 补充2 省略 roleID 应返回400.]]>
+        <![CDATA[Test description: 省略 roleID 返回 400.]]>
+        <![CDATA[Error message: expected response to have status code 400 but got 500.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 400 but got 500
+   at Object.eval sandbox-script.js:1:5).]]>
+      </failure>
+    </testcase>
+    <testcase name="响应不泄露 Oracle 异常" time="0.013" classname="A122RoleId400">
+      <failure type="AssertionFailure" message="expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-12 补充2 省略 roleID 应返回400.]]>
+        <![CDATA[Test description: 响应不泄露 Oracle 异常.]]>
+        <![CDATA[Error message: expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected 'Oracle.ManagedDataAccess.Client.Oracl…' to not include 'ORA-'
+   at Object.eval sandbox-script.js:2:5).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-19 补充1 空对象应按资源状态返回409" id="68a66866-893a-497c-96c7-20383acffa7f" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="2" errors="0" time="0.006">
+    <testcase name="可选 releaseReason 省略后返回 409" time="0.006" classname="A191409">
+      <failure type="AssertionFailure" message="expected response to have status code 409 but got 400">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-19 补充1 空对象应按资源状态返回409.]]>
+        <![CDATA[Test description: 可选 releaseReason 省略后返回 409.]]>
+        <![CDATA[Error message: expected response to have status code 409 but got 400.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 409 but got 400
+   at Object.eval sandbox-script.js:1:6).]]>
+      </failure>
+    </testcase>
+    <testcase name="响应说明记录已经解除" time="0.006" classname="A191409">
+      <failure type="AssertionFailure" message="expected '{&quot;type&quot;:&quot;https://tools.ietf.org/html/…' to include '已被解除'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: 6e92ff76-5647-4bbb-a8b7-1cbac9cb9096.]]>
+        <![CDATA[Collection name: B组_A组补充问题互测.]]>
+        <![CDATA[Request name: A-19 补充1 空对象应按资源状态返回409.]]>
+        <![CDATA[Test description: 响应说明记录已经解除.]]>
+        <![CDATA[Error message: expected '{"type":"https://tools.ietf.org/html/…' to include '已被解除'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected '{"type":"https://tools.ietf.org/html/…' to include '已被解除'
+   at Object.eval sandbox-script.js:2:6).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="A-19 补充2 提供 releaseReason 后返回409" id="bb338c67-4af9-4b6a-97b9-e94a51c1d99e" timestamp="2026-08-09T07:01:55.583Z" tests="2" failures="0" errors="0" time="0.008">
+    <testcase name="提供 releaseReason 后返回 409" time="0.008" classname="A192ReleaseReason409"/>
+    <testcase name="响应说明记录已经解除" time="0.008" classname="A192ReleaseReason409"/>
+  </testsuite>
+</testsuites>
