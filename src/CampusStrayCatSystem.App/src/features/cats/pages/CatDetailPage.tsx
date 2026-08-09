@@ -9,6 +9,8 @@ import type { CatPhoto, CatSummary } from '../../../types/cats';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { PageHeader } from '../../../shared/components/PageHeader';
 import { StatusTag } from '../../../shared/components/StatusTag';
+import { campusService } from '../../campus/services/campus.service';
+import type { CatSighting } from '../../campus/types/campus';
 
 const genderLabel: Record<string, string> = { UNKNOWN: '未知', MALE: '公猫', FEMALE: '母猫' };
 const lifeLabel: Record<string, string> = { ON_CAMPUS: '在校园', MISSING: '失踪', ADOPTED: '已领养', DECEASED: '已离世' };
@@ -47,6 +49,7 @@ export function CatDetailPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [cat, setCat] = useState<CatSummary | null>(null);
   const [photos, setPhotos] = useState<CatPhoto[]>([]);
+  const [recentSightings, setRecentSightings] = useState<CatSighting[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +63,7 @@ export function CatDetailPage() {
       const [catResult, photoResult] = await Promise.all([catsService.get(catId), catsService.photos(catId)]);
       setCat(catResult);
       setPhotos(photoResult);
+      setRecentSightings(await campusService.recentSightings(catId, 5).catch(() => []));
     } catch (loadError) {
       setError(readError(loadError));
     } finally {
@@ -123,6 +127,7 @@ export function CatDetailPage() {
       <PageHeader kicker="CAT PROFILE" title={cat.catName || '未命名猫咪'} icon="icon-critterpedia" actions={<Button type="default" onClick={() => navigate('/cats')}><Icon name="icon-map" size={15} />返回档案</Button>} />
       {error && <div className="cats-alert" role="alert"><Icon name="icon-camera" size={17} /><span>{error}</span><Button type="text" size="small" onClick={() => setError('')}>知道了</Button></div>}
       <div className="cat-detail-top"><Card className="cat-detail-cover">{primaryPhoto ? <img src={resolvePhotoUrl(primaryPhoto.photoUrl)} alt={`${cat.catName || '猫咪'}主图`} /> : <div className="cat-detail-no-cover"><Icon name="icon-critterpedia" size={42} /><span>暂时还没有照片</span></div>}{primaryPhoto && <Tag className="cat-detail-cover-tag" color="app-yellow" variant="soft">主图</Tag>}</Card><Card className="cat-detail-facts"><div className="cat-detail-facts-heading"><div><small>PROFILE NOTES</small><h2>{cat.catName || '未命名猫咪'}</h2></div><StatusTag value={cat.lifeStatus || 'ON_CAMPUS'} label={lifeLabel[cat.lifeStatus || 'ON_CAMPUS'] || cat.lifeStatus || '未知'} /></div><div className="cat-detail-fact-grid"><div><span>性别</span><strong>{genderLabel[cat.gender || 'UNKNOWN'] || '未知'}</strong></div><div><span>花色</span><strong>{cat.colorPattern || '未记录'}</strong></div><div><span>品种</span><strong>{cat.breed || '未记录'}</strong></div><div><span>活动区域</span><strong>{cat.mainAreaName || cat.mainAreaId || '暂未关联'}</strong></div><div><span>绝育</span><strong>{cat.sterilizedFlag === 1 ? '已绝育' : '未绝育'}</strong></div><div><span>剪耳</span><strong>{cat.earTipFlag === 1 ? '已剪耳' : '未剪耳'}</strong></div></div>{cat.personalityTags && <div className="cat-detail-personality"><span>性格标签</span><div>{cat.personalityTags.split(',').map((tag) => <Tag key={tag} color="app-teal" variant="soft" size="small">{tag.trim()}</Tag>)}</div></div>}</Card></div>
+      <Card className="cat-sightings-card"><div className="cat-sightings-heading"><div><h2>最近目击</h2><p>{recentSightings.length ? `最近记录了 ${recentSightings.length} 次校园相遇。` : '还没有这只猫咪的目击记录。'}</p></div><Button type="default" onClick={() => navigate('/campus')}><Icon name="icon-map" size={15} />去校园地图</Button></div>{recentSightings.length ? <div className="cat-sighting-list">{recentSightings.map((sighting) => <div className="cat-sighting-item" key={sighting.sightingID}><span className="cat-sighting-icon"><Icon name="icon-map" size={16} /></span><span><strong>{sighting.areaName || cat.mainAreaName || '未知区域'}</strong><small>{displayTime(sighting.sightingTime)}{sighting.remark ? ` · ${sighting.remark}` : ''}</small></span></div>)}</div> : <div className="cat-sightings-empty"><Icon name="icon-map" size={25} /><span>在校园地图中记录第一次目击吧。</span></div>}</Card>
       <Card className="cat-photos-card"><div className="cat-photos-heading"><div><h2>猫咪照片</h2><p>{photos.length ? `共 ${photos.length} 张照片 · 最近上传于 ${displayTime(photos[photos.length - 1]?.uploadTime)}` : '照片会在这里形成这只猫咪的识别记录。'}</p></div>{canManage && <><input ref={fileInput} className="cat-photo-input" type="file" accept="image/jpeg,image/png" onChange={(event) => void upload(event)} /><Button type="primary" loading={uploading} onClick={() => fileInput.current?.click()}><Icon name="icon-camera" size={16} />上传照片</Button></>}</div>{notice && <div className="cat-detail-notice"><Tag color="app-green" variant="soft">{notice}</Tag></div>}{photos.length ? <div className="cat-photo-grid">{photos.map((photo) => <div className={photo.isPrimary === 1 ? 'cat-photo-item primary' : 'cat-photo-item'} key={photo.photoID}><img src={resolvePhotoUrl(photo.photoUrl)} alt={`${cat.catName || '猫咪'}照片`} /><div className="cat-photo-overlay"><span>{photo.isPrimary === 1 ? '主图' : displayTime(photo.uploadTime)}</span>{canManage && <div>{photo.isPrimary !== 1 && <Button type="default" size="small" onClick={() => void setPrimary(photo)}>设为主图</Button>}<Button type="default" size="small" onClick={() => void deletePhoto(photo)}>删除</Button></div>}</div></div>)}</div> : <div className="cat-photo-empty"><Icon name="icon-camera" size={30} /><strong>还没有照片</strong><p>{canManage ? '上传一张清晰的照片，帮助大家在校园里认出它。' : '管理员或志愿者上传照片后，这里会展示识别记录。'}</p></div>}</Card>
     </section>
   );
