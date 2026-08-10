@@ -10,14 +10,18 @@ import { SharedComponentsPreview } from '../shared/components/SharedComponentsPr
 import { CatsPage } from '../features/cats/pages/CatsPage';
 import { CatDetailPage } from '../features/cats/pages/CatDetailPage';
 import { CampusPage } from '../features/campus/pages/CampusPage';
+import { SystemPage } from '../features/system/pages/SystemPage';
 import { useAuthStore } from '../stores/auth.store';
 import { FinancePage } from '../features/finance/pages/FinancePage'
 import { ProjectPage } from '../features/finance/pages/ProjectPage'
 import { RecordsPage } from '../features/finance/pages/RecordsPage'
 import { StatisticsPage } from '../features/finance/pages/StatisticsPage'
 function AdminOnly({ children }: { children: ReactNode }) {
-  const role = useAuthStore((state) => state.user?.roleName?.toUpperCase());
-  return role === 'ADMIN' ? children : <Navigate to="/" replace />;
+  const user = useAuthStore((state) => state.user);
+  const role = user?.roleName?.trim().toUpperCase();
+  const permissions = (user?.permissionScope || '').split(',').map((permission) => permission.trim().toUpperCase());
+  const canManageSystem = role === 'ADMIN' || permissions.some((permission) => ['USER_MANAGE', 'ROLE_MANAGE', 'BLACKLIST_MANAGE'].includes(permission));
+  return canManageSystem ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
@@ -40,6 +44,7 @@ export default function App() {
             <Route path="finance/projects" element={<ProjectPage />} />
             <Route path="finance/records" element={<RecordsPage />} />
             <Route path="finance/statistics" element={<StatisticsPage />} />
+            <Route path="system" element={<AdminOnly><SystemPage /></AdminOnly>} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

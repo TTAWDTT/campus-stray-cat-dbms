@@ -27,6 +27,26 @@ namespace CampusStrayCatSystem.Core
             return Ok(await _repository.GetPendingApplicationsAsync());
         }
 
+        [HttpGet("applications")]
+        [Authorize(Roles = "ADMIN,VOLUNTEER")]
+        public async Task<ActionResult<IEnumerable<AdoptionPendingAppDto>>> GetApplications([FromQuery] string? status = "APPROVED")
+        {
+            var targetStatus = string.IsNullOrWhiteSpace(status) ? "APPROVED" : status.Trim().ToUpperInvariant();
+            if (targetStatus is not ("PENDING" or "APPROVED" or "REJECTED"))
+                return BadRequest(new { message = "status 只能是 PENDING、APPROVED 或 REJECTED。" });
+
+            return Ok(await _repository.GetApplicationsByStatusAsync(targetStatus));
+        }
+
+        [HttpGet("my-applications")]
+        public async Task<ActionResult<IEnumerable<AdoptionPendingAppDto>>> GetMyApplications()
+        {
+            var userId = CurrentUserId();
+            if (userId == null) return Unauthorized();
+
+            return Ok(await _repository.GetApplicationsByApplicantAsync(userId));
+        }
+
         [HttpGet("visits")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<ActionResult<IEnumerable<AdoptionVisitSummaryDto>>> GetVisitSummary()

@@ -10,6 +10,7 @@ PROMPT ===== Rebuilding campus stray cat database =====;
 @@queries/task_17_18_19_oracle_programming.sql
 @@queries/rescue_care_oracle_programming.sql
 @@queries/a_group_demo_data.sql
+@@queries/team_admin_accounts.sql
 @@insert_demo_data.sql
 
 PROMPT ===== Campus stray cat database is ready =====;

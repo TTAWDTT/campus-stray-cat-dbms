@@ -1,0 +1,3709 @@
+{
+  "info": {
+    "_postman_id": "852d4598-9bea-4107-a006-6bea79b1394c",
+    "name": "A组_B组接口完整互测",
+    "description": "A测B。严格对照 docs/B组_猫咪档案与校园位置接口文档.md 与提交模板 B-01~B-39。\n归档用 DELETE /api/cats/{id}；区域用 roots/hierarchy/children。\n编码字典见文档 §1。\n先跑 00 登录；Environment 填 testPassword（勿提交仓库）。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5047"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "volunteerToken",
+      "value": ""
+    },
+    {
+      "key": "userToken",
+      "value": ""
+    },
+    {
+      "key": "testPassword",
+      "value": ""
+    },
+    {
+      "key": "catId",
+      "value": ""
+    },
+    {
+      "key": "archivePhotoCatId",
+      "value": ""
+    },
+    {
+      "key": "areaId",
+      "value": ""
+    },
+    {
+      "key": "childAreaId",
+      "value": ""
+    },
+    {
+      "key": "pointId",
+      "value": ""
+    },
+    {
+      "key": "nestId",
+      "value": ""
+    },
+    {
+      "key": "sightingId",
+      "value": ""
+    },
+    {
+      "key": "photoId",
+      "value": ""
+    },
+    {
+      "key": "candidateId",
+      "value": ""
+    },
+    {
+      "key": "demoAreaId",
+      "value": "demo-area-library"
+    },
+    {
+      "key": "demoCatId",
+      "value": "demo-cat-campus-001"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 准备-登录",
+      "item": [
+        {
+          "name": "00-01 管理员登录 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "let d=pm.response.json(); if(d.token) pm.collectionVariables.set('adminToken', d.token); pm.test('ADMIN',()=>pm.expect(d.roleName).to.eql('ADMIN'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"a_group_admin\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "00-02 志愿者登录 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "let d=pm.response.json(); if(d.token) pm.collectionVariables.set('volunteerToken', d.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"a_group_volunteer\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "00-03 普通用户登录 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "let d=pm.response.json(); if(d.token) pm.collectionVariables.set('userToken', d.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"a_group_user\",\n  \"password\": \"{{testPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-01~05 猫咪档案",
+      "item": [
+        {
+          "name": "B-01-01 列表 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('数组',()=>pm.expect(pm.response.json()).to.be.an('array'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-01-02 lifeStatus过滤 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats?lifeStatus=ON_CAMPUS",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-01-03 非法lifeStatus [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats?lifeStatus=BAD",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-01-04 非法archiveStatus [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats?archiveStatus=BAD",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-02-01 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{demoCatId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-02-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/no-cat-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-03-00 缺花色对照文档可选 [文档不一致]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('文档写 colorPattern 可选：若实现强制必填则记 BUG-B（当前实现多返回400）', () => {",
+                  "  // 不强制断言通过：记录实际状态码",
+                  "  console.log('B-03-00 actual status', pm.response.code, pm.response.text());",
+                  "  pm.expect([201,400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 400) {",
+                  "  pm.test('实现要求花色必填，与文档“否”不一致 → 应提 BUG-B', () => pm.expect(pm.response.text()).to.include('花色'));",
+                  "}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/cats",
+            "description": "官方文档 colorPattern 必填=否；实现 [Required] 花色不能为空。此条用于提交 BUG。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catName\": \"缺花色探针\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-03-01 管理员新增 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){",
+                  "  const id=d.catID||d.CatID||d.catId;",
+                  "  if(id) pm.collectionVariables.set('catId', id);",
+                  "}",
+                  "pm.test('捕获 catID', () => pm.expect(pm.collectionVariables.get('catId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"A测B互测猫\",\n  \"gender\": \"UNKNOWN\",\n  \"sterilizedFlag\": 0,\n  \"earTipFlag\": 0,\n  \"mainAreaId\": \"{{demoAreaId}}\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-03-02 区域不存在 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"坏区域\",\n  \"mainAreaId\": \"no-area-zzz\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-03-03 未登录 [401]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [401]', () => pm.expect([401]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [401]",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"匿名\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-03-04 普通用户 [403]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [403]', () => pm.expect([403]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [403]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"用户建\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-04-01 更新 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats/{{catId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"A测B互测猫-改\",\n  \"gender\": \"FEMALE\",\n  \"sterilizedFlag\": 0,\n  \"earTipFlag\": 0,\n  \"mainAreaId\": \"{{demoAreaId}}\",\n  \"lifeStatus\": \"ON_CAMPUS\",\n  \"archiveStatus\": \"PUBLISHED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-04-00 更新缺绝育剪耳标志 [文档不一致]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('文档写 sterilizedFlag/earTipFlag 可选；实现若400则记 BUG', () => pm.expect([204,400]).to.include(pm.response.code));",
+                  "if (pm.response.code === 400) { pm.test('实现强制必填，与文档不一致', () => pm.expect(pm.response.text()).to.match(/绝育|剪耳/)); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/cats/{{catId}}",
+            "description": "对照文档：更新字段与新增相同且 sterilizedFlag/earTipFlag 为否；实现 UpdateCatRequest 标 [Required]。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"探针更新\",\n  \"gender\": \"MALE\",\n  \"lifeStatus\": \"ON_CAMPUS\",\n  \"archiveStatus\": \"PUBLISHED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-04-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats/no-cat-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"x\",\n  \"gender\": \"UNKNOWN\",\n  \"sterilizedFlag\": 0,\n  \"earTipFlag\": 0,\n  \"lifeStatus\": \"ON_CAMPUS\",\n  \"archiveStatus\": \"DRAFT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-05-01 DELETE归档 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}",
+            "description": "文档/模板：DELETE 执行归档而非物理删除",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-05-02 归档后再查详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "let d=pm.response.json(); pm.test('归档状态',()=>pm.expect(String(d.archiveStatus||'').toUpperCase()).to.eql('ARCHIVED'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-05-03 不存在归档 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/no-cat-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-05-04 再建活跃猫供后续 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){",
+                  "  const id=d.catID||d.CatID||d.catId;",
+                  "  if(id) pm.collectionVariables.set('catId', id);",
+                  "}",
+                  "pm.test('捕获 catID', () => pm.expect(pm.collectionVariables.get('catId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"colorPattern\": \"狸花\",\n  \"catName\": \"A测B活跃猫\",\n  \"gender\": \"MALE\",\n  \"mainAreaId\": \"{{demoAreaId}}\",\n  \"lifeStatus\": \"ON_CAMPUS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-06~13 校园区域",
+      "item": [
+        {
+          "name": "B-06-01 条件查询 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-06-02 areaType过滤 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas?areaType=PUBLIC_AREA",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-07-01 根区域 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/roots",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-08-01 层级 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/hierarchy",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-09-01 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{demoAreaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-09-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/no-area-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-10-01 下级区域 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{demoAreaId}}/children",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-10-02 父不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/no-area-zzz/children",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-11-01 新增区域 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.areaID||d.AreaID||d.areaId; if(id) pm.collectionVariables.set(\"areaId\", id); }",
+                  "pm.test('捕获 areaId', () => pm.expect(pm.collectionVariables.get('areaId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaName\": \"A测B区域\",\n  \"campusName\": \"嘉定校区\",\n  \"areaType\": \"PUBLIC_AREA\",\n  \"riskLevel\": \"LOW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-11-02 缺名称 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campusName\": \"嘉定校区\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-12-01 更新 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas/{{areaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaName\": \"A测B区域-改\",\n  \"campusName\": \"嘉定校区\",\n  \"areaType\": \"GREENBELT\",\n  \"riskLevel\": \"MEDIUM\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-12-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas/no-area-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaName\": \"x\",\n  \"areaType\": \"GATE\",\n  \"riskLevel\": \"LOW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-13-prep 子区域 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.areaID||d.AreaID||d.areaId; if(id) pm.collectionVariables.set(\"childAreaId\", id); }",
+                  "pm.test('捕获 childAreaId', () => pm.expect(pm.collectionVariables.get('childAreaId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaName\": \"A测B子区\",\n  \"parentAreaID\": \"{{areaId}}\",\n  \"areaType\": \"ACTIVITY_AREA\",\n  \"riskLevel\": \"LOW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-13-01 有子区域删冲突 [409]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [409]', () => pm.expect([409]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{areaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [409]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-13-02 删子区 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{childAreaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-13-03 删父区 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{areaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-13-04 再删 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/campus-areas/{{areaId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-13-05 重建区域供点位 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.areaID||d.AreaID||d.areaId; if(id) pm.collectionVariables.set(\"areaId\", id); }",
+                  "pm.test('捕获 areaId', () => pm.expect(pm.collectionVariables.get('areaId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campus-areas",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaName\": \"A测B服务区\",\n  \"campusName\": \"嘉定校区\",\n  \"areaType\": \"PUBLIC_AREA\",\n  \"riskLevel\": \"LOW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-14~18 服务点",
+      "item": [
+        {
+          "name": "B-14-01 列表 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-14-02 普通用户权限抽检",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200, 401, 403]', () => pm.expect([200, 401, 403]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points",
+            "description": "文档要求管理员/志愿者；若普通用户200则记文档不一致",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-15-01 详情依赖列表首条或新建后ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200, 404]', () => pm.expect([200, 404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points/{{pointId}}",
+            "description": "若 pointId 尚未创建会404，先跑 B-16",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-16-01 新增 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.pointID||d.PointID||d.pointId; if(id) pm.collectionVariables.set(\"pointId\", id); }",
+                  "pm.test('捕获 pointID', () => pm.expect(pm.collectionVariables.get('pointId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/service-points",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"A测B投喂点\",\n  \"pointType\": \"FEEDING\",\n  \"longitude\": 121.21,\n  \"latitude\": 31.28,\n  \"facilityStatus\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-15-02 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points/{{pointId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-15-03 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points/no-point-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-16-02 缺字段 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/service-points",
+            "description": "文档要求参数非法应400；若返回201（允许缺 areaID）则记 BUG-B：服务点写入校验过松。",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointName\": \"无区域\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-17-01 更新 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/service-points/{{pointId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"A测B投喂点-改\",\n  \"pointType\": \"FEEDING\",\n  \"longitude\": 121.22,\n  \"latitude\": 31.29,\n  \"facilityStatus\": \"MAINTENANCE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-17-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/service-points/no-point-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"x\",\n  \"pointType\": \"NEST\",\n  \"facilityStatus\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-18-01 删除 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points/{{pointId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-18-02 再删 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/service-points/{{pointId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-18-03 重建NEST点 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.pointID||d.PointID||d.pointId; if(id) pm.collectionVariables.set(\"pointId\", id); }",
+                  "pm.test('捕获 pointID', () => pm.expect(pm.collectionVariables.get('pointId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/service-points",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"areaID\": \"{{areaId}}\",\n  \"pointName\": \"A测B猫窝\",\n  \"pointType\": \"NEST\",\n  \"longitude\": 121.21,\n  \"latitude\": 31.28,\n  \"facilityStatus\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-19~23 猫窝维护",
+      "item": [
+        {
+          "name": "B-19-01 列表 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nest-maintenance-records",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-21-01 新增 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){",
+                  "  const id=d.maintenanceID||d.MaintenanceID||d.id;",
+                  "  if(id) pm.collectionVariables.set('nestId', id);",
+                  "}",
+                  "pm.test('捕获 maintenanceID', () => pm.expect(pm.collectionVariables.get('nestId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nest-maintenance-records",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointID\": \"{{pointId}}\",\n  \"materialType\": \"INSULATION_BOX\",\n  \"checkTime\": \"2026-08-10T10:00:00Z\",\n  \"weatherCondition\": \"SUNNY\",\n  \"damageLevel\": \"NONE\",\n  \"actionType\": \"CLEAN\",\n  \"remark\": \"A测B\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-20-01 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nest-maintenance-records/{{nestId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-20-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/nest-maintenance-records/no-nest-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-21-02 点位不存在 [404,400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404, 400]', () => pm.expect([404, 400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nest-maintenance-records",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404, 400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointID\": \"no-point-zzz\",\n  \"damageLevel\": \"MINOR\",\n  \"actionType\": \"REPAIR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-22-01 更新 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/nest-maintenance-records/{{nestId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pointID\": \"{{pointId}}\",\n  \"materialType\": \"FOOD_BOWL\",\n  \"checkTime\": \"2026-08-10T11:00:00Z\",\n  \"weatherCondition\": \"CLOUDY\",\n  \"damageLevel\": \"MINOR\",\n  \"actionType\": \"REPAIR\",\n  \"remark\": \"A测B-改\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-23-01 删除 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/nest-maintenance-records/{{nestId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-23-02 再删 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/nest-maintenance-records/{{nestId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-24~29 目击记录",
+      "item": [
+        {
+          "name": "B-24-01 列表 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-24-02 时间非法 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings?from=2026-08-10T12:00:00Z&to=2026-08-01T12:00:00Z",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-27-01 登录新增 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){",
+                  "  const id=d.sightingID||d.SightingID||d.sightingId||d.id;",
+                  "  if(id) pm.collectionVariables.set('sightingId', id);",
+                  "}",
+                  "pm.test('捕获 sightingID', () => pm.expect(pm.collectionVariables.get('sightingId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cat-sightings",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"areaID\": \"{{demoAreaId}}\",\n  \"longitude\": 121.21,\n  \"latitude\": 31.28,\n  \"remark\": \"A测B目击\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-25-01 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-25-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/no-sight-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-26-01 最近目击 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/recent/by-cat/{{demoCatId}}?limit=5",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-26-02 limit非法 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/recent/by-cat/{{demoCatId}}?limit=0",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-27-02 未登录 [401]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [401]', () => pm.expect([401]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cat-sightings",
+            "description": "对照 B组接口文档 / 提交模板；预期 [401]",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"areaID\": \"{{demoAreaId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-27-03 关联非法 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400, 404]', () => pm.expect([400, 404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cat-sightings",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400, 404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catID\": \"no-cat-zzz\",\n  \"areaID\": \"no-area-zzz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-28-01 志愿者更新 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"areaID\": \"{{demoAreaId}}\",\n  \"remark\": \"目击-改\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-28-02 普通用户更新 [403]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [403]', () => pm.expect([403]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [403]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"catID\": \"{{catId}}\",\n  \"areaID\": \"{{demoAreaId}}\",\n  \"remark\": \"用户改\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-29-01 管理员删除 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-29-02 再删 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cat-sightings/{{sightingId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-30~35 猫咪照片",
+      "item": [
+        {
+          "name": "B-30-01 列表 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-32-01 上传 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.photoID||d.PhotoID||d.photoId; if(id) pm.collectionVariables.set(\"photoId\", id); }",
+                  "pm.test('捕获 photoID', () => pm.expect(pm.collectionVariables.get('photoId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos",
+            "description": "文件失效时在 Postman 重选仓库根目录 logo.png",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "test-cat.png"
+                },
+                {
+                  "key": "isPrimary",
+                  "type": "text",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-31-01 详情 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-31-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/no-photo-zzz",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-34-01 特征 [200/404/500]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200, 404, 500]', () => pm.expect([200, 404, 500]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}/feature",
+            "description": "按实际结果对照文档记录",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-33-01 设主图 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}/primary",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-33-02 不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/no-photo-zzz/primary",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-32-02 无文件 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "isPrimary",
+                  "type": "text",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-32-03 猫不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/no-cat-zzz/photos",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "test-cat.png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-35-01 删除 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-35-02 再删 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{catId}}/photos/{{photoId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-35-03 归档猫上传前置建猫 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){ const id=d.catID||d.CatID||d.catId; if(id) pm.collectionVariables.set(\"archivePhotoCatId\", id); }",
+                  "pm.test('捕获 archivePhotoCatId', () => pm.expect(pm.collectionVariables.get('archivePhotoCatId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cats",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"colorPattern\": \"狸花\",\n  \"catName\":\"归档上传猫\",\"lifeStatus\":\"ON_CAMPUS\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-35-04 归档该猫 [204]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [204]', () => pm.expect([204]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{archivePhotoCatId}}",
+            "description": "对照 B组接口文档 / 提交模板；预期 [204]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-35-05 归档猫上传 [409]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [409]', () => pm.expect([409]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/cats/{{archivePhotoCatId}}/photos",
+            "description": "对照 B组接口文档 / 提交模板；预期 [409]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "test-cat.png"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B-36~39 命名投票",
+      "item": [
+        {
+          "name": "B-36-01 未登录 [401]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [401]', () => pm.expect([401]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [401]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-36-02 登录查询 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-36-03 猫不存在 [404]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [404]', () => pm.expect([404]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/cats/no-cat-zzz/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [404]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-37-01 发布候选 [201]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [201]', () => pm.expect([201]).to.include(pm.response.code));",
+                  "let d=null; try{d=pm.response.json();}catch(e){}",
+                  "if(d){",
+                  "  const id=d.candidateID||d.CandidateID||d.candidateId||d.id;",
+                  "  if(id) pm.collectionVariables.set('candidateId', id);",
+                  "}",
+                  "pm.test('捕获 candidateID', () => pm.expect(pm.collectionVariables.get('candidateId')).to.be.ok);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [201]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"candidateName\": \"互测名A\",\n  \"deadline\": \"2026-12-31T23:59:59Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-37-02 空名 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"candidateName\":\"\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-37-03 截止已过 [400]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [400]', () => pm.expect([400]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [400]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"candidateName\":\"过期名\",\"deadline\":\"2020-01-01T00:00:00Z\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-37-04 普通用户 [403]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [403]', () => pm.expect([403]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/naming-votes/cats/{{catId}}/candidates",
+            "description": "对照 B组接口文档 / 提交模板；预期 [403]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"candidateName\":\"用户名\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-38-01 投票 [200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200]', () => pm.expect([200]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/vote",
+            "description": "对照 B组接口文档 / 提交模板；预期 [200]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-38-02 重复投票 [409]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [409]', () => pm.expect([409]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/vote",
+            "description": "对照 B组接口文档 / 提交模板；预期 [409]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-38-03 未登录 [401]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [401]', () => pm.expect([401]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/vote",
+            "description": "对照 B组接口文档 / 提交模板；预期 [401]",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "B-39-01 截止前定名应409 [409]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [409]', () => pm.expect([409]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/winner",
+            "description": "对照 B组接口文档 / 提交模板；预期 [409]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-39-02 非管理员 [403]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [403]', () => pm.expect([403]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/winner",
+            "description": "对照 B组接口文档 / 提交模板；预期 [403]",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{volunteerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-39-03 截止后定名（需先改库deadline）[200]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test('状态码 [200, 409]', () => pm.expect([200, 409]).to.include(pm.response.code));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/naming-votes/candidates/{{candidateId}}/winner",
+            "description": "先在 Oracle 将候选 DEADLINE 改到过去，再跑本条；未改库时可能仍409，按实际记录",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

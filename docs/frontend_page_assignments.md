@@ -116,6 +116,8 @@ TNR 使用“发现 → 捕捉 → 绝育 → 恢复 → 放归”时间线；�
 领养接口：
 
 - `/api/adoption-workflow/pending`
+- `/api/adoption-workflow/applications?status=APPROVED`
+- `/api/adoption-workflow/my-applications`
 - `/api/adoption-workflow/visits`
 - `/api/adoption-workflow/applications`
 - `/api/adoption-workflow/applications/{applicationId}/review`
@@ -140,7 +142,7 @@ TNR 使用“发现 → 捕捉 → 绝育 → 恢复 → 放归”时间线；�
 
 按钮：提交领养申请、审核通过/驳回、添加回访、注册志愿者、新建排班、签到、上传签到照片、查看积分、新增投喂任务、更新任务状态、提交投喂记录、发起/确认/拒绝/撤销交接。
 
-当前领养接口没有“查询当前用户本人申请”的接口，提交接口也没有返回申请编号，正式开发前建议补充 `GET /api/adoption-workflow/my-applications` 并返回 `applicationId`。
+普通用户提交申请后调用 `/api/adoption-workflow/my-applications` 查看自己的申请状态；管理员或志愿者调用 `/api/adoption-workflow/applications?status=APPROVED` 获取可回访申请。
 
 ### 页面七：财务公示
 
