@@ -17,13 +17,16 @@ namespace CampusStrayCatSystem.Core
     {
         private readonly IEmergencyReportRepository _reportRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ICampusAreaRepository _areaRepository;
 
         public EmergencyReportsController(
             IEmergencyReportRepository reportRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ICampusAreaRepository areaRepository)
         {
             _reportRepository = reportRepository;
             _userRepository = userRepository;
+            _areaRepository = areaRepository;
         }
 
         /// <summary>
@@ -76,6 +79,12 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(report.AreaID))
             {
                 return BadRequest("区域 ID 不能为空。");
+            }
+
+            report.AreaID = report.AreaID.Trim();
+            if (await _areaRepository.GetByIdAsync(report.AreaID) == null)
+            {
+                return NotFound($"未找到区域 {report.AreaID}。");
             }
 
             if (string.IsNullOrWhiteSpace(report.AnimalType) || !AnimalTypes.IsValid(report.AnimalType))

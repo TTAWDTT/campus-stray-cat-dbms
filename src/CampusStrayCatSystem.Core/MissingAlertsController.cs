@@ -16,10 +16,23 @@ namespace CampusStrayCatSystem.Core
     public class MissingAlertsController : ControllerBase
     {
         private readonly IMissingAlertRepository _missingAlertRepository;
+        private readonly ICatRepository _catRepository;
+        private readonly ICampusAreaRepository _areaRepository;
+        private readonly ICatSightingRepository _sightingRepository;
+        private readonly IUserRepository _userRepository;
 
-        public MissingAlertsController(IMissingAlertRepository missingAlertRepository)
+        public MissingAlertsController(
+            IMissingAlertRepository missingAlertRepository,
+            ICatRepository catRepository,
+            ICampusAreaRepository areaRepository,
+            ICatSightingRepository sightingRepository,
+            IUserRepository userRepository)
         {
             _missingAlertRepository = missingAlertRepository;
+            _catRepository = catRepository;
+            _areaRepository = areaRepository;
+            _sightingRepository = sightingRepository;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -43,6 +56,11 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(catId))
             {
                 return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            if (!await _catRepository.Exists(catId.Trim()))
+            {
+                return NotFound($"未找到猫咪 {catId}。");
             }
 
             var alerts = await _missingAlertRepository.GetByCatId(catId);
@@ -82,9 +100,21 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            sighting.CatID = sighting.CatID.Trim();
+            if (!await _catRepository.Exists(sighting.CatID))
+            {
+                return NotFound($"未找到猫咪 {sighting.CatID}。");
+            }
+
             if (string.IsNullOrWhiteSpace(sighting.AreaID))
             {
                 return BadRequest("区域 ID 不能为空。");
+            }
+
+            sighting.AreaID = sighting.AreaID.Trim();
+            if (await _areaRepository.GetByIdAsync(sighting.AreaID) == null)
+            {
+                return NotFound($"未找到区域 {sighting.AreaID}。");
             }
 
             if (sighting.SightingTime == null)
@@ -116,6 +146,34 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            alert.CatID = alert.CatID.Trim();
+            if (!await _catRepository.Exists(alert.CatID))
+            {
+                return NotFound($"未找到猫咪 {alert.CatID}。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(alert.LastSightingID))
+            {
+                alert.LastSightingID = alert.LastSightingID.Trim();
+                var sighting = await _sightingRepository.GetByIdAsync(alert.LastSightingID);
+                if (sighting == null)
+                {
+                    return NotFound($"未找到最后目击记录 {alert.LastSightingID}。");
+                }
+
+                if (!string.Equals(sighting.CatID, alert.CatID, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("最后目击记录不属于该猫咪。");
+                }
+            }
+
+            var existingAlerts = await _missingAlertRepository.GetByCatId(alert.CatID);
+            if (existingAlerts.Any(existing =>
+                    string.Equals(existing.AlertStatus, MissingAlertStatuses.Processing, StringComparison.OrdinalIgnoreCase)))
+            {
+                return Conflict("该猫已有处理中预警。");
+            }
+
             if (alert.ThresholdDays != null && alert.ThresholdDays <= 0)
             {
                 return BadRequest("阈值天数必须大于 0。");
@@ -131,7 +189,19 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
             }
 
-            await _missingAlertRepository.CreateAlert(alert);
+            try
+            {
+                await _missingAlertRepository.CreateAlert(alert);
+            }
+            catch (Exception ex) when (ContainsOracleError(ex, "ORA-20163"))
+            {
+                return Conflict("该猫已有处理中预警。");
+            }
+            catch (Exception ex) when (ContainsOracleError(ex, "ORA-20162"))
+            {
+                return NotFound("最后目击记录不存在或不属于该猫咪。");
+            }
+
             return CreatedAtAction(nameof(GetById), new { alertId = alert.AlertID }, alert);
         }
 
@@ -159,16 +229,36 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
             }
 
-            var handlerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(handlerUserId)) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(alert.HandlerUserID))
+            {
+                return BadRequest("处理人 ID 不能为空。");
+            }
+
+            var handlerUserId = alert.HandlerUserID.Trim();
+            var handler = await _userRepository.GetById(handlerUserId);
+            if (handler == null || !UserStatusCodes.IsActive(handler.Status)
+                || !(string.Equals(handler.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(handler.RoleName, "VOLUNTEER", StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest("处理人必须是有效的管理员或志愿者。");
+            }
 
             if (await _missingAlertRepository.GetById(alertId) == null)
             {
                 return NotFound($"未找到预警 {alertId}。");
             }
 
-            var rows = await _missingAlertRepository.UpdateStatus(alertId, alert.AlertStatus, handlerUserId, alert.Remark);
+            var rows = await _missingAlertRepository.UpdateStatus(
+                alertId,
+                alert.AlertStatus.Trim().ToUpperInvariant(),
+                handlerUserId,
+                alert.Remark);
             return NoContent();
+        }
+
+        private static bool ContainsOracleError(Exception ex, string code)
+        {
+            return ex.ToString().Contains(code, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

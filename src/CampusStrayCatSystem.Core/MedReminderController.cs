@@ -15,10 +15,20 @@ namespace CampusStrayCatSystem.Core
     public class MedReminderController : ControllerBase
     {
         private readonly IMedReminderRepository _reminderRepository;
+        private readonly ICatRepository _catRepository;
+        private readonly IMedHealthRecordRepository _healthRecordRepository;
+        private readonly IUserRepository _userRepository;
 
-        public MedReminderController(IMedReminderRepository reminderRepository)
+        public MedReminderController(
+            IMedReminderRepository reminderRepository,
+            ICatRepository catRepository,
+            IMedHealthRecordRepository healthRecordRepository,
+            IUserRepository userRepository)
         {
             _reminderRepository = reminderRepository;
+            _catRepository = catRepository;
+            _healthRecordRepository = healthRecordRepository;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -44,6 +54,11 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            if (!await _catRepository.Exists(catId.Trim()))
+            {
+                return NotFound($"未找到猫咪 {catId}。");
+            }
+
             var reminders = await _reminderRepository.GetByCatId(catId);
             return Ok(reminders);
         }
@@ -63,6 +78,36 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(reminder.CatID))
             {
                 return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            reminder.CatID = reminder.CatID.Trim();
+            if (!await _catRepository.Exists(reminder.CatID))
+            {
+                return NotFound($"未找到猫咪 {reminder.CatID}。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(reminder.RecordID))
+            {
+                reminder.RecordID = reminder.RecordID.Trim();
+                var record = await _healthRecordRepository.GetById(reminder.RecordID);
+                if (record == null)
+                {
+                    return NotFound($"未找到医疗记录 {reminder.RecordID}。");
+                }
+
+                if (!string.Equals(record.CatID, reminder.CatID, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("医疗记录不属于该猫咪。");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(reminder.ReceiverUserID))
+            {
+                reminder.ReceiverUserID = reminder.ReceiverUserID.Trim();
+                if (!await _userRepository.Exists(reminder.ReceiverUserID))
+                {
+                    return NotFound($"未找到接收者 {reminder.ReceiverUserID}。");
+                }
             }
 
             if (string.IsNullOrWhiteSpace(reminder.ReminderType) ||
