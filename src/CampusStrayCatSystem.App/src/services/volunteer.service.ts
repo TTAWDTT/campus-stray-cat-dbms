@@ -1,6 +1,6 @@
 import {http} from './http'
 import dayjs from 'dayjs'
-import { USE_MOCK, mockApplications, mockVisits, mockActivities, mockFeedingTasks } from '../features/volunteer/test/mockData'
+import { USE_MOCK, mockApplications, mockApprovedApplications, mockVisits, mockActivities, mockFeedingTasks } from '../features/volunteer/test/mockData'
 
 type ApiRecord=Record<string,unknown>
 
@@ -103,6 +103,25 @@ export const VolunteerService={
         }
         const {data}=await http.get('/adoption-workflow/visits')
         return (data as ApiRecord[]).map(toVisit)
+    },
+    //获取已通过的领养申请（用于新建回访记录）
+    async getApprovedApplications(){
+        if (USE_MOCK) {
+            return mockApprovedApplications.map(toApplication)
+        }
+        const {data}=await http.get('/adoption-workflow/applications', { params: { status: 'APPROVED' } })
+        return (data as ApiRecord[]).map(toApplication)
+    },
+    //新增回访记录
+    async createVisit(applicationId: string, payload: Record<string, unknown>){
+        if (USE_MOCK) {
+            console.log('[mock] 新增回访记录', applicationId, payload)
+            return
+        }
+        await http.post(
+            `/adoption-workflow/applications/${encodeURIComponent(applicationId)}/visits`,
+            payload
+        )
     },
     //获取志愿者活动（排班）列表
     async getActivity(){

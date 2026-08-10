@@ -55,6 +55,36 @@ export const mockApplications: ApiRecord[] = [
 ]
 
 // ═══════════════════════════════════════════
+// 1b. 已通过领养申请（用于新建回访记录）
+// ═══════════════════════════════════════════
+export const mockApprovedApplications: ApiRecord[] = [
+    {
+        applicationId: 'APP24004',
+        catId: 'CAT004',
+        catName: '小白',
+        applicantUserId: 'U1004',
+        applicantName: '赵六',
+        applyTime: '2026-08-01T10:00:00',
+        currentStatus: 'APPROVED',
+        reviewerUserId: 'U2001',
+        agreementNo: 'AGR2026001',
+        confirmTime: '2026-08-05T15:00:00',
+    },
+    {
+        applicationId: 'APP24005',
+        catId: 'CAT005',
+        catName: '花花',
+        applicantUserId: 'U1005',
+        applicantName: '孙七',
+        applyTime: '2026-08-03T09:30:00',
+        currentStatus: 'APPROVED',
+        reviewerUserId: 'U2002',
+        agreementNo: 'AGR2026002',
+        confirmTime: '2026-08-06T11:00:00',
+    },
+]
+
+// ═══════════════════════════════════════════
 // 2. 回访记录
 // ═══════════════════════════════════════════
 export const mockVisits: ApiRecord[] = [
