@@ -1,5 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/api/MedHealthRecords"
-method: GET
-examples: .resources/C07.resources/examples
-order: 4502808864357216

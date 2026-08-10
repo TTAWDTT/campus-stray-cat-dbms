@@ -1,8 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/api/TnrCases"
-method: GET
-body:
-  type: json
-  content: ""
-examples: .resources/C01.resources/examples
-order: 1786178432691

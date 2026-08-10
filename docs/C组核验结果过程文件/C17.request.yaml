@@ -1,5 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/api/MedReminder/123456/complete"
-method: PUT
-examples: .resources/C17.resources/examples
-order: 4503599579361815

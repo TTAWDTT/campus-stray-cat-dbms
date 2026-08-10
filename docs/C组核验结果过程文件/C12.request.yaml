@@ -1,5 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/api/MedReminder"
-method: GET
-examples: .resources/C12.resources/examples
-order: 4503558153530874

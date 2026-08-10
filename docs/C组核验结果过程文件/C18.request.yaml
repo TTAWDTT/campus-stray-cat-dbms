@@ -1,5 +1,0 @@
-$kind: http-request
-url: "{{baseUrl}}/api/EmergencyReports"
-method: GET
-examples: .resources/C18.resources/examples
-order: 4503599622541999
