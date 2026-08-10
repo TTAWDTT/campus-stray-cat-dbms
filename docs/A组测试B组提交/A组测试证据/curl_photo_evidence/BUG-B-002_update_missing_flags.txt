@@ -1,0 +1,2 @@
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"errors":{"EarTipFlag":["剪耳标志不能为空。"],"SterilizedFlag":["绝育标志不能为空。"]},"traceId":"00-503e80d3391f88c86b59ff787b7c99cf-af11ff531a224229-00"}
+HTTP:400

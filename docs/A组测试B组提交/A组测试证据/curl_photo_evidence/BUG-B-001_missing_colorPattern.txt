@@ -1,0 +1,2 @@
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"errors":{"ColorPattern":["花色不能为空。"]},"traceId":"00-7cc4f3fd8194b2bff78b44f115b5f010-593e8e26b6c4458c-00"}
+HTTP:400
