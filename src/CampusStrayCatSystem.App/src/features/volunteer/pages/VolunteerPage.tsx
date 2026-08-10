@@ -1,10 +1,11 @@
-import { Card, Icon, Button, Table, type TableColumn, Drawer, Form, FormItem, useForm, Input, Notification ,Radio} from 'animal-island-ui'
+import { Card, Icon, Button, Table, type TableColumn, Drawer, Form, FormItem, useForm, Input, Notification ,Radio,Tabs} from 'animal-island-ui'
 import { useNavigate } from 'react-router-dom'
 import type { KeyboardEvent } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { VolunteerService, shiftStatusLabels } from '../../../services/volunteer.service'
 import { useAuthStore } from '../../../stores/auth.store'
 import { StatusTag } from '../../../shared/components/StatusTag'
+import { PageHeader } from '../../../shared/components/PageHeader'
 import { DatePicker } from 'antd'
 
 export function VolunteerPage() {
@@ -16,9 +17,14 @@ export function VolunteerPage() {
     const [recruitForm] = useForm()
     const [creditForm] = useForm()
     const [feedingTasks, setFeedingTasks] = useState<any[]>([])
-    const [feedingFilter, setFeedingFilter] = useState('all')
-    const [feedingInput, setFeedingInput] = useState('')
-    const [statusFilter, setStatusFilter] = useState('')
+    const [receivedHandovers, setReceivedHandovers] = useState<any[]>([])
+    const [sentHandovers, setSentHandovers] = useState<any[]>([])
+    const [allHandovers, setAllHandovers] = useState<any[]>([])
+    const [handoverFilter, setHandoverFilter] = useState('all')
+    const [handoverInput, setHandoverInput] = useState('')
+    const [handoverStatusFilter, setHandoverStatusFilter] = useState('')
+    const [handoverRelatedType, setHandoverRelatedType] = useState('SHIFT')
+    const [handoverRelatedId, setHandoverRelatedId] = useState('')
     const isAdmin = (useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN') ||true
     useEffect(() => {
         VolunteerService.getPendingApplications()
@@ -40,26 +46,75 @@ export function VolunteerPage() {
         VolunteerService.getAllFeedingTasks().then(setFeedingTasks).catch(() => setFeedingTasks([]))
     }, [])
 
-    const queryFeedingTasks = async () => {
+    useEffect(() => {
+        const volId = myShifts[0]?.volunteerId
+        if (!volId) return
+        VolunteerService.getHandoverRecordsByTo(volId).then(setReceivedHandovers).catch(() => setReceivedHandovers([]))
+        VolunteerService.getHandoverRecordsByFrom(volId).then(setSentHandovers).catch(() => setSentHandovers([]))
+    }, [myShifts])
+
+    useEffect(() => {
+        VolunteerService.getHandoverRecords().then(setAllHandovers).catch(() => setAllHandovers([]))
+    }, [])
+
+    const queryAllHandovers = async () => {
         try {
-            if (feedingFilter === 'all') {
-                const data = await VolunteerService.getAllFeedingTasks()
-                setFeedingTasks(data)
-            } else if (feedingFilter === 'id') {
-                if (!feedingInput) { Notification.error('请输入任务ID'); return }
-                const data = await VolunteerService.getFeedingTasksById(feedingInput)
-                setFeedingTasks(data)
-            } else if (feedingFilter === 'point') {
-                if (!feedingInput) { Notification.error('请输入点位ID'); return }
-                const data = await VolunteerService.getFeedingTasksByPoint(feedingInput)
-                setFeedingTasks(data)
-            } else if (feedingFilter === 'status') {
-                if (!statusFilter) { Notification.error('请选择状态'); return }
-                const data = await VolunteerService.getFeedingTasksByStatus(statusFilter)
-                setFeedingTasks(data)
+            if (handoverFilter === 'all') {
+                const data = await VolunteerService.getHandoverRecords()
+                setAllHandovers(data)
+            } else if (handoverFilter === 'id') {
+                if (!handoverInput) { Notification.error('请输入交接ID'); return }
+                const data = await VolunteerService.getHandoverRecordsById(handoverInput)
+                setAllHandovers(data)
+            } else if (handoverFilter === 'status') {
+                if (!handoverStatusFilter) { Notification.error('请选择状态'); return }
+                const data = await VolunteerService.getHandoverRecordsByStatus(handoverStatusFilter)
+                setAllHandovers(data)
+            } else if (handoverFilter === 'related') {
+                if (!handoverRelatedType || !handoverRelatedId) { Notification.error('请填写关联类型和关联ID'); return }
+                const data = await VolunteerService.getHandoverRecordsByRelated(handoverRelatedType, handoverRelatedId)
+                setAllHandovers(data)
             }
         } catch {
             Notification.error('查询失败')
+        }
+    }
+
+    const refreshHandovers = () => {
+        const volId = myShifts[0]?.volunteerId
+        if (!volId) return
+        VolunteerService.getHandoverRecordsByTo(volId).then(setReceivedHandovers).catch(() => {})
+        VolunteerService.getHandoverRecordsByFrom(volId).then(setSentHandovers).catch(() => {})
+        VolunteerService.getHandoverRecords().then(setAllHandovers).catch(() => {})
+    }
+
+    const handleConfirmHandover = async (handoverID: string) => {
+        try {
+            await VolunteerService.confirmHandover(handoverID)
+            Notification.success('交接已确认')
+            refreshHandovers()
+        } catch {
+            Notification.error('确认失败')
+        }
+    }
+
+    const handleRejectHandover = async (handoverID: string) => {
+        try {
+            await VolunteerService.rejectHandover(handoverID)
+            Notification.success('已拒绝交接')
+            refreshHandovers()
+        } catch {
+            Notification.error('操作失败')
+        }
+    }
+
+    const handleCancelHandover = async (handoverID: string) => {
+        try {
+            await VolunteerService.cancelHandover(handoverID)
+            Notification.success('交接已撤销')
+            refreshHandovers()
+        } catch {
+            Notification.error('撤销失败')
         }
     }
 
@@ -153,81 +208,128 @@ export function VolunteerPage() {
             },
         },
     ]
+    
+    const ReceivedHandoverColumns:TableColumn<any>[]=useMemo(()=>{
+        const hasPending=receivedHandovers.some((h:any)=>h.handoverStatus==='PENDING')
+        const cols:TableColumn<any>[]=[
+            { title:'交接编号',dataIndex:'handoverID',width:100},
+            { title:'发起人ID',dataIndex:'fromVolunteerID',width:100},
+            { title:'关联任务',dataIndex:'relatedID',width:100},
+            { title:'发起时间',dataIndex:'applyTime',width:150,render:(t:any)=>t?t.format('MM-DD HH:mm'):'-'},
+            {
+                title:'状态',dataIndex:'handoverStatus',
+                render:(t:any)=>{
+                    const map:Record<string,{value:string;label:string}>={
+                        PENDING:{value:'PROCESSING',label:'待确认'},
+                        CONFIRMED:{value:'COMPLETED',label:'已确认'},
+                        REJECTED:{value:'REJECTED',label:'已拒绝'},
+                        CANCELLED:{value:'PENDING',label:'已撤销'},
+                    }
+                    const item=map[t]
+                    return item?<StatusTag value={item.value} label={item.label}/>:<span>{t||'-'}</span>
+                },
+            },
+        ]
+        if(hasPending){
+            cols.push({
+                title:'操作',
+                render:(_,value)=>{
+                    const handoverID=value.handoverID
+                    const handoverStatus=value.handoverStatus as string
+                    return handoverStatus==='PENDING'?(
+                        <div style={{display:'flex',gap:4}}>
+                            <Button type='primary' size="small" onClick={() => handleConfirmHandover(handoverID)}>确认</Button>
+                            <Button type='default' size="small" onClick={() => handleRejectHandover(handoverID)}>拒绝</Button>
+                        </div>
+                    ):null
+                }
+            })
+        }
+        return cols
+    },[receivedHandovers])
+
+    const SentHandoverColumns:TableColumn<any>[]=useMemo(()=>{
+        const hasPending=sentHandovers.some((h:any)=>h.handoverStatus==='PENDING')
+        const cols:TableColumn<any>[]=[
+            {title:'交接编号',dataIndex:'handoverID',width:100},
+            {title:'接收人ID',dataIndex:'toVolunteerID',width:100},
+            {title:'关联任务',dataIndex:'relatedID',width:100},
+            { title:'发起时间',dataIndex:'applyTime',width:150,render:(t:any)=>t?t.format('MM-DD HH:mm'):'-'},
+            {
+                title:'状态',dataIndex:'handoverStatus',
+                render:(t:any)=>{
+                    const map:Record<string,{value:string;label:string}>={
+                        PENDING:{value:'PROCESSING',label:'待确认'},
+                        CONFIRMED:{value:'COMPLETED',label:'已确认'},
+                        REJECTED:{value:'REJECTED',label:'已拒绝'},
+                        CANCELLED:{value:'PENDING',label:'已撤销'},
+                    }
+                    const item=map[t]
+                    return item?<StatusTag value={item.value} label={item.label}/>:<span>{t||'-'}</span>
+                },
+            },
+        ]
+        if(hasPending){
+            cols.push({
+                title:'操作',
+                render:(_,value)=>{
+                    const handoverID=value.handoverID
+                    const handoverStatus=value.handoverStatus as string
+                    return handoverStatus==='PENDING'?(
+                        <Button type='default' size="small" onClick={() => handleCancelHandover(handoverID)}>撤销</Button>
+                    ): null
+                }
+            })
+        }
+        return cols
+    },[sentHandovers])
+
+    const AllHandoverColumns:TableColumn<any>[]=useMemo(()=>{
+        const hasPending=allHandovers.some((h:any)=>h.handoverStatus==='PENDING')
+        const cols:TableColumn<any>[]=[
+            {title:'交接编号',dataIndex:'handoverID',width:100},
+            {title:'发起人ID',dataIndex:'fromVolunteerID',width:100},
+            {title:'接收人ID',dataIndex:'toVolunteerID',width:100},
+            {title:'关联任务',dataIndex:'relatedID',width:100},
+            {title:'发起时间',dataIndex:'applyTime',width:150,render:(t:any)=>t?t.format('MM-DD HH:mm'):'-'},
+            {
+                title:'状态',dataIndex:'handoverStatus',
+                render:(t:any)=>{
+                    const map:Record<string,{value:string;label:string}>={
+                        PENDING:{value:'PROCESSING',label:'待确认'},
+                        CONFIRMED:{value:'COMPLETED',label:'已确认'},
+                        REJECTED:{value:'REJECTED',label:'已拒绝'},
+                        CANCELLED:{value:'PENDING',label:'已撤销'},
+                    }
+                    const item=map[t]
+                    return item?<StatusTag value={item.value} label={item.label}/>:<span>{t||'-'}</span>
+                },
+            },
+        ]
+        if(hasPending){
+            cols.push({
+                title:'操作',
+                render:(_,value)=>{
+                    const handoverID=value.handoverID
+                    const handoverStatus=value.handoverStatus as string
+                    const isReceived=receivedHandovers.some((h:any)=>h.handoverID===handoverID)
+                    const isSent=sentHandovers.some((h:any)=>h.handoverID===handoverID)
+                    return handoverStatus==='PENDING'?(
+                        <div style={{display:'flex',gap:4}}>
+                            {isReceived&&<Button type='primary' size="small" onClick={() => handleConfirmHandover(handoverID)}>确认</Button>}
+                            {isReceived&&<Button type='default' size="small" onClick={() => handleRejectHandover(handoverID)}>拒绝</Button>}
+                            {isSent&&<Button type='default' size="small" onClick={() => handleCancelHandover(handoverID)}>撤销</Button>}
+                        </div>
+                    ):null
+                }
+            })
+        }
+        return cols
+    },[allHandovers,receivedHandovers,sentHandovers])
 
     return (
         <>
-            <div className="finance-hero-grid" style={{ gridTemplateColumns: isAdmin ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)' }}>
-                <div className="finance-hero-card-hit" role="button" tabIndex={0}
-                    aria-label="领养审核"
-                    onClick={() => navigate('/volunteer/adoptions')}
-                    onKeyDown={activateCard(() => navigate('/volunteer/adoptions'))}>
-                    <Card color="app-teal" className="finance-hero-card">
-                        <div className="finance-hero-card-inner">
-                            <span className="finance-hero-icon">
-                                <Icon name="icon-chat" size={28} />
-                            </span>
-                            <h2>领养审核</h2>
-                            <p>处理待审核的领养申请，仔细评估每一位申请人是否适合领养。</p>
-                            {pendingCount > 0 && (
-                                <span className="volunteer-pending-badge">
-                                    <strong>{pendingCount}</strong>
-                                    <small>条待审核</small>
-                                </span>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-
-                <div className="finance-hero-card-hit" role="button" tabIndex={0}
-                    aria-label="回访汇总"
-                    onClick={() => navigate('/volunteer/visits')}
-                    onKeyDown={activateCard(() => navigate('/volunteer/visits'))}>
-                    <Card color="app-blue" className="finance-hero-card">
-                        <div className="finance-hero-card-inner">
-                            <span className="finance-hero-icon">
-                                <Icon name="icon-camera" size={28} />
-                            </span>
-                            <h2>回访汇总</h2>
-                            <p>查看已完成领养的回访记录，确保每一只猫咪在新家都过得幸福。</p>
-                        </div>
-                    </Card>
-                </div>
-
-                {isAdmin && (
-                    <div className="finance-hero-card-hit" role="button" tabIndex={0}
-                        aria-label="志愿者招募"
-                        onClick={() => setRecruitOpen(true)}
-                        onKeyDown={activateCard(() => setRecruitOpen(true))}>
-                        <Card color="app-green" className="finance-hero-card">
-                            <div className="finance-hero-card-inner">
-                                <span className="finance-hero-icon">
-                                    <Icon name="icon-diy" size={28} />
-                                </span>
-                                <h2>志愿者招募</h2>
-                                <p>注册新的志愿者，让更多爱猫的同学加入到校园流浪猫的照护工作中来。</p>
-                            </div>
-                        </Card>
-                    </div>
-                )}
-
-                {isAdmin && (
-                    <div className="finance-hero-card-hit" role="button" tabIndex={0}
-                        aria-label="新增积分日志"
-                        onClick={() => setCreditLogOpen(true)}
-                        onKeyDown={activateCard(() => setCreditLogOpen(true))}>
-                        <Card color="app-yellow" className="finance-hero-card">
-                            <div className="finance-hero-card-inner">
-                                <span className="finance-hero-icon">
-                                    <Icon name="icon-miles" size={28} />
-                                </span>
-                                <h2>新增积分日志</h2>
-                                <p>为志愿者记录积分变动，更新信用等级，完整追踪每一次服务贡献。</p>
-                            </div>
-                        </Card>
-                    </div>
-                )}
-            </div>
-
+            <PageHeader kicker="Volunteer" title="志愿者中心" description="管理领养审核、回访记录、排班任务、投喂任务和交接事宜" icon="icon-design" />
 
             <Drawer open={recruitOpen} onClose={() => { setRecruitOpen(false); recruitForm.resetFields() }} title="志愿者招募" >
                 <Form form={recruitForm} layout='vertical'>
@@ -304,7 +406,7 @@ export function VolunteerPage() {
 
             <div style={{ display: 'flex', gap: 20, marginTop: 20 }}>
                 <div style={{ flex: '0 0 360px' }}>
-                    <h3 style={{ margin: '0 0 12px 0' }}>我的排班</h3>
+                    <h3 style={{ margin: '0 0 12px 0' }}>排班任务</h3>
                     {myShifts.length > 0 ? (
                         <div className="volunteer-my-shifts">
                             <div style={{ maxHeight: 132, overflowY: 'auto' }}>
@@ -321,49 +423,145 @@ export function VolunteerPage() {
                     )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <h3 style={{ margin: 0 }}>投喂任务</h3>
-                        <Radio
-                            options={[
-                                { label: '全部', value: 'all' },
-                                { label: '按ID', value: 'id' },
-                                { label: '按点位', value: 'point' },
-                                { label: '按状态', value: 'status' },
-                            ]}
-                            value={feedingFilter}
-                            onChange={(v) => { setFeedingFilter(String(v)); setFeedingInput(''); setStatusFilter('') }}
-                        />
-                    </div>
+                    <h3 style={{ margin: '0 0 12px 0' }}>投喂任务和记录</h3>
                     <div style={{ maxHeight: 132, overflowY: 'auto' }}>
                         <Table columns={feedingColumns} dataSource={feedingTasks} />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            {(feedingFilter === 'id' || feedingFilter === 'point') && (
-                                <Input
-                                    placeholder={feedingFilter === 'id' ? '请输入任务ID' : '请输入点位ID'}
-                                    value={feedingInput}
-                                    onChange={(e: any) => setFeedingInput(e.target.value)}
-                                    style={{ width: 160 }}
-                                />
-                            )}
-                            {feedingFilter === 'status' && (
-                                <Radio
-                                    options={[
-                                        { label: '计划', value: 'PLANNED' },
-                                        { label: '已分配', value: 'ASSIGNED' },
-                                        { label: '执行中', value: 'IN_PROGRESS' },
-                                        { label: '已完成', value: 'COMPLETED' },
-                                        { label: '逾期', value: 'MISSED' },
-                                    ]}
-                                    value={statusFilter}
-                                    onChange={(v) => setStatusFilter(String(v))}
-                                />
-                            )}
-                        </div>
-                        <Button type="primary" size="small" onClick={queryFeedingTasks}>查询</Button>
+                    <div style={{ marginTop: 8, textAlign: 'right' }}>
+                        <Button type="primary" size="small" onClick={() => {
+                          const volId = myShifts[0]?.volunteerId
+                          navigate(`/volunteer/feeding-tasks${volId ? `?volunteerId=${encodeURIComponent(volId)}` : ''}`)
+                        }}>查看全部</Button>
                     </div>
                 </div>
+            </div>
+            <div className="finance-hero-grid" style={{ gridTemplateColumns: isAdmin ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', marginTop: 20 }}>
+                <div className="finance-hero-card-hit" role="button" tabIndex={0}
+                    aria-label="领养审核"
+                    onClick={() => navigate('/volunteer/adoptions')}
+                    onKeyDown={activateCard(() => navigate('/volunteer/adoptions'))}>
+                    <Card color="app-teal" className="finance-hero-card">
+                        <div className="finance-hero-card-inner">
+                            <span className="finance-hero-icon">
+                                <Icon name="icon-chat" size={28} />
+                            </span>
+                            <h2>领养审核</h2>
+                            <p>处理待审核的领养申请，仔细评估每一位申请人是否适合领养。</p>
+                            {pendingCount > 0 && (
+                                <span className="volunteer-pending-badge">
+                                    <strong>{pendingCount}</strong>
+                                    <small>条待审核</small>
+                                </span>
+                            )}
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="finance-hero-card-hit" role="button" tabIndex={0}
+                    aria-label="回访汇总"
+                    onClick={() => navigate('/volunteer/visits')}
+                    onKeyDown={activateCard(() => navigate('/volunteer/visits'))}>
+                    <Card color="app-blue" className="finance-hero-card">
+                        <div className="finance-hero-card-inner">
+                            <span className="finance-hero-icon">
+                                <Icon name="icon-camera" size={28} />
+                            </span>
+                            <h2>回访汇总</h2>
+                            <p>查看已完成领养的回访记录，确保每一只猫咪在新家都过得幸福。</p>
+                        </div>
+                    </Card>
+                </div>
+
+                {isAdmin && (
+                    <div className="finance-hero-card-hit" role="button" tabIndex={0}
+                        aria-label="志愿者招募"
+                        onClick={() => setRecruitOpen(true)}
+                        onKeyDown={activateCard(() => setRecruitOpen(true))}>
+                        <Card color="app-green" className="finance-hero-card">
+                            <div className="finance-hero-card-inner">
+                                <span className="finance-hero-icon">
+                                    <Icon name="icon-diy" size={28} />
+                                </span>
+                                <h2>志愿者招募</h2>
+                                <p>注册新的志愿者，让更多爱猫的同学加入到校园流浪猫的照护工作中来。</p>
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+                {isAdmin && (
+                    <div className="finance-hero-card-hit" role="button" tabIndex={0}
+                        aria-label="新增积分日志"
+                        onClick={() => setCreditLogOpen(true)}
+                        onKeyDown={activateCard(() => setCreditLogOpen(true))}>
+                        <Card color="app-yellow" className="finance-hero-card">
+                            <div className="finance-hero-card-inner">
+                                <span className="finance-hero-icon">
+                                    <Icon name="icon-miles" size={28} />
+                                </span>
+                                <h2>新增积分日志</h2>
+                                <p>为志愿者记录积分变动，更新信用等级，完整追踪每一次服务贡献。</p>
+                            </div>
+                        </Card>
+                    </div>
+                )}
+            </div>
+            <h3 style={{ marginTop: 20 }}>交接事宜</h3>
+            <div style={{ padding: 16 }}>
+                <Tabs items={[{
+                    key:'tab1',label:'我收到的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={ReceivedHandoverColumns} dataSource={receivedHandovers} /></div>
+                },{
+                    key:'tab2',label:'我发起的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={SentHandoverColumns} dataSource={sentHandovers} /></div>
+                },{
+                    key:'tab3',label:'全部交接',children:<>
+                        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
+                            <Radio
+                                options={[
+                                    {label:'全部',value:'all'},
+                                    {label:'按ID',value:'id'},
+                                    {label:'按状态',value:'status'},
+                                    {label:'按关联',value:'related'},
+                                ]}
+                                value={handoverFilter}
+                                onChange={(v)=>{setHandoverFilter(String(v));setHandoverInput('');setHandoverStatusFilter('');setHandoverRelatedId('')}}
+                            />
+                            <Button type="primary" size="small" onClick={queryAllHandovers}>查询</Button>
+                        </div>
+                        <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:12 }}>
+                            {handoverFilter==='id'&&(
+                                <Input placeholder='请输入交接ID' value={handoverInput} onChange={(e:any)=>setHandoverInput(e.target.value)} style={{width:160}} />
+                            )}
+                            {handoverFilter==='status'&&(
+                                <Radio
+                                    options={[
+                                        {label:'待确认',value:'PENDING'},
+                                        {label:'已确认',value:'CONFIRMED'},
+                                        {label:'已拒绝',value:'REJECTED'},
+                                        {label:'已撤销',value:'CANCELLED'},
+                                    ]}
+                                    value={handoverStatusFilter}
+                                    onChange={(v)=>setHandoverStatusFilter(String(v))}
+                                />
+                            )}
+                            {handoverFilter==='related'&&(
+                                <>
+                                    <Radio
+                                        options={[{label:'投喂任务',value:'SHIFT'}]}
+                                        value={handoverRelatedType}
+                                        onChange={(v)=>setHandoverRelatedType(String(v))}
+                                    />
+                                    <div style={{width:130,flex:'none'}}>
+                                        <Input placeholder='关联任务ID' value={handoverRelatedId} onChange={(e:any)=>setHandoverRelatedId(e.target.value)} />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+                            <Table columns={AllHandoverColumns} dataSource={allHandovers} />
+                        </div>
+                    </>
+                }]}
+                 defaultActiveKey='tab1' />
             </div>
         </>
     )

@@ -239,3 +239,81 @@ export const mockFeedingTasks: ApiRecord[] = [
         ShiftStatus: 'MISSED',
     },
 ]
+
+// ═══════════════════════════════════════════
+// 5. 投喂记录（打卡记录，对应 VolCheckIn）
+// ═══════════════════════════════════════════
+export const mockFeedingRecords: ApiRecord[] = [
+    {
+        CheckInID: 'CI001',
+        ShiftID: 'SHIFT001',
+        CheckInTime: '2026-08-09T08:15:00',
+        Longitude: 121.5064,
+        Latitude: 31.2457,
+        PhotoUrl: 'https://example.com/photos/feed-ci001.jpg',
+        DistanceMeters: 5.2,
+        CheckInStatus: 'CHECKED_IN',
+    },
+    {
+        CheckInID: 'CI002',
+        ShiftID: 'SHIFT002',
+        CheckInTime: '2026-08-08T10:20:00',
+        Longitude: 121.5068,
+        Latitude: 31.2460,
+        PhotoUrl: 'https://example.com/photos/feed-ci002.jpg',
+        DistanceMeters: 12.8,
+        CheckInStatus: 'CHECKED_IN',
+    },
+    {
+        CheckInID: 'CI003',
+        ShiftID: 'SHIFT003',
+        CheckInTime: '2026-08-10T09:35:00',
+        Longitude: 121.5070,
+        Latitude: 31.2463,
+        PhotoUrl: '',
+        DistanceMeters: 0,
+        CheckInStatus: 'LATE',
+    },
+]
+
+// ═══════════════════════════════════════════
+// 6. 交接记录（对应 VolHandover）
+// ═══════════════════════════════════════════
+export const mockHandovers: ApiRecord[] = [
+    {
+        HandoverID: 'HO001',
+        FromVolunteerID: 'V001',
+        ToVolunteerID: 'V002',
+        HandoverType: 'TASK_TRANSFER',
+        RelatedType: 'SHIFT',
+        RelatedID: 'SHIFT001',
+        ApplyTime: '2026-08-09T12:00:00',
+        ConfirmTime: null,
+        HandoverStatus: 'PENDING',
+        Remark: '临时有事，麻烦帮忙喂一下',
+    },
+    {
+        HandoverID: 'HO002',
+        FromVolunteerID: 'V002',
+        ToVolunteerID: 'V001',
+        HandoverType: 'TASK_TRANSFER',
+        RelatedType: 'SHIFT',
+        RelatedID: 'SHIFT002',
+        ApplyTime: '2026-08-08T09:00:00',
+        ConfirmTime: '2026-08-08T09:30:00',
+        HandoverStatus: 'CONFIRMED',
+        Remark: '已确认，下午我去喂',
+    },
+    {
+        HandoverID: 'HO003',
+        FromVolunteerID: 'V001',
+        ToVolunteerID: 'V003',
+        HandoverType: 'TASK_TRANSFER',
+        RelatedType: 'SHIFT',
+        RelatedID: 'SHIFT003',
+        ApplyTime: '2026-08-10T08:00:00',
+        ConfirmTime: null,
+        HandoverStatus: 'REJECTED',
+        Remark: '时间冲突无法接替',
+    },
+]

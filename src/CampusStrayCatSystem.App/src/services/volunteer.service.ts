@@ -1,6 +1,6 @@
 import {http} from './http'
 import dayjs from 'dayjs'
-import { USE_MOCK, mockApplications, mockApprovedApplications, mockVisits, mockActivities, mockFeedingTasks } from '../features/volunteer/test/mockData'
+import { USE_MOCK, mockApplications, mockApprovedApplications, mockVisits, mockActivities, mockFeedingTasks, mockFeedingRecords, mockHandovers } from '../features/volunteer/test/mockData'
 
 type ApiRecord=Record<string,unknown>
 
@@ -68,6 +68,36 @@ const toFeedingTasks=(data:ApiRecord)=>{
         shiftStatus:value<string>(data,'shiftStatus','ShiftStatus')||''
     }
 }
+
+const toFeedingRecords=(data:ApiRecord)=>{
+    const rawCheckInTime=value<string>(data,'checkInTime','CheckInTime')
+    return {
+        CheckInID:value<string>(data,'CheckInID','checkInID')||'',
+        ShiftID:value<string>(data,'ShiftID','shiftID')||'',
+        CheckInTime:rawCheckInTime?dayjs(rawCheckInTime):undefined,
+        Longitude:value<number>(data,'Longitude','longitude')||0,
+        Latitude:value<number>(data,'Latitude','latitude')||0,
+        PhotoUrl:value<string>(data,'PhotoUrl','photoUrl')||'',
+        DistanceMeters:value<number>(data,'DistanceMeters','distanceMeters')||0,
+        CheckInStatus:value<string>(data,'CheckInStatus','checkInStatus')||''
+    }
+}
+const toHandoverRecords=(data:ApiRecord)=>{
+    const rawApplyTime=value<string>(data,'applyTime','ApplyTime')
+    const rawConfirmTime=value<string>(data,'confirmTime','ConfirmTime')
+    return {
+        handoverID:value<string>(data,'handoverID','HandoverID')||'',
+        fromVolunteerID:value<string>(data,'fromVolunteerID','FromVolunteerID')||'',
+        toVolunteerID:value<string>(data,'toVolunteerID','ToVolunteerID')||'',
+        handoverType:value<string>(data,'handoverType','HandoverType')||'',
+        relatedType:value<string>(data,'relatedType','RelatedType')||'',
+        relatedID:value<string>(data,'relatedID','RelatedID')||'',
+        applyTime:rawApplyTime?dayjs(rawApplyTime):undefined,
+        confirmTime:rawConfirmTime?dayjs(rawConfirmTime):undefined,
+        handoverStatus:value<string>(data,'handoverStatus','HandoverStatus')||'',
+        remark:value<string>(data,'remark','Remark')||'',
+    }
+}
 export const shiftStatusLabels: Record<string, string> = {
     PLANNED: '计划',
     ASSIGNED: '已分配',
@@ -86,7 +116,24 @@ export const passFlagLabels: Record<number, string> = {
     0: '未通过',
     1: '通过',
 }
-
+export const CheckInLabels:Record<string,string>={
+    CHECKED_IN:'已签到',
+    LATE:'迟到',
+}
+export const HandoverStatusLabels: Record<string, string> = {
+    PENDING: '待确认',
+    CONFIRMED: '已确认',
+    REJECTED: '已拒绝',
+    CANCELLED: '已撤销',
+}
+export type PostHandoverPayLoad={
+    fromVolunteerID:string,
+    toVolunteerID:string,
+    handoverType?:string,
+    relatedType:string,
+    relatedID:string,
+    remark?:string,
+}
 export const VolunteerService={
     //获取待审核申请列表
     async getPendingApplications(){
@@ -155,7 +202,7 @@ export const VolunteerService={
         }
         await http.post('/volunteer-workflow/shifts', payload)
     },
-    //签到
+    //排班签到
     async checkInShift(shiftId: string, payload: Record<string, unknown>) {
         if (USE_MOCK) {
             console.log(`[mock] 签到排班 ${shiftId}`, payload)
@@ -166,7 +213,6 @@ export const VolunteerService={
             payload
         )
     },
-    //获取已审核申请列表
     //审核领养申请
     async checkAdoption(applicationId:string,checkStatus:string){
         if (USE_MOCK) {
@@ -215,5 +261,140 @@ export const VolunteerService={
         if (USE_MOCK) return mockFeedingTasks.filter(t => (t.ShiftStatus || t.shiftStatus) === status).map(toFeedingTasks)
         const {data}=await http.get(`/feeding-tasks/by-status/${encodeURIComponent(status)}`)
         return (data as ApiRecord[]).map(toFeedingTasks)
+    },
+    //新增投喂任务
+    async postFeedingTasks(volunteerID:string,pointID:string,backupVolunteerID:string,planStartTime:Date,planEndTime:Date,shiftStatus:string){
+        const payload={
+            volunteerID:volunteerID,
+            pointID:pointID,
+            backupVolunteerID:backupVolunteerID,
+            planStartTime:planStartTime.toISOString(),
+            planEndTime:planEndTime.toISOString(),
+            shiftStatus:shiftStatus
+        }
+        const {data}=await http.post('/feeding-tasks', payload)
+        return toFeedingTasks(data as ApiRecord)
+    },
+    //更改投喂任务
+    async putFeedingTasks(shiftID:string,volunteerID:string,pointID:string,backupVolunteerID:string,planStartTime:Date,planEndTime:Date,shiftStatus:string){
+        const payload={
+            volunteerID:volunteerID,
+            pointID:pointID,
+            backupVolunteerID:backupVolunteerID,
+            planStartTime:planStartTime.toISOString(),
+            planEndTime:planEndTime.toISOString(),
+            shiftStatus:shiftStatus
+        }
+        const {data}=await http.put(`/feeding-tasks/${encodeURIComponent(shiftID)}`, payload)
+        return toFeedingTasks(data as ApiRecord)
+    },
+    //提交签到记录
+    async postFeedingRecords(shiftID:string,checkInTime:Date,longitude:number,latitude:number,photoUrl:string,distanceMeters:number,checkInStatus:string){
+        if (USE_MOCK) {
+            console.log('[mock] 提交签到记录', {shiftID,checkInTime,checkInStatus})
+            return
+        }
+        const payload={
+            shiftID:shiftID,
+            checkInTime:checkInTime.toISOString(),
+            longitude:longitude,
+            latitude:latitude,
+            photoUrl:photoUrl,
+            distanceMeters:distanceMeters,
+            checkInStatus:checkInStatus
+        }
+        const {data}=await http.post('/feeding-records', payload)
+        return toFeedingRecords(data as ApiRecord)
+    },
+    //获取投喂记录
+    async getFeedingRecords(){
+        if (USE_MOCK) return mockFeedingRecords.map(toFeedingRecords)
+        const {data}=await http.get('/feeding-records')
+        return (data as ApiRecord[]).map(toFeedingRecords)
+    },
+    async getFeedingRecordsById(id:string){
+        if (USE_MOCK) {
+            const found = mockFeedingRecords.find(r => (r.CheckInID || r.checkInID) === id)
+            return found ? [toFeedingRecords(found)] : []
+        }
+        const {data}=await http.get(`/feeding-records/${encodeURIComponent(id)}`)
+        return (data as ApiRecord[]).map(toFeedingRecords)
+    },
+    async getFeedingRecordsByShift(shiftId:string){
+        if (USE_MOCK) return mockFeedingRecords.filter(r => (r.ShiftID || r.shiftID) === shiftId).map(toFeedingRecords)
+        const {data}=await http.get(`/feeding-records/by-shift/${encodeURIComponent(shiftId)}`)
+        return (data as ApiRecord[]).map(toFeedingRecords)
+    },
+    async getFeedingRecordsByVolunteer(volunteerId:string){
+        if (USE_MOCK) return mockFeedingRecords.map(toFeedingRecords)
+        const {data}=await http.get(`/feeding-records/by-volunteer/${encodeURIComponent(volunteerId)}`)
+        return (data as ApiRecord[]).map(toFeedingRecords)
+    },
+    //获取交接记录
+    async getHandoverRecords(){
+        if (USE_MOCK) return mockHandovers.map(toHandoverRecords)
+        const {data}=await http.get('handovers')
+        return(data as ApiRecord[]).map(toHandoverRecords)
+    },
+    async getHandoverRecordsByTo(toVolunteerID:string){
+        if (USE_MOCK) return mockHandovers.filter(h => (h.ToVolunteerID || (h as any).toVolunteerID) === toVolunteerID).map(toHandoverRecords)
+        const {data}=await http.get(`handovers/by-to/${encodeURIComponent(toVolunteerID)}`)
+        return(data as ApiRecord[]).map(toHandoverRecords)
+    },
+    async getHandoverRecordsByFrom(fromVolunteerID:string){
+        if (USE_MOCK) return mockHandovers.filter(h => (h.FromVolunteerID || (h as any).fromVolunteerID) === fromVolunteerID).map(toHandoverRecords)
+        const {data}=await http.get(`handovers/by-from/${encodeURIComponent(fromVolunteerID)}`)
+        return(data as ApiRecord[]).map(toHandoverRecords)
+    },
+    async getHandoverRecordsById(id:string){
+        if (USE_MOCK) {
+            const found = mockHandovers.find(h => (h.HandoverID || (h as any).handoverID) === id)
+            return found ? [toHandoverRecords(found)] : []
+        }
+        const {data}=await http.get(`handovers/${encodeURIComponent(id)}`)
+        return [toHandoverRecords(data as ApiRecord)]
+    },
+    async getHandoverRecordsByStatus(status:string){
+        if (USE_MOCK) return mockHandovers.filter(h => (h.HandoverStatus || (h as any).handoverStatus) === status).map(toHandoverRecords)
+        const {data}=await http.get(`handovers/by-status/${encodeURIComponent(status)}`)
+        return(data as ApiRecord[]).map(toHandoverRecords)
+    },
+    async getHandoverRecordsByRelated(relatedType:string,relatedId:string){
+        if (USE_MOCK) return mockHandovers.filter(h => {
+            const rt = (h.RelatedType || (h as any).relatedType)
+            const ri = (h.RelatedID || (h as any).relatedID)
+            return rt === relatedType && ri === relatedId
+        }).map(toHandoverRecords)
+        const {data}=await http.get(`handovers/by-related/${encodeURIComponent(relatedType)}/${encodeURIComponent(relatedId)}`)
+        return(data as ApiRecord[]).map(toHandoverRecords)
+    },
+    //确认/拒绝/撤销交接
+    async confirmHandover(handoverID:string){
+        if (USE_MOCK) {
+            const h = mockHandovers.find(x => (x.HandoverID || (x as any).handoverID) === handoverID)
+            if (h) h.HandoverStatus = 'CONFIRMED'
+            return
+        }
+        await http.put(`handovers/${encodeURIComponent(handoverID)}/confirm`)
+    },
+    async rejectHandover(handoverID:string){
+        if (USE_MOCK) {
+            const h = mockHandovers.find(x => (x.HandoverID || (x as any).handoverID) === handoverID)
+            if (h) h.HandoverStatus = 'REJECTED'
+            return
+        }
+        await http.put(`handovers/${encodeURIComponent(handoverID)}/reject`)
+    },
+    async cancelHandover(handoverID:string){
+        if (USE_MOCK) {
+            const h = mockHandovers.find(x => (x.HandoverID || (x as any).handoverID) === handoverID)
+            if (h) h.HandoverStatus = 'CANCELLED'
+            return
+        }
+        await http.put(`handovers/${encodeURIComponent(handoverID)}/cancel`)
+    },
+    async postHandover(payload:PostHandoverPayLoad){
+        const {data}=await http.post('handovers',payload)
+        return toHandoverRecords(data as ApiRecord)
     }
 }

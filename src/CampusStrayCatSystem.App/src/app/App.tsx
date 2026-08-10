@@ -21,6 +21,7 @@ import { VolunteerPage } from '../features/volunteer/pages/VolunteerPage'
 import { VisitPage } from '../features/volunteer/pages/VisitPage'
 import { AdoptionCheckPage } from '../features/volunteer/pages/AdoptionCheckPage'
 import { ActivityPage } from '../features/volunteer/pages/ActivityPage'
+import { FeedingTasksPage } from '../features/volunteer/pages/FeedingTasksPage'
 
 function AdminOnly({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="volunteer/visits" element={<VisitPage/>} />
             <Route path="volunteer/adoptions" element={<AdoptionCheckPage/>} />
             <Route path="volunteer/activity" element={<ActivityPage/>} />
+            <Route path="volunteer/feeding-tasks" element={<FeedingTasksPage/>} />
             <Route path="system" element={<AdminOnly><SystemPage /></AdminOnly>} />
           </Route>
         </Route>
