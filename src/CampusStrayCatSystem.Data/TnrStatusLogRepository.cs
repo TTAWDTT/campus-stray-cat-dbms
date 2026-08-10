@@ -24,22 +24,6 @@ namespace CampusStrayCatSystem.Data
             return await QueryAsync(sql, new { CaseID = caseId });
         }
 
-        public async Task<TnrStatusLog?> GetById(string logId)
-        {
-            const string sql = @"
-                SELECT LOGID AS LogID,
-                       CASEID AS CaseID,
-                       FROMSTATUS AS FromStatus,
-                       TOSTATUS AS ToStatus,
-                       OPERATORID AS OperatorID,
-                       OPTIME AS OpTime,
-                       REMARK AS Remark
-                FROM TNR_STATUSLOGS
-                WHERE LOGID = :LogID";
-
-            return await QuerySingleAsync(sql, new { LogID = logId });
-        }
-
         public async Task<int> Create(TnrStatusLog log)
         {
             log.LogID = Guid.NewGuid().ToString();
