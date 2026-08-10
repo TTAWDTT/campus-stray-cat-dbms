@@ -1,0 +1,83 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrStatusLogs/case/e5aa77bb-2bd6-4d51-ba94-e49fb264795a"
+  method: GET
+  headers:
+    Authorization: Bearer {{volunteerToken}}
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Mon, 10 Aug 2026 08:43:03 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "logID": "b2e43e97-fed8-431a-abf0-67e16b9d68ea",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "DISCOVERED",
+          "toStatus": "CAPTURED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-08T21:31:49",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "944ccd58-48ec-417d-a22d-a1a419bf8889",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "CAPTURED",
+          "toStatus": "RELEASED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-08T21:33:41",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "0b6934c4-b67e-4b87-839d-af1b350a30e4",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "RELEASED",
+          "toStatus": "DISCOVERED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-08T21:37:39",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "283c18ad-b763-4182-8039-bd227d6fca8e",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "DISCOVERED",
+          "toStatus": "CAPTURED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-09T11:19:00",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "7b397deb-6b28-4ab8-af62-35a6eb0509f4",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "CAPTURED",
+          "toStatus": "CAPTURED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-09T11:52:17",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "e62d7aa6-48e4-41c0-b134-78d60d062fa0",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "CAPTURED",
+          "toStatus": "CAPTURED",
+          "operatorID": "user-admin-a-group",
+          "opTime": "2026-08-09T11:53:01",
+          "remark": "已在图书馆附近成功捕捉"
+        },
+        {
+          "logID": "a8dd065a-5962-4cab-bdb5-37cf421812ea",
+          "caseID": "e5aa77bb-2bd6-4d51-ba94-e49fb264795a",
+          "fromStatus": "CAPTURED",
+          "toStatus": "CAPTURED",
+          "operatorID": "user-volunteer-a-group",
+          "opTime": "2026-08-10T16:42:50",
+          "remark": "已在图书馆附近成功捕捉"
+        }
+      ]
+order: 4358277177756273

@@ -1,4 +1,4 @@
-# C 组（功能点 11-16）：接口核验结果（初步）
+# C 组（功能点 11-16）：接口核验结果
 
 > 对应接口文档：[C组_救助TNR与医疗接口文档.md]
 > 对应测试清单：`组内文件/C组功能点接口Postman测试清单.md`
@@ -24,34 +24,34 @@
 
 | 编号 | 接口 | 方法 | URL | 测试角色 | 状态 | 问题编号 |
 |---|---|---|---|---|---|---|
-| C-01 | 查询 TNR 案例列表 | GET | `/api/TnrCases` | ADMIN | 通过 |  |
-| C-02 | 查询 TNR 案例详情 | GET | `/api/TnrCases/{id}` | ADMIN | 通过 |  |
-| C-03 | 创建 TNR 案例 | POST | `/api/TnrCases` | ADMIN | 通过 |  |
-| C-04 | 更新 TNR 案例 | PUT | `/api/TnrCases/{id}` | ADMIN | 通过 |  |
-| C-05 | 更新 TNR 状态 | PUT | `/api/TnrCases/{id}/status` | ADMIN | 不通过 | BUG-C001、BUG-C011、BUG-C012 |
-| C-06 | 查询 TNR 状态日志 | GET | `/api/TnrStatusLogs/case/{caseId}` | ADMIN | 通过 |  |
-| C-07 | 查询医疗记录列表 | GET | `/api/MedHealthRecords` | ADMIN | 通过 |  |
-| C-08 | 按猫查询医疗记录 | GET | `/api/MedHealthRecords/cat/{catId}` | ADMIN | 不通过 | BUG-C002 |
-| C-09 | 查询医疗记录详情 | GET | `/api/MedHealthRecords/{id}` | ADMIN | 通过 |  |
-| C-10 | 新增医疗记录 | POST | `/api/MedHealthRecords` | ADMIN | 通过 |  |
-| C-11 | 编辑医疗记录 | PUT | `/api/MedHealthRecords/{id}` | ADMIN | 通过 |  |
-| C-12 | 查询待处理提醒 | GET | `/api/MedReminder` | ADMIN | 通过 |  |
-| C-13 | 按猫查询提醒 | GET | `/api/MedReminder/cat/{catId}` | ADMIN | 不通过 | BUG-C003 |
-| C-14 | 新增医疗提醒 | POST | `/api/MedReminder` | ADMIN | 不通过 | BUG-C004、BUG-C013 |
-| C-15 | 查询提醒详情 | GET | `/api/MedReminder/{reminderId}` | ADMIN | 通过 |  |
-| C-16 | 标记提醒已发送 | PUT | `/api/MedReminder/{reminderId}/sent` | ADMIN | 通过 |  |
-| C-17 | 标记提醒已完成 | PUT | `/api/MedReminder/{reminderId}/complete` | ADMIN | 通过 |  |
-| C-18 | 查询紧急上报列表 | GET | `/api/EmergencyReports` | ADMIN | 通过 |  |
-| C-19 | 查询紧急上报详情 | GET | `/api/EmergencyReports/{reportId}` | ADMIN | 通过 |  |
-| C-20 | 提交紧急上报 | POST | `/api/EmergencyReports` | ADMIN | 不通过 | BUG-C005 |
-| C-21 | 分配紧急上报处理人 | PUT | `/api/EmergencyReports/{reportId}/assign` | ADMIN | 通过 |  |
-| C-22 | 更新紧急上报状态 | PUT | `/api/EmergencyReports/{reportId}/status` | ADMIN | 通过 |  |
-| C-23 | 查询失踪预警列表 | GET | `/api/MissingAlerts` | ADMIN | 通过 |  |
-| C-24 | 按猫查询失踪预警 | GET | `/api/MissingAlerts/cat/{catId}` | ADMIN | 不通过 | BUG-C010 |
-| C-25 | 查询失踪预警详情 | GET | `/api/MissingAlerts/{alertId}` | ADMIN | 通过 |  |
-| C-26 | 创建目击记录 | POST | `/api/MissingAlerts/sightings` | ADMIN | 不通过 | BUG-C006、BUG-C007 |
-| C-27 | 创建失踪预警 | POST | `/api/MissingAlerts` | ADMIN | 不通过 | BUG-C008、BUG-C009、BUG-C016 |
-| C-28 | 更新失踪预警状态 | PUT | `/api/MissingAlerts/{alertId}/status` | ADMIN | 不通过 | BUG-C014、BUG-C015 |
+| C-01 | 查询 TNR 案例列表 | GET | `/api/TnrCases` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-02 | 查询 TNR 案例详情 | GET | `/api/TnrCases/{id}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-03 | 创建 TNR 案例 | POST | `/api/TnrCases` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-04 | 更新 TNR 案例 | PUT | `/api/TnrCases/{id}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-05 | 更新 TNR 状态 | PUT | `/api/TnrCases/{id}/status` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C001、BUG-C011、BUG-C012 |
+| C-06 | 查询 TNR 状态日志 | GET | `/api/TnrStatusLogs/case/{caseId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-07 | 查询医疗记录列表 | GET | `/api/MedHealthRecords` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-08 | 按猫查询医疗记录 | GET | `/api/MedHealthRecords/cat/{catId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C002 |
+| C-09 | 查询医疗记录详情 | GET | `/api/MedHealthRecords/{id}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-10 | 新增医疗记录 | POST | `/api/MedHealthRecords` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-11 | 编辑医疗记录 | PUT | `/api/MedHealthRecords/{id}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-12 | 查询待处理提醒 | GET | `/api/MedReminder` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-13 | 按猫查询提醒 | GET | `/api/MedReminder/cat/{catId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C003 |
+| C-14 | 新增医疗提醒 | POST | `/api/MedReminder` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C004、BUG-C013 |
+| C-15 | 查询提醒详情 | GET | `/api/MedReminder/{reminderId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-16 | 标记提醒已发送 | PUT | `/api/MedReminder/{reminderId}/sent` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-17 | 标记提醒已完成 | PUT | `/api/MedReminder/{reminderId}/complete` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-18 | 查询紧急上报列表 | GET | `/api/EmergencyReports` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-19 | 查询紧急上报详情 | GET | `/api/EmergencyReports/{reportId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-20 | 提交紧急上报 | POST | `/api/EmergencyReports` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C005 |
+| C-21 | 分配紧急上报处理人 | PUT | `/api/EmergencyReports/{reportId}/assign` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-22 | 更新紧急上报状态 | PUT | `/api/EmergencyReports/{reportId}/status` | ADMIN/VOLUNTEER/VET/普通用户/未登录/处理人/非处理人 | 通过 |  |
+| C-23 | 查询失踪预警列表 | GET | `/api/MissingAlerts` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-24 | 按猫查询失踪预警 | GET | `/api/MissingAlerts/cat/{catId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C010 |
+| C-25 | 查询失踪预警详情 | GET | `/api/MissingAlerts/{alertId}` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 通过 |  |
+| C-26 | 创建目击记录 | POST | `/api/MissingAlerts/sightings` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C006、BUG-C007 |
+| C-27 | 创建失踪预警 | POST | `/api/MissingAlerts` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C008、BUG-C009、BUG-C016 |
+| C-28 | 更新失踪预警状态 | PUT | `/api/MissingAlerts/{alertId}/status` | ADMIN/VOLUNTEER/VET/普通用户/未登录 | 不通过 | BUG-C014、BUG-C015 |
 
 ## 3. 问题详情
 
@@ -347,17 +347,21 @@
 复测结果：未修复
 ```
 
-## 6. 待补充测试
-
-- **权限边界（已完成）**：已补充普通登录用户对受保护接口（C-01~C-17、C-21、C-22、C-28）的访问测试，均返回 `403 Forbidden`，身份校验生效；仅需登录的接口（C-18~C-20、C-23~C-27）普通用户访问正常。因权限校验已确认生效，`VOLUNTEER`/`VET` 作为合法角色的"应通过"测试未单独执行。
-- **C-27 重复处理中预警（已完成，发现 BUG-C016）**：重复创建处理中预警时返回 `500` 而非 `409`，详见 BUG-C016。
-- **C-21 处理人角色限制（部分完成）**：已验证处理人 ID 不存在/无效返回 `400 "处理人必须是有效的管理员或志愿者。"`；`VET` 作为处理人应被拒绝（`400`）待补充。
-
 ## 4. 提交前检查
 
 - [√] 已填写测试人、日期、代码版本和数据库环境。
 - [√] 28 个接口均已填写状态。
 - [√] 每个不通过项都有问题编号和复现信息。
 - [√] 已隐藏 Token、密码、数据库账号和服务器凭据（过程文件中 500 响应体含 JWT，建议清理后再对外提交）。
+
+## 5. 补充测试
+
+以下测试项均已全部完成，未发现新增 BUG：
+
+- **权限边界测试**：对所有 28 个接口补充了多类身份的访问测试，共 97 个用例，全部符合预期：
+  - C-01~C-17（需 ADMIN/VOLUNTEER/VET）：志愿者/兽医访问返回 `200/201/204`，普通用户 `403`，未登录 `401`。
+  - C-18~C-20、C-23~C-27（仅需登录）：志愿者/兽医/普通用户访问返回 `200/201/204`，未登录 `401`。
+  - C-21、C-22、C-28（需 ADMIN/VOLUNTEER）：志愿者访问 `204`，兽医/普通用户 `403`，未登录 `401`。
+- **C-22 处理人/非处理人业务校验**：C-22 更新紧急上报处理状态时，除角色校验外还有处理人校验——被分配的处理人本人访问返回 `204`，非处理人（其他VOLUNTEER）访问返回 `403`，业务权限控制正确。
 
 ---

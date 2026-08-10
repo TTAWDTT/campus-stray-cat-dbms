@@ -1,9 +1,6 @@
 $kind: http-request
-name: C26
 url: "{{baseUrl}}/api/MissingAlerts/sightings"
 method: POST
-headers:
-  Authorization: Bearer {{adminToken}}
 body:
   type: json
   content: "{\r

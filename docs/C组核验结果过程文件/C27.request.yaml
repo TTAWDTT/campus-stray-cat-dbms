@@ -1,8 +1,6 @@
 $kind: http-request
 url: "{{baseUrl}}/api/MissingAlerts"
 method: POST
-headers:
-  Authorization: Bearer {{adminToken}}
 body:
   type: json
   content: "{\r

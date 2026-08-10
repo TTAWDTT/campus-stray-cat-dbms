@@ -1,8 +1,6 @@
 $kind: http-request
 url: "{{baseUrl}}/api/MissingAlerts/091444b959764e70a2088a5e29b4f420/status"
 method: PUT
-headers:
-  Authorization: Bearer {{userToken}}
 body:
   type: json
   content: "{\r

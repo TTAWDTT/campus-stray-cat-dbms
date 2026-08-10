@@ -1,7 +1,5 @@
 $kind: http-request
 url: "{{baseUrl}}/api/MedReminder/123456/complete"
 method: PUT
-headers:
-  Authorization: Bearer {{userToken}}
 examples: .resources/C17.resources/examples
 order: 4503599579361815

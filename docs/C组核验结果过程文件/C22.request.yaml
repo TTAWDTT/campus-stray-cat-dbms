@@ -1,9 +1,6 @@
 $kind: http-request
-name: C22
-url: "{{baseUrl}}/api/EmergencyReports/123456/status"
+url: "{{baseUrl}}/api/EmergencyReports/8a9c4bf712cc497290f2eaa70d4f3cfa/status"
 method: PUT
-headers:
-  Authorization: Bearer {{userToken}}
 body:
   type: json
   content: "{\r

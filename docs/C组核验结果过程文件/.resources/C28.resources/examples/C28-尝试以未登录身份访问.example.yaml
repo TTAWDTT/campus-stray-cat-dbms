@@ -1,0 +1,27 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts/091444b959764e70a2088a5e29b4f420/status"
+  method: PUT
+  body:
+    type: json
+    content: "{\r
+
+      \    \"alertStatus\": \"FOUND\",\r
+
+      \    \"handlerUserID\": \"特朗普\",\r
+
+      \    \"remark\": \"特朗普已在南校区找到图图，状态良好\"\r
+
+      }"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:51:40 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4456111075370480

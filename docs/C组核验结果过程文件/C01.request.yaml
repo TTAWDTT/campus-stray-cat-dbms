@@ -1,8 +1,6 @@
 $kind: http-request
 url: "{{baseUrl}}/api/TnrCases"
 method: GET
-headers:
-  Authorization: Bearer {{userToken}}
 body:
   type: json
   content: ""

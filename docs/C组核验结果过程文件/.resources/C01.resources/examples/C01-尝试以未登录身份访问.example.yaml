@@ -1,0 +1,19 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/TnrCases"
+  method: GET
+  body:
+    type: json
+    content: ""
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:04:28 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4503577702029460

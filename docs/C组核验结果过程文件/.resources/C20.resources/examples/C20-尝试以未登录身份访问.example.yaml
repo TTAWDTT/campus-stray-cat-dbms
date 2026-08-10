@@ -1,0 +1,33 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/EmergencyReports"
+  method: POST
+  body:
+    type: json
+    content: "{\r
+
+      \    \"areaID\": \"demo-area-library\",\r
+
+      \    \"animalType\": \"CAT\",\r
+
+      \    \"photoURL\": \"https://example.invalid/emergency-cat.jpg\",\r
+
+      \    \"longitude\": 121.5065,\r
+
+      \    \"latitude\": 31.2822,\r
+
+      \    \"urgencyLevel\": \"H\"\r
+
+      }"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:32:10 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4380603305684095

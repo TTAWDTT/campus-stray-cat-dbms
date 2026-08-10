@@ -1,0 +1,16 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/4d9cd956-4067-4946-889e-2db2137dc97d"
+  method: GET
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:06:36 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4458649458855168

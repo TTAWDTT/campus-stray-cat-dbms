@@ -1,0 +1,48 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts/sightings"
+  method: POST
+  headers:
+    Authorization: Bearer {{userToken}}
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"areaID\": \"demo-area-library\",\r
+
+      \    \"longitude\": 121.5065,\r
+
+      \    \"latitude\": 31.2822,\r
+
+      \    \"photoURL\": \"https://example.invalid/sighting-photo.jpg\",\r
+
+      \    \"sightingTime\": \"2026-08-06T18:00:00Z\",\r
+
+      \    \"remark\": \"在图书馆附近最后一次目击到图图\"\r
+
+      }"
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    content-type: application/json; charset=utf-8
+    date: Mon, 10 Aug 2026 09:20:05 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: json
+    content: |-
+      {
+        "sightingID": "d6fdc6fac5984c05a7bedf4c74e0570f",
+        "catID": "demo-cat-campus-001",
+        "userID": "user-normal-a-group",
+        "areaID": "demo-area-library",
+        "longitude": 121.5065,
+        "latitude": 31.2822,
+        "photoUrl": "https://example.invalid/sighting-photo.jpg",
+        "sightingTime": "2026-08-06T18:00:00Z",
+        "remark": "在图书馆附近最后一次目击到图图"
+      }
+order: 1919152554235079

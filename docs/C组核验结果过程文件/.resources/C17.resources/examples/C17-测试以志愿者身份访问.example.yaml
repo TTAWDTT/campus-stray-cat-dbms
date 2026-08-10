@@ -1,0 +1,18 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedReminder/123456/complete"
+  method: PUT
+  headers:
+    Authorization: Bearer {{volunteerToken}}
+response:
+  statusCode: 404
+  statusText: Not Found
+  headers:
+    content-type: text/plain; charset=utf-8
+    date: Mon, 10 Aug 2026 08:48:53 GMT
+    server: Kestrel
+    transfer-encoding: chunked
+  body:
+    type: text
+    content: 未找到提醒 123456。
+order: 4311944674363141

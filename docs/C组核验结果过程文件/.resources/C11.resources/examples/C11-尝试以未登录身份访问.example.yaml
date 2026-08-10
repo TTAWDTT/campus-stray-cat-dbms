@@ -1,0 +1,35 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MedHealthRecords/4d9cd956-4067-4946-889e-2db2137dc97d"
+  method: PUT
+  body:
+    type: json
+    content: "{\r
+
+      \    \"recordID\": \"4d9cd956-4067-4946-889e-2db2137dc97d\",\r
+
+      \    \"catID\": \"demo-cat-campus-999\",\r
+
+      \    \"recordType\": \"VACCINATION\",\r
+
+      \    \"hospitalName\": \"同济附属动物医院\",\r
+
+      \    \"diagnosis\": \"猫三联疫苗第一针（加强），状态良好\",\r
+
+      \    \"recordDate\": \"2026-08-03T09:00:00Z\",\r
+
+      \    \"nextDueDate\": \"2026-08-24T09:00:00Z\"\r
+
+      }"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:07:10 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4485757837972005

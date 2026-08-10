@@ -1,8 +1,6 @@
 $kind: http-request
 url: "{{baseUrl}}/api/MedHealthRecords"
 method: POST
-headers:
-  Authorization: Bearer {{userToken}}
 body:
   type: json
   content: "{\r

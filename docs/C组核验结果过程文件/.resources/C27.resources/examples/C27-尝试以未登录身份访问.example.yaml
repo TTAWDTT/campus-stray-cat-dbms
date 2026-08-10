@@ -1,0 +1,31 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/MissingAlerts"
+  method: POST
+  body:
+    type: json
+    content: "{\r
+
+      \    \"catID\": \"demo-cat-campus-001\",\r
+
+      \    \"lastSightingID\": \"f1dcb713b60b4ccdaade5c671dce27d8\",\r
+
+      \    \"lastSightingTime\": \"2026-08-06T18:00:00Z\",\r
+
+      \    \"thresholdDays\": 7,\r
+
+      \    \"remark\": \"图图已超过4天未被目击，请各位留意\"\r
+
+      }"
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    content-length: "0"
+    date: Mon, 10 Aug 2026 09:33:16 GMT
+    server: Kestrel
+    www-authenticate: Bearer
+  body:
+    type: text
+    content: ""
+order: 4495179823361791

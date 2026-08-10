@@ -1,8 +1,5 @@
 $kind: http-request
-name: C18
 url: "{{baseUrl}}/api/EmergencyReports"
 method: GET
-headers:
-  Authorization: Bearer {{userToken}}
 examples: .resources/C18.resources/examples
 order: 4503599622541999

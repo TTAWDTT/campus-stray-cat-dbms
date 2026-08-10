@@ -1,7 +1,5 @@
 $kind: http-request
 url: "{{baseUrl}}/api/MedHealthRecords"
 method: GET
-headers:
-  Authorization: Bearer {{userToken}}
 examples: .resources/C07.resources/examples
 order: 4502808864357216
