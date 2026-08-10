@@ -56,6 +56,12 @@ namespace CampusStrayCatSystem.Core
             if (tnrCase == null)
                 return BadRequest("TNR案例数据为空，无法创建。");
 
+            // 设置默认状态
+            if (string.IsNullOrWhiteSpace(tnrCase.CurrentStatus))
+            {
+                tnrCase.CurrentStatus = TnrStatuses.Discovered;
+            }
+
             // 业务校验
             var validationError = await ValidateTnrCase(tnrCase);
             if (validationError != null)
@@ -116,6 +122,18 @@ namespace CampusStrayCatSystem.Core
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的TNR案例，无法更新状态。");
 
+            // 校验请求体中的 operatorID（如果提供）是否存在
+            if (!string.IsNullOrWhiteSpace(request.OperatorID))
+            {
+                if (!await _userRepository.Exists(request.OperatorID))
+                    return BadRequest($"操作者 UserID='{request.OperatorID}' 不存在。");
+            }
+
+            // 校验状态流转方向（不允许逆向回退）
+            if (!IsValidTransition(existing.CurrentStatus, request.NewStatus))
+                return BadRequest($"不允许从 '{existing.CurrentStatus}' 流转到 '{request.NewStatus}'。");
+
+            // 操作人以当前登录用户为准（安全原则：不能以他人身份操作）
             var operatorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(operatorId))
                 return Unauthorized();
@@ -129,6 +147,42 @@ namespace CampusStrayCatSystem.Core
             await _tnrCaseRepository.UpdateStatusWithLog(id, request.NewStatus, oldStatus ?? "", operatorId, request.Remark);
 
             return Ok(new { oldStatus, newStatus = request.NewStatus, message = "状态更新成功，已生成流转日志。" });
+        }
+
+        // 校验 TNR 状态流转是否合法。
+        // 标准流程: DISCOVERED → CAPTURED → SURGERY → RECOVERING → RELEASED（终端）。
+        // 任意非终端状态可流转到 CANCELLED（终端）。
+        // 终端状态不允许再流转。
+        private static bool IsValidTransition(string? fromStatus, string toStatus)
+        {
+            // 无当前状态时允许设置任意合法状态
+            if (string.IsNullOrWhiteSpace(fromStatus))
+                return true;
+
+            // 不允许同状态流转
+            if (string.Equals(fromStatus, toStatus, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // 终端状态不允许再流转
+            if (string.Equals(fromStatus, TnrStatuses.Released, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fromStatus, TnrStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // 任意非终端状态可流转到 CANCELLED
+            if (string.Equals(toStatus, TnrStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // 标准正向流转路径
+            if (string.Equals(fromStatus, TnrStatuses.Discovered, StringComparison.OrdinalIgnoreCase))
+                return string.Equals(toStatus, TnrStatuses.Captured, StringComparison.OrdinalIgnoreCase);
+            if (string.Equals(fromStatus, TnrStatuses.Captured, StringComparison.OrdinalIgnoreCase))
+                return string.Equals(toStatus, TnrStatuses.Surgery, StringComparison.OrdinalIgnoreCase);
+            if (string.Equals(fromStatus, TnrStatuses.Surgery, StringComparison.OrdinalIgnoreCase))
+                return string.Equals(toStatus, TnrStatuses.Recovering, StringComparison.OrdinalIgnoreCase);
+            if (string.Equals(fromStatus, TnrStatuses.Recovering, StringComparison.OrdinalIgnoreCase))
+                return string.Equals(toStatus, TnrStatuses.Released, StringComparison.OrdinalIgnoreCase);
+
+            return false;
         }
 
         // 业务校验

@@ -33,6 +33,9 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<MedHealthRecord>>> GetByCatId(string catId)
         {
+            if (!await _catRepository.Exists(catId))
+                return NotFound($"未找到 ID 为 {catId} 的猫咪档案。");
+
             var records = await _medHealthRecordRepository.GetByCatId(catId);
             return Ok(records ?? new List<MedHealthRecord>());
         }
@@ -78,6 +81,9 @@ namespace CampusStrayCatSystem.Core
             var existing = await _medHealthRecordRepository.GetById(id);
             if (existing == null)
                 return NotFound($"未找到 ID 为 {id} 的医疗记录，无法更新。");
+
+            // 医疗记录不允许更换所属猫咪
+            record.CatID = existing.CatID;
 
             var validationError = await ValidateMedRecord(record);
             if (validationError != null)

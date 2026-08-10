@@ -19,7 +19,8 @@ namespace CampusStrayCatSystem.Data
                        CAPTURETIME AS CaptureTime,
                        SURGERYTIME AS SurgeryTime,
                        RELEASETIME AS ReleaseTime,
-                       TOTALCOST AS TotalCost
+                       TOTALCOST AS TotalCost,
+                       REMARK AS Remark
                 FROM TNR_CASES
                 ORDER BY CAPTURETIME DESC NULLS LAST";
 
@@ -37,7 +38,8 @@ namespace CampusStrayCatSystem.Data
                        CAPTURETIME AS CaptureTime,
                        SURGERYTIME AS SurgeryTime,
                        RELEASETIME AS ReleaseTime,
-                       TOTALCOST AS TotalCost
+                       TOTALCOST AS TotalCost,
+                       REMARK AS Remark
                 FROM TNR_CASES
                 WHERE CASEID = :CaseID";
 
@@ -50,9 +52,9 @@ namespace CampusStrayCatSystem.Data
 
             const string sql = @"
                 INSERT INTO TNR_CASES (CASEID, CATID, RESPONSIBLEUSERID, CURRENTSTATUS, HOSPITALNAME,
-                                       CAPTURETIME, SURGERYTIME, RELEASETIME, TOTALCOST)
+                                       CAPTURETIME, SURGERYTIME, RELEASETIME, TOTALCOST, REMARK)
                 VALUES (:CaseID, :CatID, :ResponsibleUserID, :CurrentStatus, :HospitalName,
-                        :CaptureTime, :SurgeryTime, :ReleaseTime, :TotalCost)";
+                        :CaptureTime, :SurgeryTime, :ReleaseTime, :TotalCost, :Remark)";
 
             return await ExecuteAsync(sql, new
             {
@@ -64,7 +66,8 @@ namespace CampusStrayCatSystem.Data
                 tnrCase.CaptureTime,
                 tnrCase.SurgeryTime,
                 tnrCase.ReleaseTime,
-                tnrCase.TotalCost
+                tnrCase.TotalCost,
+                tnrCase.Remark
             });
         }
 
@@ -78,7 +81,8 @@ namespace CampusStrayCatSystem.Data
                     CAPTURETIME = :CaptureTime,
                     SURGERYTIME = :SurgeryTime,
                     RELEASETIME = :ReleaseTime,
-                    TOTALCOST = :TotalCost
+                    TOTALCOST = :TotalCost,
+                    REMARK = :Remark
                 WHERE CASEID = :CaseID";
 
             return await ExecuteAsync(sql, new
@@ -90,6 +94,7 @@ namespace CampusStrayCatSystem.Data
                 tnrCase.SurgeryTime,
                 tnrCase.ReleaseTime,
                 tnrCase.TotalCost,
+                tnrCase.Remark,
                 tnrCase.CaseID
             });
         }
