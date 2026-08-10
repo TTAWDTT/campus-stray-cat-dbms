@@ -6,26 +6,30 @@ using CampusStrayCatSystem.Models;
 
 namespace CampusStrayCatSystem.Core
 {
-    /// <summary>
-    /// 猫咪失踪预警接口。
-    /// 负责记录最后目击、创建预警、更新预警状态和关闭结果。
-    /// </summary>
+    // 猫咪失踪预警接口
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class MissingAlertsController : ControllerBase
     {
         private readonly IMissingAlertRepository _missingAlertRepository;
+        private readonly ICatRepository _catRepository;
+        private readonly ICampusAreaRepository _areaRepository;
+        private readonly ICatSightingRepository _sightingRepository;
 
-        public MissingAlertsController(IMissingAlertRepository missingAlertRepository)
+        public MissingAlertsController(
+            IMissingAlertRepository missingAlertRepository,
+            ICatRepository catRepository,
+            ICampusAreaRepository areaRepository,
+            ICatSightingRepository sightingRepository)
         {
             _missingAlertRepository = missingAlertRepository;
+            _catRepository = catRepository;
+            _areaRepository = areaRepository;
+            _sightingRepository = sightingRepository;
         }
 
-        /// <summary>
-        /// 获取全部失踪预警。
-        /// 适合管理员在工作台里查看全部处理情况。
-        /// </summary>
+        // 获取全部失踪预警
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CatMissingAlert>>> GetAll()
         {
@@ -33,10 +37,7 @@ namespace CampusStrayCatSystem.Core
             return Ok(alerts);
         }
 
-        /// <summary>
-        /// 按猫咪查询预警历史。
-        /// 这样可以快速看到某只猫是否出现过失踪预警。
-        /// </summary>
+        // 按猫咪查询预警历史
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<CatMissingAlert>>> GetByCatId(string catId)
         {
@@ -49,10 +50,7 @@ namespace CampusStrayCatSystem.Core
             return Ok(alerts);
         }
 
-        /// <summary>
-        /// 查看单条预警。
-        /// 用于查看完整流转信息和最近处理结果。
-        /// </summary>
+        // 查看单条预警
         [HttpGet("{alertId}")]
         public async Task<ActionResult<CatMissingAlert>> GetById(string alertId)
         {
@@ -65,10 +63,7 @@ namespace CampusStrayCatSystem.Core
             return alert == null ? NotFound($"未找到预警 {alertId}。") : Ok(alert);
         }
 
-        /// <summary>
-        /// 先记录一次猫咪目击信息。
-        /// 预警流程里“最后目击”最好单独存，这样后续能精确追踪位置和时间。
-        /// </summary>
+        // 记录猫咪目击信息
         [HttpPost("sightings")]
         public async Task<ActionResult<CatSighting>> CreateSighting([FromBody] CatSighting sighting)
         {
@@ -82,10 +77,16 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            if (!await _catRepository.Exists(sighting.CatID))
+                return NotFound($"未找到 ID 为 {sighting.CatID} 的猫咪档案。");
+
             if (string.IsNullOrWhiteSpace(sighting.AreaID))
             {
                 return BadRequest("区域 ID 不能为空。");
             }
+
+            if (await _areaRepository.GetByIdAsync(sighting.AreaID) == null)
+                return NotFound($"未找到 ID 为 {sighting.AreaID} 的区域。");
 
             if (sighting.SightingTime == null)
             {
@@ -99,10 +100,7 @@ namespace CampusStrayCatSystem.Core
             return Ok(sighting);
         }
 
-        /// <summary>
-        /// 创建失踪预警。
-        /// 这里会把猫、最后目击、阈值和当前处理人一起保存。
-        /// </summary>
+        // 创建失踪预警
         [HttpPost]
         public async Task<ActionResult<CatMissingAlert>> Create([FromBody] CatMissingAlert alert)
         {
@@ -114,6 +112,15 @@ namespace CampusStrayCatSystem.Core
             if (string.IsNullOrWhiteSpace(alert.CatID))
             {
                 return BadRequest("猫咪 ID 不能为空。");
+            }
+
+            if (!await _catRepository.Exists(alert.CatID))
+                return NotFound($"未找到 ID 为 {alert.CatID} 的猫咪档案。");
+
+            if (!string.IsNullOrWhiteSpace(alert.LastSightingID))
+            {
+                if (await _sightingRepository.GetByIdAsync(alert.LastSightingID) == null)
+                    return NotFound($"未找到 ID 为 {alert.LastSightingID} 的最后目击记录。");
             }
 
             if (alert.ThresholdDays != null && alert.ThresholdDays <= 0)
@@ -135,10 +142,7 @@ namespace CampusStrayCatSystem.Core
             return CreatedAtAction(nameof(GetById), new { alertId = alert.AlertID }, alert);
         }
 
-        /// <summary>
-        /// 更新预警状态。
-        /// 支持处理中、已寻回、已关闭等状态流转。
-        /// </summary>
+        // 更新预警状态
         [HttpPut("{alertId}/status")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateStatus(string alertId, [FromBody] CatMissingAlert alert)

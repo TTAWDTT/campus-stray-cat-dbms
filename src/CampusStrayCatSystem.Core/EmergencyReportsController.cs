@@ -6,10 +6,7 @@ using System.Security.Claims;
 
 namespace CampusStrayCatSystem.Core
 {
-    /// <summary>
-    /// 紧急救助上报接口。
-    /// 提供提交、分配和处理状态更新的完整闭环。
-    /// </summary>
+    // 紧急救助上报接口
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -17,19 +14,19 @@ namespace CampusStrayCatSystem.Core
     {
         private readonly IEmergencyReportRepository _reportRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ICampusAreaRepository _areaRepository;
 
         public EmergencyReportsController(
             IEmergencyReportRepository reportRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ICampusAreaRepository areaRepository)
         {
             _reportRepository = reportRepository;
             _userRepository = userRepository;
+            _areaRepository = areaRepository;
         }
 
-        /// <summary>
-        /// 获取全部紧急上报。
-        /// 适合管理员工作台按时间查看最新上报。
-        /// </summary>
+        // 获取全部紧急上报
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EmergencyReport>>> GetAll()
         {
@@ -37,10 +34,7 @@ namespace CampusStrayCatSystem.Core
             return Ok(reports);
         }
 
-        /// <summary>
-        /// 按上报编号查看单条记录。
-        /// 便于提交后回查和处理时核对内容。
-        /// </summary>
+        // 按上报编号查看单条记录
         [HttpGet("{reportId}")]
         public async Task<ActionResult<EmergencyReport>> GetById(string reportId)
         {
@@ -53,10 +47,7 @@ namespace CampusStrayCatSystem.Core
             return report == null ? NotFound($"未找到上报 {reportId}。") : Ok(report);
         }
 
-        /// <summary>
-        /// 提交一条新的紧急救助上报。
-        /// 这是普通用户最先使用的入口。
-        /// </summary>
+        // 提交一条新的紧急救助上报
         [HttpPost]
         [Authorize]
         public async Task<ActionResult<EmergencyReport>> Create([FromBody] EmergencyReport report)
@@ -78,6 +69,9 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("区域 ID 不能为空。");
             }
 
+            if (await _areaRepository.GetByIdAsync(report.AreaID) == null)
+                return NotFound($"未找到 ID 为 {report.AreaID} 的区域。");
+
             if (string.IsNullOrWhiteSpace(report.AnimalType) || !AnimalTypes.IsValid(report.AnimalType))
             {
                 return BadRequest("动物类型必须是 CAT、DOG 或 OTHER。");
@@ -96,10 +90,7 @@ namespace CampusStrayCatSystem.Core
             return CreatedAtAction(nameof(GetById), new { reportId = report.ReportID }, report);
         }
 
-        /// <summary>
-        /// 给上报分配处理人。
-        /// 一般由管理员或志愿者在接单后调用。
-        /// </summary>
+        // 给上报分配处理人
         [HttpPut("{reportId}/assign")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> AssignHandler(string reportId, [FromBody] string? handlerUserId)
@@ -131,10 +122,7 @@ namespace CampusStrayCatSystem.Core
             return NoContent();
         }
 
-        /// <summary>
-        /// 更新上报处理状态和结果。
-        /// 这个接口负责把“已受理、处理中、已完成”等状态写回去。
-        /// </summary>
+        // 更新上报处理状态和结果
         [HttpPut("{reportId}/status")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]
         public async Task<IActionResult> UpdateStatus(string reportId, [FromBody] EmergencyReport report)
@@ -168,8 +156,6 @@ namespace CampusStrayCatSystem.Core
                 return Forbid();
             }
 
-            // 这里调用的是 Oracle Package，ExecuteNonQuery 的返回值不代表包内 UPDATE 行数。
-            // 报告不存在和非法状态由 Package 抛错，接口只在调用成功后返回 204。
             await _reportRepository.UpdateStatus(reportId, report.ProcessStatus.Trim().ToUpperInvariant(), report.ProcessResult);
             return NoContent();
         }

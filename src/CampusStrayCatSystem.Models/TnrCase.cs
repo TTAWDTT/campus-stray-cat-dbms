@@ -29,5 +29,6 @@ namespace CampusStrayCatSystem.Models
         public DateTime? SurgeryTime { get; set; }
         public DateTime? ReleaseTime { get; set; }
         public decimal? TotalCost { get; set; }
+        public string? Remark { get; set; }
     }
 }
