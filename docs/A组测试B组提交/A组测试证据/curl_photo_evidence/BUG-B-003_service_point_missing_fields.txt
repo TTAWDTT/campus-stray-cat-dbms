@@ -1,0 +1,2 @@
+{"pointID":"07bac185-b520-405f-b29f-b99b01c88c62","areaID":null,"pointName":"无区域","pointType":null,"longitude":null,"latitude":null,"facilityStatus":null,"deployTime":null}
+HTTP:201
