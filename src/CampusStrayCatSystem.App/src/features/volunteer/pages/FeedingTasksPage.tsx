@@ -5,13 +5,15 @@ import { DatePicker } from 'antd'
 import {PageHeader} from '../../../shared/components/PageHeader'
 import {StatusTag} from '../../../shared/components/StatusTag'
 import {VolunteerService} from '../../../services/volunteer.service'
+import {useAuthStore} from '../../../stores/auth.store'
 
 export function FeedingTasksPage() {
   const navigate = useNavigate()
   const [searchParams]=useSearchParams()
   const myVolunteerId=searchParams.get('volunteerId')||''
+  const isAdmin=(useAuthStore.getState().user?.roleName?.toUpperCase()==='ADMIN')
   const [feedingTasks,setFeedingTasks]=useState<any[]>([])
-  const [feedingFilter,setFeedingFilter]=useState('mine')
+  const [feedingFilter,setFeedingFilter]=useState(isAdmin?'all':'mine')
   const [feedingInput,setFeedingInput]=useState('')
   const [statusFilter,setStatusFilter]=useState('')
   const [feedingRecords,setFeedingRecords]=useState<any[]>([])
@@ -26,6 +28,10 @@ export function FeedingTasksPage() {
   const [handoverOpen,setHandoverOpen]=useState(false)
   const [currentHandoverShiftId,setCurrentHandoverShiftId]=useState('')
   const [currentHandoverFromVolId,setCurrentHandoverFromVolId]=useState('')
+  const [taskDrawerOpen,setTaskDrawerOpen]=useState(false)
+  const [taskDrawerMode,setTaskDrawerMode]=useState<'create'|'update'>('create')
+  const [editingTaskId,setEditingTaskId]=useState('')
+  const [taskForm]=useForm()
 
   useEffect(()=>{
     VolunteerService.getAllFeedingTasks().then(setFeedingTasks).catch(()=>{
@@ -148,6 +154,70 @@ export function FeedingTasksPage() {
     handoverForm.resetFields()
   }
 
+  const openTaskDrawer=(mode:'create'|'update',record?:any)=>{
+    setTaskDrawerMode(mode)
+    if(mode==='update'&&record){
+      setEditingTaskId(record.shiftID)
+      taskForm.setFieldsValue({
+        volunteerID:record.volunteerID,
+        pointID:record.pointID,
+        backupVolunteerID:record.backupVolunteerID||'',
+        planStartTime:record.planStartTime,
+        planEndTime:record.planEndTime,
+        shiftStatus:record.shiftStatus,
+      })
+    }else{
+      setEditingTaskId('')
+      taskForm.resetFields()
+    }
+    setTaskDrawerOpen(true)
+  }
+
+  const closeTaskDrawer=()=>{
+    setTaskDrawerOpen(false)
+    taskForm.resetFields()
+  }
+
+  const handleTaskSubmit=async ()=>{
+    const values:Record<string,any>=taskForm.getFieldsValue()
+    if(!values.volunteerID){Notification.error('请输入志愿者ID');return}
+    if(!values.pointID){Notification.error('请输入点位ID');return}
+    if(!values.planStartTime||!values.planEndTime){Notification.error('请选择时间');return}
+    if(!values.shiftStatus){Notification.error('请选择状态');return}
+    const startTime:Date=values.planStartTime?(values.planStartTime as any).toDate():new Date()
+    const endTime:Date=values.planEndTime?(values.planEndTime as any).toDate():new Date()
+    if(endTime<=startTime){Notification.error('结束时间不得早于开始时间');return}
+    if(values.backupVolunteerID&&values.backupVolunteerID===values.volunteerID){Notification.error('备用志愿者不得与负责人相同');return}
+    try{
+      if(taskDrawerMode==='update'){
+        await VolunteerService.putFeedingTasks(
+          editingTaskId,
+          String(values.volunteerID),
+          String(values.pointID),
+          String(values.backupVolunteerID||''),
+          startTime,
+          endTime,
+          String(values.shiftStatus)
+        )
+        Notification.success('更新成功')
+      }else{
+        await VolunteerService.postFeedingTasks(
+          String(values.volunteerID),
+          String(values.pointID),
+          String(values.backupVolunteerID||''),
+          startTime,
+          endTime,
+          String(values.shiftStatus)
+        )
+        Notification.success('创建成功')
+      }
+      closeTaskDrawer()
+      VolunteerService.getAllFeedingTasks().then(setFeedingTasks).catch(()=>{})
+    }catch{
+      Notification.error(taskDrawerMode==='update'?'更新失败':'创建失败')
+    }
+  }
+
   const handleHandover=async ()=>{
     const values:Record<string,any>=handoverForm.getFieldsValue()
     if(!values.toVolunteerID){Notification.error('请输入接收方志愿者ID');return}
@@ -193,8 +263,9 @@ export function FeedingTasksPage() {
         if(done) return null
         return (
           <div style={{display:'flex',gap:4}}>
-            <Button type="primary" size="small" onClick={()=>openCheckIn(_record.shiftID)}>签到</Button>
+            {!isAdmin&&<Button type="primary" size="small" onClick={()=>openCheckIn(_record.shiftID)}>签到</Button>}
             <Button type="primary" size="small" onClick={()=>openHandover(_record.shiftID,_record.volunteerID)}>交接</Button>
+            {isAdmin&&<Button type="primary" size="small" onClick={()=>openTaskDrawer('update',_record)}>更新</Button>}
           </div>
         )
       },
@@ -236,12 +307,15 @@ export function FeedingTasksPage() {
               {label:'按ID',value:'id'},
               {label:'按点位',value:'point'},
               {label:'按状态',value:'status'},
-              {label:'我的',value:'mine'}
+              ...(!isAdmin?[{label:'我的',value:'mine'}]:[]),
             ]}
             value={feedingFilter}
             onChange={(v)=>{setFeedingFilter(String(v));setFeedingInput('');setStatusFilter('')}}
           />
-          <Button type="primary" size="small" onClick={queryFeedingTasks}>查询</Button>
+          <div style={{display:'flex',gap:8}}>
+            <Button type="primary" size="small" onClick={queryFeedingTasks}>查询</Button>
+            {isAdmin&&<Button type="primary" size="small" onClick={()=>openTaskDrawer('create')}>新增任务</Button>}
+          </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
           {(feedingFilter==='id'||feedingFilter==='point')&&(
@@ -276,7 +350,7 @@ export function FeedingTasksPage() {
               {label:'全部',value:'all'},
               {label:'按ID',value:'id'},
               {label:'按任务',value:'shift'},
-              {label:'我的',value:'mine'}
+              ...(!isAdmin?[{label:'我的',value:'mine'}]:[]),
             ]}
             value={recordFilter}
             onChange={(v)=>{setRecordFilter(String(v));setRecordInput('')}}
@@ -337,6 +411,38 @@ export function FeedingTasksPage() {
             <FormItem>
               <Button type='primary' style={{marginRight:8}} onClick={handleHandover}>提交</Button>
               <Button type='primary' onClick={closeHandover}>取消</Button>
+            </FormItem>
+          </Form>
+        </Drawer>
+        <Drawer open={taskDrawerOpen} onClose={closeTaskDrawer} title={taskDrawerMode==='update'?'更新投喂任务':'新增投喂任务'}>
+          <Form form={taskForm} layout='vertical'>
+            <FormItem label='志愿者ID' name='volunteerID' required>
+              <Input placeholder='请输入志愿者ID' />
+            </FormItem>
+            <FormItem label='点位ID' name='pointID' required>
+              <Input placeholder='请输入点位ID' />
+            </FormItem>
+            <FormItem label='备用志愿者ID' name='backupVolunteerID'>
+              <Input placeholder='请输入备用志愿者ID（选填）' />
+            </FormItem>
+            <FormItem label='开始时间' name='planStartTime' required>
+              <DatePicker showTime />
+            </FormItem>
+            <FormItem label='结束时间' name='planEndTime' required>
+              <DatePicker showTime />
+            </FormItem>
+            <FormItem label='排班状态' name='shiftStatus' required>
+              <Radio options={[
+                {label:'已排班',value:'PLANNED'},
+                {label:'已分配',value:'ASSIGNED'},
+                {label:'执行中',value:'IN_PROGRESS'},
+                {label:'已完成',value:'COMPLETED'},
+                {label:'逾期',value:'MISSED'},
+              ]}/>
+            </FormItem>
+            <FormItem>
+              <Button type='primary' style={{marginRight:8}} onClick={handleTaskSubmit}>提交</Button>
+              <Button type='primary' onClick={closeTaskDrawer}>取消</Button>
             </FormItem>
           </Form>
         </Drawer>

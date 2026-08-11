@@ -14,10 +14,10 @@ const loadData=async ()=>{
 export function ActivityPage() {
   const navigate = useNavigate()
   const [data,setData]=useState<any[]>([])
-  const [activeKey,setActiveKey]=useState('mine')
+  const isAdmin =( useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')
+  const [activeKey,setActiveKey]=useState(isAdmin ? 'all' : 'mine')
 
   const userId = useAuthStore.getState().user?.userId
-  const isAdmin =( useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')||true
   const shiftPriority: Record<string, number> = { IN_PROGRESS: 0, PLANNED: 1, ASSIGNED: 2, COMPLETED: 3, MISSED: 4 }
   const myShifts = (userId ? data.filter((item: any) => item.userId === userId) : data)
     .sort((a: any, b: any) => (shiftPriority[a.shiftStatus] ?? 99) - (shiftPriority[b.shiftStatus] ?? 99))
@@ -201,11 +201,15 @@ export function ActivityPage() {
             activeKey={activeKey}
             onChange={setActiveKey}
             items={[
-              {
-                key: 'mine',
-                label: '我的排班',
-                children: <Table columns={activityColumns} dataSource={myShifts} />,
-              },
+              ...(!isAdmin
+                ? [
+                    {
+                      key: 'mine',
+                      label: '我的排班',
+                      children: <Table columns={activityColumns} dataSource={myShifts} />,
+                    },
+                  ]
+                : []),
               {
                 key: 'all',
                 label: '全部排班',

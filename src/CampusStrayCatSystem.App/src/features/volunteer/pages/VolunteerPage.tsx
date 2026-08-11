@@ -25,7 +25,7 @@ export function VolunteerPage() {
     const [handoverStatusFilter, setHandoverStatusFilter] = useState('')
     const [handoverRelatedType, setHandoverRelatedType] = useState('SHIFT')
     const [handoverRelatedId, setHandoverRelatedId] = useState('')
-    const isAdmin = (useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN') ||true
+    const isAdmin = (useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')
     useEffect(() => {
         VolunteerService.getPendingApplications()
             .then((data) => setPendingCount(data.length))
@@ -312,13 +312,11 @@ export function VolunteerPage() {
                 render:(_,value)=>{
                     const handoverID=value.handoverID
                     const handoverStatus=value.handoverStatus as string
-                    const isReceived=receivedHandovers.some((h:any)=>h.handoverID===handoverID)
-                    const isSent=sentHandovers.some((h:any)=>h.handoverID===handoverID)
                     return handoverStatus==='PENDING'?(
                         <div style={{display:'flex',gap:4}}>
-                            {isReceived&&<Button type='primary' size="small" onClick={() => handleConfirmHandover(handoverID)}>确认</Button>}
-                            {isReceived&&<Button type='default' size="small" onClick={() => handleRejectHandover(handoverID)}>拒绝</Button>}
-                            {isSent&&<Button type='default' size="small" onClick={() => handleCancelHandover(handoverID)}>撤销</Button>}
+                            <Button type='default' size="small" onClick={() => handleConfirmHandover(handoverID)}>确认</Button>
+                            <Button type='default' size="small" onClick={() => handleRejectHandover(handoverID)}>拒绝</Button>
+                            <Button type='default' size="small" onClick={() => handleCancelHandover(handoverID)}>撤销</Button>
                         </div>
                     ):null
                 }
@@ -508,11 +506,8 @@ export function VolunteerPage() {
             </div>
             <h3 style={{ marginTop: 20 }}>交接事宜</h3>
             <div style={{ padding: 16 }}>
-                <Tabs items={[{
-                    key:'tab1',label:'我收到的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={ReceivedHandoverColumns} dataSource={receivedHandovers} /></div>
-                },{
-                    key:'tab2',label:'我发起的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={SentHandoverColumns} dataSource={sentHandovers} /></div>
-                },{
+                <Tabs items={isAdmin ? [
+                  {
                     key:'tab3',label:'全部交接',children:<>
                         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
                             <Radio
@@ -560,8 +555,16 @@ export function VolunteerPage() {
                             <Table columns={AllHandoverColumns} dataSource={allHandovers} />
                         </div>
                     </>
-                }]}
-                 defaultActiveKey='tab1' />
+                  }
+                ] : [
+                  {
+                    key:'tab1',label:'我收到的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={ReceivedHandoverColumns} dataSource={receivedHandovers} /></div>
+                  },
+                  {
+                    key:'tab2',label:'我发起的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={SentHandoverColumns} dataSource={sentHandovers} /></div>
+                  },
+                ]}
+                 defaultActiveKey={isAdmin ? 'tab3' : 'tab1'} />
             </div>
         </>
     )
