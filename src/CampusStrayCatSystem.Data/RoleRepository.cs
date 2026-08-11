@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using CampusStrayCatSystem.Models;
+using Oracle.ManagedDataAccess.Client;
+using Dapper;
 
 namespace CampusStrayCatSystem.Data
 {
@@ -104,8 +106,8 @@ namespace CampusStrayCatSystem.Data
         // ✅ 修改 CreateRole 增加审计日志（调用存储过程或手动添加）
         public async Task<int> CreateRoleWithAuditAsync(Role role, string operatorId)
         {
-            using var conn = new OracleConnection(_connectionString);
-            await conn.OpenAsync();
+            using var conn = CreateConnection();
+            conn.Open();
             using var transaction = conn.BeginTransaction();
             try {
                 // 1. 插入角色
@@ -147,8 +149,8 @@ namespace CampusStrayCatSystem.Data
         }
         public async Task<string> AssignRoleWithAuditAsync(string userId, string newRoleId, string operatorId)
         {
-            using var conn = new OracleConnection(_connectionString);
-            await conn.OpenAsync();
+            using var conn = CreateConnection();
+            conn.Open();
             using var transaction = conn.BeginTransaction();
             try {
                 // 1. 获取当前角色（加锁防止并发）

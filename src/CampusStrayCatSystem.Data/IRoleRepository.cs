@@ -15,6 +15,7 @@ namespace CampusStrayCatSystem.Data
         Task<int> DeleteRole(string id);
         Task<int> AssignRole(string userId, string roleId);
         Task<string> AssignRoleWithAuditAsync(string userId, string newRoleId, string operatorId);  // ✅ 新增
+        Task<int> CreateRoleWithAuditAsync(Role role, string operatorId);
         Task<int> GetUserCount(string roleId);
     }
 }
