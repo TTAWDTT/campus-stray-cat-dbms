@@ -1,7 +1,7 @@
 import type { CatSummary } from '../../types/cats'
 
 /** 设为 true 则使用 Mock 数据，false 则调用真实接口 */
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 type ApiRecord = Record<string, unknown>
 
