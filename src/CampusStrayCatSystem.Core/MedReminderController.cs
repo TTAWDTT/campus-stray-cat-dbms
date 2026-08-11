@@ -5,7 +5,10 @@ using CampusStrayCatSystem.Models;
 
 namespace CampusStrayCatSystem.Core
 {
-    // 医疗提醒接口
+    /// <summary>
+    /// 医疗提醒接口。
+    /// 负责创建提醒、查看待处理提醒，以及更新提醒发送状态。
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "ADMIN,VOLUNTEER,VET")]
@@ -13,16 +16,25 @@ namespace CampusStrayCatSystem.Core
     {
         private readonly IMedReminderRepository _reminderRepository;
         private readonly ICatRepository _catRepository;
+        private readonly IMedHealthRecordRepository _healthRecordRepository;
+        private readonly IUserRepository _userRepository;
 
         public MedReminderController(
             IMedReminderRepository reminderRepository,
-            ICatRepository catRepository)
+            ICatRepository catRepository,
+            IMedHealthRecordRepository healthRecordRepository,
+            IUserRepository userRepository)
         {
             _reminderRepository = reminderRepository;
             _catRepository = catRepository;
+            _healthRecordRepository = healthRecordRepository;
+            _userRepository = userRepository;
         }
 
-        // 获取待处理或已发送的提醒列表
+        /// <summary>
+        /// 获取待处理或已发送的提醒列表。
+        /// 这个接口适合做提醒中心页面。
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MedReminder>>> GetPendingReminders()
         {
@@ -30,7 +42,10 @@ namespace CampusStrayCatSystem.Core
             return Ok(reminders);
         }
 
-        // 按猫咪查询提醒历史
+        /// <summary>
+        /// 按猫咪查询提醒历史。
+        /// 这样可以在猫咪详情页直接看到后续护理安排。
+        /// </summary>
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<MedReminder>>> GetByCatId(string catId)
         {
@@ -39,11 +54,19 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            if (!await _catRepository.Exists(catId.Trim()))
+            {
+                return NotFound($"未找到猫咪 {catId}。");
+            }
+
             var reminders = await _reminderRepository.GetByCatId(catId);
             return Ok(reminders);
         }
 
-        // 新增一条提醒
+        /// <summary>
+        /// 新增一条提醒。
+        /// 前端把医疗记录、猫咪、接收人和提醒时间传进来即可。
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<MedReminder>> Create([FromBody] MedReminder reminder)
         {
@@ -57,8 +80,35 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("猫咪 ID 不能为空。");
             }
 
+            reminder.CatID = reminder.CatID.Trim();
             if (!await _catRepository.Exists(reminder.CatID))
-                return NotFound($"未找到 ID 为 {reminder.CatID} 的猫咪档案。");
+            {
+                return NotFound($"未找到猫咪 {reminder.CatID}。");
+            }
+
+            if (!string.IsNullOrWhiteSpace(reminder.RecordID))
+            {
+                reminder.RecordID = reminder.RecordID.Trim();
+                var record = await _healthRecordRepository.GetById(reminder.RecordID);
+                if (record == null)
+                {
+                    return NotFound($"未找到医疗记录 {reminder.RecordID}。");
+                }
+
+                if (!string.Equals(record.CatID, reminder.CatID, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("医疗记录不属于该猫咪。");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(reminder.ReceiverUserID))
+            {
+                reminder.ReceiverUserID = reminder.ReceiverUserID.Trim();
+                if (!await _userRepository.Exists(reminder.ReceiverUserID))
+                {
+                    return NotFound($"未找到接收者 {reminder.ReceiverUserID}。");
+                }
+            }
 
             if (string.IsNullOrWhiteSpace(reminder.ReminderType) ||
                 !ReminderTypes.IsValid(reminder.ReminderType))
@@ -84,7 +134,10 @@ namespace CampusStrayCatSystem.Core
             return CreatedAtAction(nameof(GetById), new { reminderId = reminder.ReminderID }, reminder);
         }
 
-        // 查看提醒详情
+        /// <summary>
+        /// 查看提醒详情。
+        /// 这个接口主要用于创建成功后回查或排查数据。
+        /// </summary>
         [HttpGet("{reminderId}")]
         public async Task<ActionResult<MedReminder>> GetById(string reminderId)
         {
@@ -97,7 +150,10 @@ namespace CampusStrayCatSystem.Core
             return reminder == null ? NotFound($"未找到提醒 {reminderId}。") : Ok(reminder);
         }
 
-        // 标记提醒已发送
+        /// <summary>
+        /// 把提醒标记为已发送。
+        /// 这一步通常表示消息已经发到接收人手里。
+        /// </summary>
         [HttpPut("{reminderId}/sent")]
         public async Task<IActionResult> MarkSent(string reminderId)
         {
@@ -115,7 +171,10 @@ namespace CampusStrayCatSystem.Core
             return NoContent();
         }
 
-        // 标记提醒已完成
+        /// <summary>
+        /// 把提醒标记为已完成。
+        /// 这一步表示后续护理动作已经处理完毕。
+        /// </summary>
         [HttpPut("{reminderId}/complete")]
         public async Task<IActionResult> Complete(string reminderId)
         {
