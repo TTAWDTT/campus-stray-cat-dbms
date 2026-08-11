@@ -19,6 +19,6 @@ namespace CampusStrayCatSystem.Models.DTOs
         public string ReasonDetail { get; set; }
 
         [MaxLength(36, ErrorMessage = "关联申请 ID 不能超过36字节")]
-        public string ApplicationId { get; set; }  // 可选
+        public string? ApplicationId { get; set; }  // 可选
     }
 }

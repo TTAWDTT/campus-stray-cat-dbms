@@ -68,6 +68,12 @@ namespace CampusStrayCatSystem.Core
     
             var roleName = dto.RoleName.Trim();
     
+             // ✅ 新增：校验角色名是否合法
+            if (!RoleCodes.IsValid(roleName))
+            {
+                return BadRequest($"角色名必须是 {string.Join("、", RoleCodes.Allowed)}。");
+            }
+
             // 2. 检查角色名是否重复（忽略大小写）
             if (await _roleRepository.ExistsByNameAsync(roleName))
                 return Conflict(new { message = $"角色名称 '{roleName}' 已存在" });
