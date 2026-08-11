@@ -181,13 +181,13 @@ namespace CampusStrayCatSystem.Core
 
             alert.HandlerUserID = null;
 
-            alert.AlertStatus = string.IsNullOrWhiteSpace(alert.AlertStatus)
-                ? MissingAlertStatuses.Processing
-                : alert.AlertStatus.Trim().ToUpperInvariant();
-            if (!MissingAlertStatuses.IsValid(alert.AlertStatus))
+            if (!string.IsNullOrWhiteSpace(alert.AlertStatus) &&
+                !string.Equals(alert.AlertStatus.Trim(), MissingAlertStatuses.Processing, StringComparison.OrdinalIgnoreCase))
             {
-                return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
+                return BadRequest("创建失踪预警时初始状态只能是 PROCESSING，FOUND 或 CLOSED 请通过状态更新接口修改。");
             }
+
+            alert.AlertStatus = MissingAlertStatuses.Processing;
 
             try
             {

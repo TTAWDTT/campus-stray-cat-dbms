@@ -123,7 +123,8 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("处理人 ID 不能为空。");
             }
 
-            var handler = await _userRepository.GetById(handlerUserId.Trim());
+            var trimmedHandlerUserId = handlerUserId.Trim();
+            var handler = await _userRepository.GetById(trimmedHandlerUserId);
             if (handler == null || !UserStatusCodes.IsActive(handler.Status)
                 || !(string.Equals(handler.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
                      || string.Equals(handler.RoleName, "VOLUNTEER", StringComparison.OrdinalIgnoreCase)))
@@ -136,7 +137,7 @@ namespace CampusStrayCatSystem.Core
                 return NotFound($"未找到上报 {reportId}。");
             }
 
-            var rows = await _reportRepository.AssignHandler(reportId, handlerUserId);
+            var rows = await _reportRepository.AssignHandler(reportId, trimmedHandlerUserId);
             return NoContent();
         }
 

@@ -33,6 +33,9 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("cat/{catId}")]
         public async Task<ActionResult<IEnumerable<MedHealthRecord>>> GetByCatId(string catId)
         {
+            if (string.IsNullOrWhiteSpace(catId))
+                return BadRequest("猫咪 ID 不能为空。");
+
             if (!await _catRepository.Exists(catId))
                 return NotFound($"未找到 ID 为 {catId} 的猫咪档案。");
 
@@ -104,9 +107,10 @@ namespace CampusStrayCatSystem.Core
             if (!await _catRepository.Exists(record.CatID))
                 return $"猫咪 CatID='{record.CatID}' 不存在。";
 
-            // 医疗类型合法
+            // 医疗类型合法，统一格式化
             if (!string.IsNullOrWhiteSpace(record.RecordType))
             {
+                record.RecordType = record.RecordType.Trim().ToUpperInvariant();
                 if (!MedRecordTypes.IsValid(record.RecordType))
                     return $"无效的医疗类型 '{record.RecordType}'。允许的类型: {string.Join(", ", MedRecordTypes.Allowed)}";
             }

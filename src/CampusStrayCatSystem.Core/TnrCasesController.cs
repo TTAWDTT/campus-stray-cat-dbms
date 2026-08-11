@@ -40,6 +40,9 @@ namespace CampusStrayCatSystem.Core
         [HttpGet("{id}")]
         public async Task<ActionResult<TnrCase>> GetTnrCase(string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest("案例 ID 不能为空。");
+
             var tnrCase = await _tnrCaseRepository.GetById(id);
 
             if (tnrCase == null)
@@ -56,10 +59,14 @@ namespace CampusStrayCatSystem.Core
             if (tnrCase == null)
                 return BadRequest("TNR案例数据为空，无法创建。");
 
-            // 设置默认状态
+            // 设置默认状态，统一格式化
             if (string.IsNullOrWhiteSpace(tnrCase.CurrentStatus))
             {
                 tnrCase.CurrentStatus = TnrStatuses.Discovered;
+            }
+            else
+            {
+                tnrCase.CurrentStatus = tnrCase.CurrentStatus.Trim().ToUpperInvariant();
             }
 
             // 业务校验
@@ -113,6 +120,8 @@ namespace CampusStrayCatSystem.Core
         {
             if (request == null || string.IsNullOrWhiteSpace(request.NewStatus))
                 return BadRequest("新状态不能为空。");
+
+            request.NewStatus = request.NewStatus.Trim().ToUpperInvariant();
 
             // 校验状态值是否合法
             if (!TnrStatuses.IsValid(request.NewStatus))
