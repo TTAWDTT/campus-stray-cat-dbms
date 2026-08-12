@@ -20,6 +20,7 @@ namespace CampusStrayCatSystem.Data
     {
         // 志愿者流程的查询和写入操作。
         Task<IEnumerable<VolunteerActivityDto>> GetActivityAsync();
+        Task<VolunteerProfileDto?> GetCurrentVolunteerAsync(string userId);
         Task<int> RegisterVolunteerAsync(VolunteerRegisterRequest request);
         Task<int> CreateShiftAsync(VolunteerShiftCreateRequest request);
         Task<int> CheckInShiftAsync(string shiftId, VolunteerCheckInRequest request, string operatorUserId);
@@ -179,6 +180,22 @@ namespace CampusStrayCatSystem.Data
                 ORDER BY USERNAME NULLS LAST, VOLUNTEERID";
 
             return await QueryAsync<VolunteerActivityDto>(sql);
+        }
+
+        public async Task<VolunteerProfileDto?> GetCurrentVolunteerAsync(string userId)
+        {
+            const string sql = @"
+                SELECT v.VOLUNTEERID AS VolunteerId,
+                       v.USERID AS UserId,
+                       u.USERNAME AS UserName,
+                       v.ACTIVESTATUS AS ActiveStatus,
+                       v.CREDITLEVEL AS CreditLevel,
+                       v.SERVICESCORE AS ServiceScore
+                FROM VOL_VOLUNTEERS v
+                JOIN SYS_USERS u ON u.USERID = v.USERID
+                WHERE v.USERID = :UserId";
+
+            return await QuerySingleAsync<VolunteerProfileDto>(sql, new { UserId = userId });
         }
 
         public async Task<int> RegisterVolunteerAsync(VolunteerRegisterRequest request)

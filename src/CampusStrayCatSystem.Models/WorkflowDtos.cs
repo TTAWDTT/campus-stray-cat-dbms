@@ -107,4 +107,14 @@ namespace CampusStrayCatSystem.Models
         public DateTime? PlanStartTime { get; set; }
         public DateTime? PlanEndTime { get; set; }
     }
+
+    public class VolunteerProfileDto
+    {
+        public string VolunteerId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
+        public string? UserName { get; set; }
+        public string? ActiveStatus { get; set; }
+        public string? CreditLevel { get; set; }
+        public decimal? ServiceScore { get; set; }
+    }
 }

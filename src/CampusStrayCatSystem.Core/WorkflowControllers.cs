@@ -134,6 +134,19 @@ namespace CampusStrayCatSystem.Core
             return Ok(await _repository.GetActivityAsync());
         }
 
+        [HttpGet("me")]
+        [Authorize(Roles = "VOLUNTEER")]
+        public async Task<ActionResult<VolunteerProfileDto>> GetCurrentVolunteer()
+        {
+            var userId = CurrentUserId();
+            if (string.IsNullOrWhiteSpace(userId)) return Unauthorized();
+
+            var volunteer = await _repository.GetCurrentVolunteerAsync(userId);
+            return volunteer == null
+                ? NotFound(new { message = "当前用户没有志愿者档案。" })
+                : Ok(volunteer);
+        }
+
         [HttpPost("volunteers")]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> RegisterVolunteer([FromBody] VolunteerRegisterRequest request)

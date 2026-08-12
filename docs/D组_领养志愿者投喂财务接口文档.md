@@ -169,6 +169,22 @@
 | 200 | 查询成功 | `VolunteerActivityDto[]` |
 | 401/403 | 未授权或角色不足 | 错误信息 |
 
+### 请求：查询当前志愿者档案
+
+| 接口说明 | 根据当前登录 JWT 返回自己的志愿者档案，用于获取后续排班、签到和交接所需的 `volunteerId` |
+|---|---|
+| HTTP URL | `http://localhost:5047/api/volunteer-workflow/me` |
+| HTTP Method | `GET` |
+| 权限要求 | 志愿者 |
+
+#### 响应体
+
+| 状态码 | 描述 | 响应体 |
+|---|---|---|
+| 200 | 查询成功 | `volunteerId`、`userId`、`userName`、`activeStatus`、`creditLevel`、`serviceScore` |
+| 401/403 | 未登录或角色不足 | 错误信息 |
+| 404 | 当前用户尚未建立志愿者档案 | 错误信息 |
+
 ### 请求：注册志愿者
 
 | 接口说明 | 将系统用户注册为志愿者 |
