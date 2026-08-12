@@ -10,6 +10,6 @@ namespace CampusStrayCatSystem.Models.DTOs
         public string? BlacklistId { get; set; }
 
         [MaxLength(500, ErrorMessage = "解除说明长度不能超过500")]
-        public string ReleaseReason { get; set; }  // 可选
+        public string? ReleaseReason { get; set; }  // 可选
     }
 }

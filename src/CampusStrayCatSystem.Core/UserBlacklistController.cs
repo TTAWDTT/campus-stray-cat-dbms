@@ -178,7 +178,7 @@ namespace CampusStrayCatSystem.Core.Controllers
                 }
 
                 var applicationId = string.IsNullOrWhiteSpace(dto.ApplicationId) ? null : dto.ApplicationId.Trim();
-                if (applicationId != null && !await _blacklistRepository.ApplicationExistsAsync(applicationId)) {
+                if (!string.IsNullOrWhiteSpace(applicationId) && !await _blacklistRepository.ApplicationExistsAsync(applicationId)) {
                     return NotFound(new { message = "关联的领养申请不存在" });
                 }
 

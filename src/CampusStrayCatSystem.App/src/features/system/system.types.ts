@@ -21,6 +21,8 @@ export interface SystemRole {
   permissionScope: string;
 }
 
+export type CreateRolePayload = Omit<SystemRole, 'roleID'>;
+
 export interface BlacklistRecord {
   blacklistId: string;
   userId: string;

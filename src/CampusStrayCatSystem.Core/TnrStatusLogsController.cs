@@ -32,5 +32,16 @@ namespace CampusStrayCatSystem.Core
             var logs = await _tnrStatusLogRepository.GetByCaseId(caseId);
             return Ok(logs ?? new List<TnrStatusLog>());
         }
+
+        //查看单条状态流转日志
+        [HttpGet("{logId}")]
+        public async Task<ActionResult<TnrStatusLog>> GetById(string logId)
+        {
+            var log = await _tnrStatusLogRepository.GetById(logId);
+            if (log == null)
+                return NotFound($"未找到 ID 为 {logId} 的状态流转日志。");
+
+            return Ok(log);
+        }
     }
 }

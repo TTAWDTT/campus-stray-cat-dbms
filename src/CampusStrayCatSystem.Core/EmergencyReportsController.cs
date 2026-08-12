@@ -17,13 +17,16 @@ namespace CampusStrayCatSystem.Core
     {
         private readonly IEmergencyReportRepository _reportRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ICampusAreaRepository _areaRepository;
 
         public EmergencyReportsController(
             IEmergencyReportRepository reportRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ICampusAreaRepository areaRepository)
         {
             _reportRepository = reportRepository;
             _userRepository = userRepository;
+            _areaRepository = areaRepository;
         }
 
         /// <summary>
@@ -78,6 +81,12 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("区域 ID 不能为空。");
             }
 
+            report.AreaID = report.AreaID.Trim();
+            if (await _areaRepository.GetByIdAsync(report.AreaID) == null)
+            {
+                return NotFound($"未找到区域 {report.AreaID}。");
+            }
+
             if (string.IsNullOrWhiteSpace(report.AnimalType) || !AnimalTypes.IsValid(report.AnimalType))
             {
                 return BadRequest("动物类型必须是 CAT、DOG 或 OTHER。");
@@ -114,7 +123,8 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("处理人 ID 不能为空。");
             }
 
-            var handler = await _userRepository.GetById(handlerUserId.Trim());
+            var trimmedHandlerUserId = handlerUserId.Trim();
+            var handler = await _userRepository.GetById(trimmedHandlerUserId);
             if (handler == null || !UserStatusCodes.IsActive(handler.Status)
                 || !(string.Equals(handler.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
                      || string.Equals(handler.RoleName, "VOLUNTEER", StringComparison.OrdinalIgnoreCase)))
@@ -127,13 +137,13 @@ namespace CampusStrayCatSystem.Core
                 return NotFound($"未找到上报 {reportId}。");
             }
 
-            var rows = await _reportRepository.AssignHandler(reportId, handlerUserId);
+            var rows = await _reportRepository.AssignHandler(reportId, trimmedHandlerUserId);
             return NoContent();
         }
 
         /// <summary>
         /// 更新上报处理状态和结果。
-        /// 这个接口负责把“已受理、处理中、已完成”等状态写回去。
+        /// 这个接口负责把"已受理、处理中、已完成"等状态写回去。
         /// </summary>
         [HttpPut("{reportId}/status")]
         [Authorize(Roles = "ADMIN,VOLUNTEER")]

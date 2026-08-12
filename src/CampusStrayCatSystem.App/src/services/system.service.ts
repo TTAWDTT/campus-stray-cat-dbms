@@ -1,5 +1,5 @@
 import { http } from './http';
-import type { BlacklistRecord, BlacklistWritePayload, PagedResult, SystemRole, SystemUser, UserStatus, UserWritePayload, VerifyStatus } from '../features/system/system.types';
+import type { BlacklistRecord, BlacklistWritePayload, CreateRolePayload, PagedResult, SystemRole, SystemUser, UserStatus, UserWritePayload, VerifyStatus } from '../features/system/system.types';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -68,7 +68,7 @@ export const systemService = {
     return data.map(toRole);
   },
 
-  async createRole(payload: SystemRole) {
+  async createRole(payload: CreateRolePayload) {
     const { data } = await http.post<ApiRecord>('/Roles', payload);
     return toRole(data);
   },
