@@ -12,6 +12,7 @@ export function VolunteerPage() {
     const navigate = useNavigate()
     const [pendingCount, setPendingCount] = useState(0)
     const [myShifts, setMyShifts] = useState<any[]>([])
+    const [volunteerId, setVolunteerId] = useState('')
     const [recruitOpen, setRecruitOpen] = useState(false)
     const [creditLogOpen, setCreditLogOpen] = useState(false)
     const [recruitForm] = useForm()
@@ -39,6 +40,9 @@ export function VolunteerPage() {
                 ? data.filter((item: any) => item.userId === userId)
                 : data.slice(0, 3)
             setMyShifts(filtered)
+            if (filtered.length > 0 && filtered[0]?.volunteerId) {
+                setVolunteerId(filtered[0].volunteerId)
+            }
         }).catch(() => setMyShifts([]))
     }, [])
 
@@ -47,11 +51,10 @@ export function VolunteerPage() {
     }, [])
 
     useEffect(() => {
-        const volId = myShifts[0]?.volunteerId
-        if (!volId) return
-        VolunteerService.getHandoverRecordsByTo(volId).then(setReceivedHandovers).catch(() => setReceivedHandovers([]))
-        VolunteerService.getHandoverRecordsByFrom(volId).then(setSentHandovers).catch(() => setSentHandovers([]))
-    }, [myShifts])
+        if (!volunteerId) return
+        VolunteerService.getHandoverRecordsByTo(volunteerId).then(setReceivedHandovers).catch(() => setReceivedHandovers([]))
+        VolunteerService.getHandoverRecordsByFrom(volunteerId).then(setSentHandovers).catch(() => setSentHandovers([]))
+    }, [volunteerId])
 
     useEffect(() => {
         VolunteerService.getHandoverRecords().then(setAllHandovers).catch(() => setAllHandovers([]))
@@ -81,10 +84,9 @@ export function VolunteerPage() {
     }
 
     const refreshHandovers = () => {
-        const volId = myShifts[0]?.volunteerId
-        if (!volId) return
-        VolunteerService.getHandoverRecordsByTo(volId).then(setReceivedHandovers).catch(() => {})
-        VolunteerService.getHandoverRecordsByFrom(volId).then(setSentHandovers).catch(() => {})
+        if (!volunteerId) return
+        VolunteerService.getHandoverRecordsByTo(volunteerId).then(setReceivedHandovers).catch(() => {})
+        VolunteerService.getHandoverRecordsByFrom(volunteerId).then(setSentHandovers).catch(() => {})
         VolunteerService.getHandoverRecords().then(setAllHandovers).catch(() => {})
     }
 
@@ -427,8 +429,7 @@ export function VolunteerPage() {
                     </div>
                     <div style={{ marginTop: 8, textAlign: 'right' }}>
                         <Button type="primary" size="small" onClick={() => {
-                          const volId = myShifts[0]?.volunteerId
-                          navigate(`/volunteer/feeding-tasks${volId ? `?volunteerId=${encodeURIComponent(volId)}` : ''}`)
+                          navigate(`/volunteer/feeding-tasks${volunteerId ? `?volunteerId=${encodeURIComponent(volunteerId)}` : ''}`)
                         }}>查看全部</Button>
                     </div>
                 </div>

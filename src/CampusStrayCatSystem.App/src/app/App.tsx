@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { MainLayout } from './layouts/MainLayout';
 import { AuthLayout } from './layouts/AuthLayout';
@@ -31,15 +31,22 @@ function AdminOnly({ children }: { children: ReactNode }) {
   return canManageSystem ? children : <Navigate to="/" replace />;
 }
 
+function VolunteerOnly({ children }: { children: ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  const role = user?.roleName?.trim().toUpperCase();
+  const isVolunteer = role === 'VOLUNTEER' || role === 'ADMIN'
+  return isVolunteer ? children : <Navigate to="/" replace />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/preview/shared" element={<SharedComponentsPreview />} />
          
-            <Route element={<AuthLayout />}>
+          <Route element={<AuthLayout />}>
               <Route path="/login" element={<LoginPage />} />
-            </Route>
+          </Route>
         <Route element={<RouteGuard />}>
           <Route element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
@@ -52,11 +59,13 @@ export default function App() {
             <Route path="finance/projects" element={<ProjectPage />} />
             <Route path="finance/records" element={<RecordsPage />} />
             <Route path="finance/statistics" element={<StatisticsPage />} />
-            <Route path='volunteer' element={<VolunteerPage/>}/>
-            <Route path="volunteer/visits" element={<VisitPage/>} />
-            <Route path="volunteer/adoptions" element={<AdoptionCheckPage/>} />
-            <Route path="volunteer/activity" element={<ActivityPage/>} />
-            <Route path="volunteer/feeding-tasks" element={<FeedingTasksPage/>} />
+            <Route element={<VolunteerOnly><Outlet /></VolunteerOnly>}>
+              <Route path='volunteer' element={<VolunteerPage/>}/>
+              <Route path="volunteer/visits" element={<VisitPage/>} />
+              <Route path="volunteer/adoptions" element={<AdoptionCheckPage/>} />
+              <Route path="volunteer/activity" element={<ActivityPage/>} />
+              <Route path="volunteer/feeding-tasks" element={<FeedingTasksPage/>} />
+            </Route>
             <Route path="system" element={<AdminOnly><SystemPage /></AdminOnly>} />
           </Route>
         </Route>

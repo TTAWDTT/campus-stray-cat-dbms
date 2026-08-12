@@ -318,7 +318,7 @@ export const VolunteerService={
             return found ? [toFeedingRecords(found)] : []
         }
         const {data}=await http.get(`/feeding-records/${encodeURIComponent(id)}`)
-        return (data as ApiRecord[]).map(toFeedingRecords)
+        return [toFeedingRecords(data as ApiRecord)]
     },
     async getFeedingRecordsByShift(shiftId:string){
         if (USE_MOCK) return mockFeedingRecords.filter(r => (r.ShiftID || r.shiftID) === shiftId).map(toFeedingRecords)

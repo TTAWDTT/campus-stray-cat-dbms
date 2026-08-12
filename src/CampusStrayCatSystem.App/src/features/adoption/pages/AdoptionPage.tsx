@@ -5,10 +5,9 @@ import {useEffect,useState} from 'react'
 import {StatusTag} from '../../../shared/components/StatusTag'
 import {PageHeader} from '../../../shared/components/PageHeader'
 import {USE_MOCK, MOCK_CATS} from '../../adoption/test'
-import { useAuthStore } from '../../../stores/auth.store'
 
-function handleAdopt(catID:string,userID:string){
-    adoptionService.postAdoption(catID,userID).then(()=>{
+function handleAdopt(catID:string){
+    adoptionService.postAdoption(catID).then(()=>{
         Notification.success('领养申请已提交，请等待管理员审核')
     }).catch(()=>{
         Notification.error('提交领养申请失败，请稍后再试')
@@ -39,8 +38,6 @@ export function AdoptionPage(){
     const [visible,setVisible]=useState(false)
     const [CatID,setCatID]=useState<string>('')
     const [applications, setApplications] = useState<any[]>([])
-    const user=useAuthStore((s)=>s.user)
-    const userId=user?.userId
 
     useEffect(()=>{
         setLoading(true)
@@ -129,7 +126,7 @@ export function AdoptionPage(){
                     title='确认领养'
                     open={visible}
                     onOk={() => {
-                        handleAdopt(CatID, userId as string);
+                        handleAdopt(CatID);
                         setVisible(false);
                     }}
                     onClose={()=>setVisible(false)}

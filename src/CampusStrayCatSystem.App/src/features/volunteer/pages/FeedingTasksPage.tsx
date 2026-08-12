@@ -10,7 +10,7 @@ import {useAuthStore} from '../../../stores/auth.store'
 export function FeedingTasksPage() {
   const navigate = useNavigate()
   const [searchParams]=useSearchParams()
-  const myVolunteerId=searchParams.get('volunteerId')||''
+  const [myVolunteerId,setMyVolunteerId]=useState(searchParams.get('volunteerId')||'')
   const isAdmin=(useAuthStore.getState().user?.roleName?.toUpperCase()==='ADMIN')
   const [feedingTasks,setFeedingTasks]=useState<any[]>([])
   const [feedingFilter,setFeedingFilter]=useState(isAdmin?'all':'mine')
@@ -41,6 +41,18 @@ export function FeedingTasksPage() {
       Notification.error('投喂记录加载失败')
     })
   },[])
+
+  useEffect(()=>{
+    if(myVolunteerId) return
+    const userId=useAuthStore.getState().user?.userId
+    if(!userId) return
+    VolunteerService.getActivity().then((data)=>{
+      const myActivity=data.find((item:any)=>item.userId===userId)
+      if(myActivity?.volunteerId){
+        setMyVolunteerId(myActivity.volunteerId)
+      }
+    }).catch(()=>{})
+  },[myVolunteerId])
 
   const queryFeedingTasks=async ()=>{
     try{
@@ -261,11 +273,12 @@ export function FeedingTasksPage() {
       render:(_text:any,_record:any)=>{
         const done=_record.shiftStatus==='COMPLETED'||_record.shiftStatus==='MISSED'
         if(done) return null
+        const isMyTask=_record.volunteerID===myVolunteerId
         return (
           <div style={{display:'flex',gap:4}}>
-            {!isAdmin&&<Button type="primary" size="small" onClick={()=>openCheckIn(_record.shiftID)}>签到</Button>}
-            <Button type="primary" size="small" onClick={()=>openHandover(_record.shiftID,_record.volunteerID)}>交接</Button>
-            {isAdmin&&<Button type="primary" size="small" onClick={()=>openTaskDrawer('update',_record)}>更新</Button>}
+            {!isAdmin && isMyTask && <Button type="primary" size="small" onClick={()=>openCheckIn(_record.shiftID)}>签到</Button>}
+            {(isAdmin || isMyTask) && <Button type="primary" size="small" onClick={()=>openHandover(_record.shiftID,_record.volunteerID)}>交接</Button>}
+            {isAdmin && <Button type="primary" size="small" onClick={()=>openTaskDrawer('update',_record)}>更新</Button>}
           </div>
         )
       },
