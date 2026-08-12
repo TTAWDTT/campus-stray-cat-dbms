@@ -98,6 +98,16 @@ const toHandoverRecords=(data:ApiRecord)=>{
         remark:value<string>(data,'remark','Remark')||'',
     }
 }
+const toVolunteerProfile=(data:ApiRecord)=>{
+    return {
+        volunteerId:value<string>(data,'volunteerId','VolunteerId')||'',
+        userId:value<string>(data,'userId','UserId')||'',
+        userName:value<string>(data,'userName','UserName')||'',
+        activeStatus:value<string>(data,'activeStatus','ActiveStatus')||'',
+        creditLevel:value<string>(data,'creditLevel','CreditLevel')||'',
+        serviceScore:value<number>(data,'serviceScore','ServiceScore')||0,
+    }
+}
 export const shiftStatusLabels: Record<string, string> = {
     PLANNED: '计划',
     ASSIGNED: '已分配',
@@ -135,6 +145,11 @@ export type PostHandoverPayLoad={
     remark?:string,
 }
 export const VolunteerService={
+    //获取志愿者档案
+    async getVolunteerProfile(){
+        const {data}=await http.get('/volunteer-workflow/me')
+        return toVolunteerProfile(data)
+    },
     //获取待审核申请列表
     async getPendingApplications(){
         if (USE_MOCK) {

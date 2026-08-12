@@ -40,10 +40,15 @@ export function VolunteerPage() {
                 ? data.filter((item: any) => item.userId === userId)
                 : data.slice(0, 3)
             setMyShifts(filtered)
-            if (filtered.length > 0 && filtered[0]?.volunteerId) {
-                setVolunteerId(filtered[0].volunteerId)
-            }
         }).catch(() => setMyShifts([]))
+    }, [])
+
+    useEffect(() => {
+        VolunteerService.getVolunteerProfile().then((profile) => {
+            if (profile?.volunteerId) {
+                setVolunteerId(profile.volunteerId)
+            }
+        }).catch(() => {})
     }, [])
 
     useEffect(() => {

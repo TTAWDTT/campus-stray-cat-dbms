@@ -44,12 +44,9 @@ export function FeedingTasksPage() {
 
   useEffect(()=>{
     if(myVolunteerId) return
-    const userId=useAuthStore.getState().user?.userId
-    if(!userId) return
-    VolunteerService.getActivity().then((data)=>{
-      const myActivity=data.find((item:any)=>item.userId===userId)
-      if(myActivity?.volunteerId){
-        setMyVolunteerId(myActivity.volunteerId)
+    VolunteerService.getVolunteerProfile().then((profile)=>{
+      if(profile?.volunteerId){
+        setMyVolunteerId(profile.volunteerId)
       }
     }).catch(()=>{})
   },[myVolunteerId])
