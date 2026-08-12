@@ -22,7 +22,7 @@ export function MainLayout() {
   const profileRole = user?.roleName?.trim() || '普通用户';
   const profileInitial = profileName.slice(0, 1);
   const privilegedRoles = ['ADMIN', 'VOLUNTEER'];
-  const isPrivileged = privilegedRoles.includes(profileRole.trim().toUpperCase())||true
+  const isPrivileged = privilegedRoles.includes(profileRole.trim().toUpperCase())
   const profilePermissions = (user?.permissionScope || '').split(',').map((permission) => permission.trim().toUpperCase());
   const canManageSystem = profileRole.trim().toUpperCase() === 'ADMIN' || profilePermissions.some((permission) => ['USER_MANAGE', 'ROLE_MANAGE', 'BLACKLIST_MANAGE'].includes(permission));
   const visibleNavItems = navItems
