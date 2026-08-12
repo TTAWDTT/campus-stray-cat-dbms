@@ -229,18 +229,19 @@ namespace CampusStrayCatSystem.Core
                 return BadRequest("预警状态必须是 PROCESSING、FOUND 或 CLOSED。");
             }
 
-            if (string.IsNullOrWhiteSpace(alert.HandlerUserID))
+            // 处理人以当前登录用户为准，避免客户端伪造其他人的身份。
+            var handlerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)?.Trim();
+            if (string.IsNullOrWhiteSpace(handlerUserId))
             {
-                return BadRequest("处理人 ID 不能为空。");
+                return Unauthorized();
             }
 
-            var handlerUserId = alert.HandlerUserID.Trim();
             var handler = await _userRepository.GetById(handlerUserId);
             if (handler == null || !UserStatusCodes.IsActive(handler.Status)
                 || !(string.Equals(handler.RoleName, "ADMIN", StringComparison.OrdinalIgnoreCase)
                      || string.Equals(handler.RoleName, "VOLUNTEER", StringComparison.OrdinalIgnoreCase)))
             {
-                return BadRequest("处理人必须是有效的管理员或志愿者。");
+                return Forbid();
             }
 
             if (await _missingAlertRepository.GetById(alertId) == null)
