@@ -917,6 +917,70 @@ button { font: inherit; }
   font-weight: 800;
 }
 
+/* ── 志愿者页面待审核徽章 ── */
+.volunteer-pending-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .48);
+  backdrop-filter: blur(6px);
+}
+
+.volunteer-pending-badge strong {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.volunteer-pending-badge small {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: .85;
+}
+
+/* ── 领养提示卡片 ── */
+.adoption-tip {
+  border: 1px solid rgba(49, 176, 164, .18) !important;
+  background: rgba(238, 249, 246, .7) !important;
+  animation: adoption-tip-in .45s var(--animal-motion-ease) both;
+}
+
+@keyframes adoption-tip-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.adoption-tip-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.adoption-tip-icon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--animal-primary-color);
+}
+
+.adoption-tip-body strong {
+  display: block;
+  color: var(--ink-deep);
+  font-size: 15px;
+  letter-spacing: -.02em;
+}
+
+.adoption-tip-body p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
 /* ── 财务公示摘要卡片 ── */
 .finance-summary-card {
   border: 1px solid var(--animal-border-color-light) !important;

@@ -6,7 +6,7 @@ type ApiRecord = Record<string, unknown>;
 const value = <T>(data: ApiRecord, camel: string, pascal: string): T | undefined =>
   (data[camel] ?? data[pascal]) as T | undefined;
 
-const toCat = (data: ApiRecord): CatSummary => ({
+export const toCat = (data: ApiRecord): CatSummary => ({
   catID: value<string>(data, 'catID', 'CatID') || '',
   catName: value<string | null>(data, 'catName', 'CatName'),
   gender: value<CatGender | null>(data, 'gender', 'Gender'),

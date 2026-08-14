@@ -21,9 +21,18 @@ export function MainLayout() {
   const profileName = user?.realName || user?.username || '用户';
   const profileRole = user?.roleName?.trim() || '普通用户';
   const profileInitial = profileName.slice(0, 1);
+  const privilegedRoles = ['ADMIN', 'VOLUNTEER'];
+  const isPrivileged = privilegedRoles.includes(profileRole.trim().toUpperCase())
   const profilePermissions = (user?.permissionScope || '').split(',').map((permission) => permission.trim().toUpperCase());
   const canManageSystem = profileRole.trim().toUpperCase() === 'ADMIN' || profilePermissions.some((permission) => ['USER_MANAGE', 'ROLE_MANAGE', 'BLACKLIST_MANAGE'].includes(permission));
-  const visibleNavItems = navItems.filter((item) => !item.roles || (item.to === '/system' ? canManageSystem : item.roles.includes(profileRole.toUpperCase())));
+  const visibleNavItems = navItems
+    .map((item) => {
+      if (item.label === '领养与志愿者') {
+        return { ...item, to: isPrivileged ? '/volunteer' : '/adoption' };
+      }
+      return item;
+    })
+    .filter((item) => !item.roles || (item.to === '/system' ? canManageSystem : item.roles.includes(profileRole.toUpperCase())));
 
   return (
     <div className={sidebarCollapsed ? 'shell sidebar-collapsed' : 'shell'}>
