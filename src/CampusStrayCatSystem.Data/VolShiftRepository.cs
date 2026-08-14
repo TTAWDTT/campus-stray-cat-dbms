@@ -131,7 +131,8 @@ namespace CampusStrayCatSystem.Data
                     POINTID = :PointID,
                     BACKUPVOLUNTEERID = :BackupVolunteerID,
                     PLANSTARTTIME = :PlanStartTime,
-                    PLANENDTIME = :PlanEndTime
+                    PLANENDTIME = :PlanEndTime,
+                    SHIFTSTATUS = :ShiftStatus
                 WHERE SHIFTID = :ShiftID";
 
             return await ExecuteAsync(sql, new
@@ -141,6 +142,7 @@ namespace CampusStrayCatSystem.Data
                 shift.BackupVolunteerID,
                 shift.PlanStartTime,
                 shift.PlanEndTime,
+                shift.ShiftStatus,
                 shift.ShiftID
             });
         }

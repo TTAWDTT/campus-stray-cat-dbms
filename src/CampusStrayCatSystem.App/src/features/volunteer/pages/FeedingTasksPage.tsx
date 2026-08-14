@@ -147,6 +147,7 @@ export function FeedingTasksPage() {
       Notification.success('签到成功')
       closeCheckIn()
       VolunteerService.getFeedingRecords().then(setFeedingRecords).catch(()=>{})
+      VolunteerService.getAllFeedingTasks().then(setFeedingTasks).catch(()=>{})
     }catch{
       Notification.error('签到失败')
     }

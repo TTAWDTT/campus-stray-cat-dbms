@@ -293,6 +293,7 @@ export const VolunteerService={
     //更改投喂任务
     async putFeedingTasks(shiftID:string,volunteerID:string,pointID:string,backupVolunteerID:string,planStartTime:Date,planEndTime:Date,shiftStatus:string){
         const payload={
+            shiftID:shiftID,
             volunteerID:volunteerID,
             pointID:pointID,
             backupVolunteerID:backupVolunteerID,
@@ -300,10 +301,9 @@ export const VolunteerService={
             planEndTime:planEndTime.toISOString(),
             shiftStatus:shiftStatus
         }
-        const {data}=await http.put(`/feeding-tasks/${encodeURIComponent(shiftID)}`, payload)
-        return toFeedingTasks(data as ApiRecord)
+        await http.put(`/feeding-tasks/${encodeURIComponent(shiftID)}`, payload)
     },
-    //提交签到记录
+    //提交投喂签到，统一走工作流以触发任务完成和服务积分记录
     async postFeedingRecords(shiftID:string,checkInTime:Date,longitude:number,latitude:number,photoUrl:string,distanceMeters:number,checkInStatus:string){
         if (USE_MOCK) {
             console.log('[mock] 提交签到记录', {shiftID,checkInTime,checkInStatus})
@@ -318,8 +318,7 @@ export const VolunteerService={
             distanceMeters:distanceMeters,
             checkInStatus:checkInStatus
         }
-        const {data}=await http.post('/feeding-records', payload)
-        return toFeedingRecords(data as ApiRecord)
+        await http.post(`/volunteer-workflow/shifts/${encodeURIComponent(shiftID)}/checkins`, payload)
     },
     //获取投喂记录
     async getFeedingRecords(){

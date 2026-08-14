@@ -8,7 +8,7 @@
  */
 
 /** Mock 开关 — 统一设为 true 或 false 即可切换所有页面的数据来源 */
-export const USE_MOCK = true
+export const USE_MOCK = false
 
 type ApiRecord = Record<string, unknown>
 

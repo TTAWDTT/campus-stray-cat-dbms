@@ -71,7 +71,7 @@ export function AdoptionPage(){
         title:'绝育',
         dataIndex:'sterilizedFlag',
         render:(_,record)=>(
-        <StatusTag value={record.sterilizedFlag==0?'app-green':'app-red'} label={record.sterilizedFlag==0?'已绝育':'未绝育'}/>
+        <StatusTag value={record.sterilizedFlag==1?'app-green':'app-red'} label={record.sterilizedFlag==1?'已绝育':'未绝育'}/>
     )
     },{
         title:'领养',
