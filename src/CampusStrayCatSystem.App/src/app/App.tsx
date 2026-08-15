@@ -10,6 +10,7 @@ import { SharedComponentsPreview } from '../shared/components/SharedComponentsPr
 import { CatsPage } from '../features/cats/pages/CatsPage';
 import { CatDetailPage } from '../features/cats/pages/CatDetailPage';
 import { CampusPage } from '../features/campus/pages/CampusPage';
+import { RescuePage } from '../features/rescue/pages/RescuePage';
 import { SystemPage } from '../features/system/pages/SystemPage';
 import { useAuthStore } from '../stores/auth.store';
 import { FinancePage } from '../features/finance/pages/FinancePage'
@@ -53,7 +54,7 @@ export default function App() {
             <Route path="cats" element={<CatsPage />} />
             <Route path="cats/:catId" element={<CatDetailPage />} />
             <Route path="campus" element={<CampusPage />} />
-            <Route path="rescue" element={<PlaceholderPage title="救助中心" icon="icon-camera" description="TNR、医疗提醒、紧急上报和失踪预警。" />} />
+            <Route path="rescue" element={<RescuePage />} />
             <Route path="adoption" element={<AdoptionPage/>} />
             <Route path="finance" element={<FinancePage />} />
             <Route path="finance/projects" element={<ProjectPage />} />
