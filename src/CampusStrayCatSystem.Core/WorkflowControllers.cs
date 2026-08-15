@@ -64,8 +64,8 @@ namespace CampusStrayCatSystem.Core
             if (userId == null) return Unauthorized();
             request.ApplicantUserId = userId;
 
-            await _repository.SubmitApplicationAsync(request);
-            return Ok();
+            var applicationId = await _repository.SubmitApplicationAsync(request);
+            return Ok(new { applicationId });
         }
 
         [HttpPost("applications/{applicationId}/review")]

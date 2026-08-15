@@ -73,17 +73,28 @@ LEFT JOIN VOL_SHIFTS s ON s.VOLUNTEERID = vol.VOLUNTEERID;
 /
 
 CREATE OR REPLACE PACKAGE PKG_ADOPTION_WORKFLOW AS
-    PROCEDURE submit_application(p_cat_id IN VARCHAR2, p_applicant_user_id IN VARCHAR2, p_status IN VARCHAR2 DEFAULT 'PENDING');
+    PROCEDURE submit_application(
+        p_cat_id IN VARCHAR2,
+        p_applicant_user_id IN VARCHAR2,
+        o_application_id OUT ADOPT_APPLICATIONS.APPLICATIONID%TYPE,
+        p_status IN VARCHAR2 DEFAULT 'PENDING'
+    );
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL);
     PROCEDURE create_visit(p_application_id IN VARCHAR2, p_visit_type IN VARCHAR2, p_visitor_user_id IN VARCHAR2, p_visit_time IN DATE DEFAULT SYSDATE, p_conclusion IN VARCHAR2 DEFAULT NULL, p_passflag IN NUMBER DEFAULT 0);
 END PKG_ADOPTION_WORKFLOW;
 /
 
 CREATE OR REPLACE PACKAGE BODY PKG_ADOPTION_WORKFLOW AS
-    PROCEDURE submit_application(p_cat_id IN VARCHAR2, p_applicant_user_id IN VARCHAR2, p_status IN VARCHAR2 DEFAULT 'PENDING') IS
+    PROCEDURE submit_application(
+        p_cat_id IN VARCHAR2,
+        p_applicant_user_id IN VARCHAR2,
+        o_application_id OUT ADOPT_APPLICATIONS.APPLICATIONID%TYPE,
+        p_status IN VARCHAR2 DEFAULT 'PENDING'
+    ) IS
     BEGIN
+        o_application_id := 'APP-' || DBMS_RANDOM.STRING('X', 8);
         INSERT INTO ADOPT_APPLICATIONS (APPLICATIONID, CATID, APPLICANTUSERID, APPLYTIME, CURRENTSTATUS, REVIEWERUSERID, AGREEMENTNO, CONFIRMTIME)
-        VALUES ('APP-' || DBMS_RANDOM.STRING('X', 8), p_cat_id, p_applicant_user_id, SYSDATE, 'PENDING', NULL, NULL, NULL);
+        VALUES (o_application_id, p_cat_id, p_applicant_user_id, SYSDATE, 'PENDING', NULL, NULL, NULL);
     END submit_application;
 
     PROCEDURE review_application(p_application_id IN VARCHAR2, p_reviewer_user_id IN VARCHAR2, p_status IN VARCHAR2, p_agreement_no IN VARCHAR2 DEFAULT NULL, p_confirm_time IN DATE DEFAULT NULL) IS

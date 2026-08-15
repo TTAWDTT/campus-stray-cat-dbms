@@ -1,5 +1,7 @@
 using CampusStrayCatSystem.Models;
+using Dapper;
 using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace CampusStrayCatSystem.Data
 {
@@ -10,7 +12,7 @@ namespace CampusStrayCatSystem.Data
         Task<IEnumerable<AdoptionPendingAppDto>> GetPendingApplicationsAsync();
         Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByStatusAsync(string status);
         Task<IEnumerable<AdoptionPendingAppDto>> GetApplicationsByApplicantAsync(string applicantUserId);
-        Task<int> SubmitApplicationAsync(AdoptionApplicationCreateRequest request);
+        Task<string> SubmitApplicationAsync(AdoptionApplicationCreateRequest request);
         Task<int> ReviewApplicationAsync(string applicationId, AdoptionApplicationReviewRequest request);
         Task<int> CreateVisitAsync(string applicationId, AdoptionVisitCreateRequest request);
         Task<IEnumerable<AdoptionVisitSummaryDto>> GetVisitSummaryAsync();
@@ -95,17 +97,19 @@ namespace CampusStrayCatSystem.Data
             return await QueryAsync<AdoptionPendingAppDto>(sql, new { ApplicantUserId = applicantUserId });
         }
 
-        public async Task<int> SubmitApplicationAsync(AdoptionApplicationCreateRequest request)
+        public async Task<string> SubmitApplicationAsync(AdoptionApplicationCreateRequest request)
         {
-            const string sql = @"BEGIN PKG_ADOPTION_WORKFLOW.submit_application(:CatId, :ApplicantUserId, :Status); END;";
+            var parameters = new DynamicParameters();
+            parameters.Add("P_CAT_ID", request.CatId, DbType.String);
+            parameters.Add("P_APPLICANT_USER_ID", request.ApplicantUserId, DbType.String);
+            parameters.Add("O_APPLICATION_ID", dbType: DbType.String,
+                direction: ParameterDirection.Output, size: 36);
+            parameters.Add("P_STATUS", "PENDING", DbType.String);
 
             // 强制后端将新申请设为 PENDING，忽略客户端传入的 Status 字段以防止绕过审核流程。
-            return await ExecuteAsync(sql, new
-            {
-                request.CatId,
-                request.ApplicantUserId,
-                Status = "PENDING"
-            });
+            await ExecuteStoredProcedureAsync("PKG_ADOPTION_WORKFLOW.SUBMIT_APPLICATION", parameters);
+            return parameters.Get<string>("O_APPLICATION_ID")
+                ?? throw new InvalidOperationException("领养申请已提交，但数据库没有返回申请编号。");
         }
 
         public async Task<int> ReviewApplicationAsync(string applicationId, AdoptionApplicationReviewRequest request)
