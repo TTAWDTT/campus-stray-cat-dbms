@@ -5,6 +5,8 @@
 - `create_tables.sql`: 创建 35 张表和外键
 - `drop_tables.sql`: 删除 35 张表，便于重建
 - `insert_demo_data.sql`: 写入可重复执行的区域、点位、猫窝维护和目击演示数据
+- `seed_acceptance_data.sql`: 可选的固定验收数据，覆盖 31 只猫、90 条目击、领养、救助、志愿者和财务状态；使用 `seed-` 前缀且可重复执行
+- `cleanup_acceptance_data.sql`: 按外键反向删除所有 `seed-` 验收数据
 - `queries/cat_photos_oracle_programming.sql`: 为现有数据库幂等增加猫咪唯一主图约束
 - `queries/field_contract_constraints.sql`: 将旧值迁移为统一业务编码，并为稳定枚举补充 CHECK 约束
 - `queries/cat_photos_acceptance.sql`: 验证唯一主图、特征 JSON 和照片引用约束并清理测试数据
@@ -16,6 +18,8 @@
 2. 新环境直接执行 `setup_all.sql`，它会按依赖顺序创建表、约束、视图、Package 和演示数据。
 3. 已有数据的环境不要执行 `drop_tables.sql`，先执行 `queries/field_contract_constraints.sql`，再按 `scripts/setup_local_db.md` 的“仅初始化对象”顺序执行。
 4. 如需接口联调，执行 `insert_demo_data.sql`，再运行 `queries/test_queries.sql` 验证数据。
+
+如需前端综合联调或分页验收，可在上述步骤后执行 `seed_acceptance_data.sql`。该脚本不会被 `setup_all.sql` 自动调用，以免普通重建过程过慢；其中账号密码统一为 `Passw0rd!`，账号名为 `seed_admin`、`seed_volunteer_01`、`seed_volunteer_02`、`seed_volunteer_03`、`seed_user_01`、`seed_user_02`、`seed_user_blacklisted` 和 `seed_vet`。
 
 已有数据库不需要重建即可执行 `queries/cat_photos_oracle_programming.sql`。脚本检测到同一猫咪存在多张主图时会中止，需先人工核对并修正重复数据。
 

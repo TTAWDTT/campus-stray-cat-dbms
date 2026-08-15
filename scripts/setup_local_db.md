@@ -25,6 +25,8 @@
 7. `database/queries/a_group_demo_data.sql`（可选演示账号）
 8. `database/insert_demo_data.sql`（可选校园数据）
 
+如需前端综合联调，再执行 `database/seed_acceptance_data.sql`；清理时执行 `database/cleanup_acceptance_data.sql`。两份脚本只处理 `seed-` 前缀的数据，不会删除团队账号或原有演示数据。
+
 演示账号密码统一为 `Passw0rd!`，只用于本地联调。
 
 ## 环境要求
