@@ -48,6 +48,28 @@ const payMethodLabel: Record<string, string> = {
     OTHER: '其他',
 }
 
+const downloadExcel = (filename: string, headers: string[], rows: Array<Array<string | number>>) => {
+    const cell = (value: string | number) => `<td>${String(value).replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] || char)}</td>`
+    const html = `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map(cell).join('')}</tr>`).join('')}</tbody></table>`
+    const blob = new Blob([`<html><meta charset="utf-8">${html}</html>`], { type: 'application/vnd.ms-excel' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${filename}.xls`
+    anchor.click()
+    URL.revokeObjectURL(url)
+}
+
+const exportRecordsToExcel = (activeKey: string, expenses: ExpenseRecord[], donations: DonationRecord[], myDonations: DonationRecord[], checkRecords: ExpenseRecord[]) => {
+    if (activeKey === 'payment' || activeKey === 'check') {
+        const source = activeKey === 'check' ? checkRecords : expenses
+        downloadExcel('财务支出记录', ['记录 ID', '项目 ID', '类型', '金额', '审核状态', '公开时间'], source.map((item) => [item.FinanceID, item.ProjectID, recordTypeLabel[item.RecordType] || item.RecordType, item.Amount, statusLabel[item.AuditStatus] || item.AuditStatus, item.PublicTime || '—']))
+        return
+    }
+    const source = activeKey === 'myDonations' ? myDonations : donations
+    downloadExcel('财务捐款记录', ['捐款 ID', '项目 ID', '金额', '支付方式', '支付时间', '公开状态'], source.map((item) => [item.DonationID, item.ProjectID, item.Amount, payMethodLabel[item.PayMethod] || item.PayMethod, item.PayTime || '—', item.PublicFlag === 1 ? '公开' : '匿名']))
+}
+
 // 捐款列
 const donationColumns: TableColumn[] = [
     { title: '捐款ID', dataIndex: 'DonationID' },
@@ -131,7 +153,7 @@ const paymentColumns: TableColumn[] = [
 ]
 
 // 组件
-export function RecordsPage() {
+export function RecordsPage({ embedded = false }: { embedded?: boolean }) {
     const navigate = useNavigate()
     const [activeKey, setActiveKey] = useState('myDonations')
     const [drawerOpen, setDrawerOpen] = useState(false)
@@ -307,8 +329,8 @@ export function RecordsPage() {
     }
 
     return (
-        <section className="feature-page finance-records-page">
-            <PageHeader kicker="FINANCE · RECORDS" title="财务记录" icon="icon-camera" actions={<Button type="text" size="small" onClick={() => navigate('/finance')}><Icon name="icon-miles" size={15} />返回</Button>} />
+        <section className={`feature-page finance-records-page${embedded ? ' finance-embedded-page' : ''}`}>
+            {embedded ? <div className="finance-embedded-toolbar"><div><strong>财务记录</strong><small>捐款、支出和审核状态</small></div><div><Button type="default" size="small" onClick={() => window.print()}>导出 PDF</Button><Button type="default" size="small" onClick={() => exportRecordsToExcel(activeKey, expenses, donations, myDonations, checkRecords)}>导出 Excel</Button></div></div> : <PageHeader kicker="FINANCE · RECORDS" title="财务记录" icon="icon-camera" actions={<Button type="text" size="small" onClick={() => navigate('/finance')}><Icon name="icon-miles" size={15} />返回</Button>} />}
 
             {error && (
                 <div className="cats-alert" role="alert">

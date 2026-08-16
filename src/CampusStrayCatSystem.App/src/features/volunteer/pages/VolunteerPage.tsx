@@ -1,5 +1,4 @@
-import { Card, Icon, Button, Table, type TableColumn, Drawer, Form, FormItem, useForm, Input, Notification ,Radio,Tabs} from 'animal-island-ui'
-import { useNavigate } from 'react-router-dom'
+import { Card, Icon, Button, Table, type TableColumn, Drawer, Modal, Form, FormItem, useForm, Input, Notification ,Radio,Tabs} from 'animal-island-ui'
 import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { VolunteerService, shiftStatusLabels } from '../../../services/volunteer.service'
@@ -7,9 +6,10 @@ import { useAuthStore } from '../../../stores/auth.store'
 import { StatusTag } from '../../../shared/components/StatusTag'
 import { PageHeader } from '../../../shared/components/PageHeader'
 import { DatePicker } from 'antd'
+import { AdoptionCheckPage } from './AdoptionCheckPage'
+import { VisitPage } from './VisitPage'
 
 export function VolunteerPage() {
-    const navigate = useNavigate()
     const [pendingCount, setPendingCount] = useState(0)
     const [myShifts, setMyShifts] = useState<any[]>([])
     const [volunteerId, setVolunteerId] = useState('')
@@ -18,6 +18,7 @@ export function VolunteerPage() {
     const [recruitForm] = useForm()
     const [creditForm] = useForm()
     const [feedingTasks, setFeedingTasks] = useState<any[]>([])
+    const [feedingRecords, setFeedingRecords] = useState<any[]>([])
     const [receivedHandovers, setReceivedHandovers] = useState<any[]>([])
     const [sentHandovers, setSentHandovers] = useState<any[]>([])
     const [allHandovers, setAllHandovers] = useState<any[]>([])
@@ -26,6 +27,10 @@ export function VolunteerPage() {
     const [handoverStatusFilter, setHandoverStatusFilter] = useState('')
     const [handoverRelatedType, setHandoverRelatedType] = useState('SHIFT')
     const [handoverRelatedId, setHandoverRelatedId] = useState('')
+    const [detailModal, setDetailModal] = useState<'shift'|'feeding'|'handover'|'adoption'|'visit'|null>(null)
+    const [shiftQuery, setShiftQuery] = useState('')
+    const [feedingQuery, setFeedingQuery] = useState('')
+    const [feedingRecordQuery, setFeedingRecordQuery] = useState('')
     const isAdmin = (useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')
     useEffect(() => {
         VolunteerService.getPendingApplications()
@@ -53,6 +58,7 @@ export function VolunteerPage() {
 
     useEffect(() => {
         VolunteerService.getAllFeedingTasks().then(setFeedingTasks).catch(() => setFeedingTasks([]))
+        VolunteerService.getFeedingRecords().then(setFeedingRecords).catch(() => setFeedingRecords([]))
     }, [])
 
     useEffect(() => {
@@ -215,6 +221,13 @@ export function VolunteerPage() {
             },
         },
     ]
+    const feedingRecordColumns: TableColumn<any>[] = [
+        { title: '记录ID', dataIndex: 'CheckInID' },
+        { title: '任务ID', dataIndex: 'ShiftID' },
+        { title: '签到时间', dataIndex: 'CheckInTime', render: (t:any) => t ? t.format('MM-DD HH:mm') : '-' },
+        { title: '距离（米）', dataIndex: 'DistanceMeters', render: (t:any) => t ?? '-' },
+        { title: '状态', dataIndex: 'CheckInStatus', render: (t:any) => t === 'CHECKED_IN' ? '已签到' : t === 'LATE' ? '迟到' : t || '-' },
+    ]
     
     const ReceivedHandoverColumns:TableColumn<any>[]=useMemo(()=>{
         const hasPending=receivedHandovers.some((h:any)=>h.handoverStatus==='PENDING')
@@ -332,6 +345,20 @@ export function VolunteerPage() {
         return cols
     },[allHandovers,receivedHandovers,sentHandovers])
 
+    const filteredShifts = myShifts.filter((item:any) => {
+        const text = `${item.shiftId ?? ''} ${item.userName ?? ''} ${item.shiftStatus ?? ''}`.toLowerCase()
+        return text.includes(shiftQuery.trim().toLowerCase())
+    })
+    const filteredFeedingTasks = feedingTasks.filter((item:any) => {
+        const text = `${item.shiftID ?? ''} ${item.volunteerID ?? ''} ${item.pointID ?? ''} ${item.shiftStatus ?? ''}`.toLowerCase()
+        return text.includes(feedingQuery.trim().toLowerCase())
+    })
+    const filteredFeedingRecords = feedingRecords.filter((item:any) => {
+        const text = `${item.CheckInID ?? ''} ${item.ShiftID ?? ''} ${item.CheckInStatus ?? ''}`.toLowerCase()
+        return text.includes(feedingRecordQuery.trim().toLowerCase())
+    })
+    const detailModalTitle = detailModal === 'shift' ? '排班任务' : detailModal === 'feeding' ? '投喂任务和记录' : detailModal === 'handover' ? '交接事宜' : detailModal === 'adoption' ? '领养审核' : '回访汇总'
+
     return (
         <>
             <PageHeader kicker="Volunteer" title="志愿者中心" description="管理领养审核、回访记录、排班任务、投喂任务和交接事宜" icon="icon-design" />
@@ -409,42 +436,76 @@ export function VolunteerPage() {
                 </Form>
             </Drawer>
 
-            <div style={{ display: 'flex', gap: 20, marginTop: 20 }}>
-                <div style={{ flex: '0 0 360px' }}>
-                    <h3 style={{ margin: '0 0 12px 0' }}>排班任务</h3>
-                    {myShifts.length > 0 ? (
-                        <div className="volunteer-my-shifts">
-                            <div style={{ maxHeight: 132, overflowY: 'auto' }}>
-                                <Table columns={shiftColumns} dataSource={myShifts} />
-                            </div>
-                            <div style={{ marginTop: 8, textAlign: 'right' }}>
-                                <Button type="primary" size="small" onClick={() => navigate('/volunteer/activity')}>
-                                    查看全部
-                                </Button>
-                            </div>
+            <div className="finance-hero-grid volunteer-work-grid" style={{ marginTop:20 }}>
+                <div className="finance-hero-card-hit" role="button" tabIndex={0} aria-label="查看排班任务"
+                    onClick={() => setDetailModal('shift')} onKeyDown={activateCard(() => setDetailModal('shift'))}>
+                    <Card color="app-teal" className="finance-hero-card">
+                        <div className="finance-hero-card-inner">
+                            <span className="finance-hero-icon"><Icon name="icon-miles" size={28} /></span>
+                            <h2>排班任务</h2>
+                            <p>{myShifts.length ? `当前有 ${myShifts.length} 条排班，点击查看完整安排` : '暂无排班任务，点击查看完整安排'}</p>
                         </div>
-                    ) : (
-                        <p style={{ color: '#999' }}>暂无排班</p>
-                    )}
+                    </Card>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ margin: '0 0 12px 0' }}>投喂任务和记录</h3>
-                    <div style={{ maxHeight: 132, overflowY: 'auto' }}>
-                        <Table columns={feedingColumns} dataSource={feedingTasks} />
-                    </div>
-                    <div style={{ marginTop: 8, textAlign: 'right' }}>
-                        <Button type="primary" size="small" onClick={() => {
-                          navigate(`/volunteer/feeding-tasks${volunteerId ? `?volunteerId=${encodeURIComponent(volunteerId)}` : ''}`)
-                        }}>查看全部</Button>
-                    </div>
+                <div className="finance-hero-card-hit" role="button" tabIndex={0} aria-label="查看投喂任务和记录"
+                    onClick={() => setDetailModal('feeding')} onKeyDown={activateCard(() => setDetailModal('feeding'))}>
+                    <Card color="app-blue" className="finance-hero-card">
+                        <div className="finance-hero-card-inner">
+                            <span className="finance-hero-icon"><Icon name="icon-shopping" size={28} /></span>
+                            <h2>投喂任务和记录</h2>
+                            <p>{feedingTasks.length ? `已有 ${feedingTasks.length} 条任务，点击查看任务与签到记录` : '暂无投喂任务，点击查看完整记录'}</p>
+                        </div>
+                    </Card>
+                </div>
+                <div className="finance-hero-card-hit" role="button" tabIndex={0} aria-label="查看交接事宜"
+                    onClick={() => setDetailModal('handover')} onKeyDown={activateCard(() => setDetailModal('handover'))}>
+                    <Card color="app-orange" className="finance-hero-card">
+                        <div className="finance-hero-card-inner">
+                            <span className="finance-hero-icon"><Icon name="icon-chat" size={28} /></span>
+                            <h2>交接事宜</h2>
+                            <p>{allHandovers.length ? `最近有 ${allHandovers.length} 条交接，点击查看状态` : '暂无交接记录，点击查看完整内容'}</p>
+                        </div>
+                    </Card>
                 </div>
             </div>
-            <div className="finance-hero-grid" style={{ gridTemplateColumns: isAdmin ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', marginTop: 20 }}>
+            <Modal title={detailModalTitle} width={detailModal === 'adoption' || detailModal === 'visit' ? 1000 : 760} open={detailModal !== null} onClose={() => setDetailModal(null)}>
+                {detailModal === 'adoption' && <AdoptionCheckPage embedded />}
+                {detailModal === 'visit' && <VisitPage embedded />}
+                {detailModal === 'shift' && <>
+                    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}><Input value={shiftQuery} onChange={(e:any)=>setShiftQuery(e.target.value)} placeholder="按编号、志愿者或状态筛选" /></div>
+                    <div className="volunteer-modal-table" style={{maxHeight:'min(56vh,520px)',overflowY:'auto',overflowX:'auto',scrollbarWidth:'thin',scrollbarColor:'rgba(121,79,39,.28) transparent'}}>
+                        <Table columns={shiftColumns} dataSource={filteredShifts} />
+                    </div>
+                </>}
+                {detailModal === 'feeding' && <>
+                    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}><Input value={feedingQuery} onChange={(e:any)=>setFeedingQuery(e.target.value)} placeholder="按任务、志愿者、点位或状态筛选" /></div>
+                    <div className="volunteer-modal-table" style={{maxHeight:'min(56vh,520px)',overflowY:'auto',overflowX:'auto',scrollbarWidth:'thin',scrollbarColor:'rgba(121,79,39,.28) transparent'}}>
+                        <Table columns={feedingColumns} dataSource={filteredFeedingTasks} />
+                    </div>
+                    <div className="volunteer-records-heading"><h4>投喂记录</h4><Input value={feedingRecordQuery} onChange={(e:any)=>setFeedingRecordQuery(e.target.value)} placeholder="按记录ID、任务ID或状态筛选" /></div>
+                    <div className="volunteer-modal-table" style={{maxHeight:220,overflowY:'auto',overflowX:'auto',scrollbarWidth:'thin',scrollbarColor:'rgba(121,79,39,.28) transparent'}}>
+                        <Table columns={feedingRecordColumns} dataSource={filteredFeedingRecords} />
+                    </div>
+                </>}
+                {detailModal === 'handover' && <div className="volunteer-modal-table" style={{maxHeight:'min(56vh,520px)',overflowY:'auto',overflowX:'auto',scrollbarWidth:'thin',scrollbarColor:'rgba(121,79,39,.28) transparent'}}>
+                    <Tabs items={isAdmin ? [{key:'tab3',label:'全部交接',children:<>
+                        <div style={{display:'grid',gap:10,marginBottom:12}}>
+                            <Radio options={[{label:'全部',value:'all'},{label:'按ID',value:'id'},{label:'按状态',value:'status'},{label:'按关联',value:'related'}]} value={handoverFilter} onChange={(v)=>{setHandoverFilter(String(v));setHandoverInput('');setHandoverStatusFilter('');setHandoverRelatedId('')}} />
+                            {handoverFilter==='id' && <Input placeholder='请输入交接ID' value={handoverInput} onChange={(e:any)=>setHandoverInput(e.target.value)} />}
+                            {handoverFilter==='status' && <Radio options={[{label:'待确认',value:'PENDING'},{label:'已确认',value:'CONFIRMED'},{label:'已拒绝',value:'REJECTED'},{label:'已撤销',value:'CANCELLED'}]} value={handoverStatusFilter} onChange={(v)=>setHandoverStatusFilter(String(v))} />}
+                            {handoverFilter==='related' && <Input placeholder='关联任务ID' value={handoverRelatedId} onChange={(e:any)=>setHandoverRelatedId(e.target.value)} />}
+                            <Button type="primary" size="small" onClick={queryAllHandovers}>查询</Button>
+                        </div>
+                        <Table columns={AllHandoverColumns} dataSource={allHandovers} />
+                    </>} ] : [{key:'tab1',label:'我收到的',children:<Table columns={ReceivedHandoverColumns} dataSource={receivedHandovers} />},{key:'tab2',label:'我发起的',children:<Table columns={SentHandoverColumns} dataSource={sentHandovers} />}]} defaultActiveKey={isAdmin?'tab3':'tab1'} />
+                </div>}
+            </Modal>
+            <div className={isAdmin ? 'finance-hero-grid volunteer-tools-grid admin' : 'finance-hero-grid volunteer-tools-grid'} style={{ marginTop: 20 }}>
                 <div className="finance-hero-card-hit" role="button" tabIndex={0}
                     aria-label="领养审核"
-                    onClick={() => navigate('/volunteer/adoptions')}
-                    onKeyDown={activateCard(() => navigate('/volunteer/adoptions'))}>
-                    <Card color="app-teal" className="finance-hero-card">
+                    onClick={() => setDetailModal('adoption')}
+                    onKeyDown={activateCard(() => setDetailModal('adoption'))}>
+                    <Card color="app-red" className="finance-hero-card">
                         <div className="finance-hero-card-inner">
                             <span className="finance-hero-icon">
                                 <Icon name="icon-chat" size={28} />
@@ -463,9 +524,9 @@ export function VolunteerPage() {
 
                 <div className="finance-hero-card-hit" role="button" tabIndex={0}
                     aria-label="回访汇总"
-                    onClick={() => navigate('/volunteer/visits')}
-                    onKeyDown={activateCard(() => navigate('/volunteer/visits'))}>
-                    <Card color="app-blue" className="finance-hero-card">
+                    onClick={() => setDetailModal('visit')}
+                    onKeyDown={activateCard(() => setDetailModal('visit'))}>
+                    <Card color="purple" className="finance-hero-card">
                         <div className="finance-hero-card-inner">
                             <span className="finance-hero-icon">
                                 <Icon name="icon-camera" size={28} />
@@ -509,68 +570,6 @@ export function VolunteerPage() {
                         </Card>
                     </div>
                 )}
-            </div>
-            <h3 style={{ marginTop: 20 }}>交接事宜</h3>
-            <div style={{ padding: 16 }}>
-                <Tabs items={isAdmin ? [
-                  {
-                    key:'tab3',label:'全部交接',children:<>
-                        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12 }}>
-                            <Radio
-                                options={[
-                                    {label:'全部',value:'all'},
-                                    {label:'按ID',value:'id'},
-                                    {label:'按状态',value:'status'},
-                                    {label:'按关联',value:'related'},
-                                ]}
-                                value={handoverFilter}
-                                onChange={(v)=>{setHandoverFilter(String(v));setHandoverInput('');setHandoverStatusFilter('');setHandoverRelatedId('')}}
-                            />
-                            <Button type="primary" size="small" onClick={queryAllHandovers}>查询</Button>
-                        </div>
-                        <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:12 }}>
-                            {handoverFilter==='id'&&(
-                                <Input placeholder='请输入交接ID' value={handoverInput} onChange={(e:any)=>setHandoverInput(e.target.value)} style={{width:160}} />
-                            )}
-                            {handoverFilter==='status'&&(
-                                <Radio
-                                    options={[
-                                        {label:'待确认',value:'PENDING'},
-                                        {label:'已确认',value:'CONFIRMED'},
-                                        {label:'已拒绝',value:'REJECTED'},
-                                        {label:'已撤销',value:'CANCELLED'},
-                                    ]}
-                                    value={handoverStatusFilter}
-                                    onChange={(v)=>setHandoverStatusFilter(String(v))}
-                                />
-                            )}
-                            {handoverFilter==='related'&&(
-                                <>
-                                    <Radio
-                                        options={[{label:'投喂任务',value:'SHIFT'}]}
-                                        value={handoverRelatedType}
-                                        onChange={(v)=>setHandoverRelatedType(String(v))}
-                                    />
-                                    <div style={{width:130,flex:'none'}}>
-                                        <Input placeholder='关联任务ID' value={handoverRelatedId} onChange={(e:any)=>setHandoverRelatedId(e.target.value)} />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        <div style={{ maxHeight: 180, overflowY: 'auto' }}>
-                            <Table columns={AllHandoverColumns} dataSource={allHandovers} />
-                        </div>
-                    </>
-                  }
-                ] : [
-                  {
-                    key:'tab1',label:'我收到的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={ReceivedHandoverColumns} dataSource={receivedHandovers} /></div>
-                  },
-                  {
-                    key:'tab2',label:'我发起的',children:<div style={{ maxHeight: 180, overflowY: 'auto' }}><Table columns={SentHandoverColumns} dataSource={sentHandovers} /></div>
-                  },
-                ]}
-                 defaultActiveKey={isAdmin ? 'tab3' : 'tab1'} />
             </div>
         </>
     )

@@ -1,4 +1,4 @@
-import {Table,Button,type TableColumn,Notification,Modal,Card,Icon} from 'animal-island-ui'
+import {Table,Button,type TableColumn,Notification,Modal,Card,Icon,Input} from 'animal-island-ui'
 import type {CatSummary} from '../../../types/cats'
 import {adoptionService,applicationStatusLabels} from '../../../services/adoption.services'
 import {useEffect,useState} from 'react'
@@ -38,6 +38,8 @@ export function AdoptionPage(){
     const [visible,setVisible]=useState(false)
     const [CatID,setCatID]=useState<string>('')
     const [applications, setApplications] = useState<any[]>([])
+    const [catQuery, setCatQuery] = useState('')
+    const [applicationQuery, setApplicationQuery] = useState('')
 
     useEffect(()=>{
         setLoading(true)
@@ -97,6 +99,16 @@ export function AdoptionPage(){
         { title: '审核时间', dataIndex: 'confirmTime', render: (t: any) => t ? t.format('YYYY-MM-DD HH:mm') : '-' },
     ]
 
+    const filteredCats = cats.filter((cat:any) => {
+        const text = `${cat.catID ?? ''} ${cat.catName ?? ''} ${cat.gender ?? ''} ${cat.colorPattern ?? ''}`.toLowerCase()
+        return text.includes(catQuery.trim().toLowerCase())
+    })
+    const filteredApplications = applications.filter((item:any) => {
+        const text = `${item.applicationId ?? ''} ${item.catName ?? ''} ${item.currentStatus ?? ''}`.toLowerCase()
+        return text.includes(applicationQuery.trim().toLowerCase())
+    })
+    const dateText = (value:any) => value ? value.format('YYYY-MM-DD HH:mm') : '-'
+
     return (
         <>
             <div className='user-page'>
@@ -113,12 +125,36 @@ export function AdoptionPage(){
                             </div>
                         </div>
                     </Card>
-                    <Table columns={CatTableColumn} dataSource={cats as unknown as Record<string, unknown>[]} loading={loading}></Table>
+                    <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
+                        <Input value={catQuery} onChange={(e:any)=>setCatQuery(e.target.value)} placeholder='搜索猫咪名称、性别或花色' style={{maxWidth:280}} />
+                    </div>
+                    <div className="mobile-adoption-list" aria-label="可申请领养的猫咪">
+                        {loading ? <div className="mobile-adoption-empty">正在加载猫咪档案…</div> : filteredCats.length === 0 ? <div className="mobile-adoption-empty">没有找到符合条件的猫咪</div> : filteredCats.map((cat:any) => <article className="mobile-adoption-card" key={String(cat.catID)}>
+                            <div><strong>{cat.catName || '未命名猫咪'}</strong><small>{cat.gender || '性别未知'} · {cat.colorPattern || '花色待补充'}</small></div>
+                            <StatusTag value={cat.sterilizedFlag == 1 ? 'app-green' : 'app-red'} label={cat.sterilizedFlag == 1 ? '已绝育' : '未绝育'} />
+                            <Button type="default" size="small" onClick={() => { setCatID(String(cat.catID)); setVisible(true); }}>就是它了</Button>
+                        </article>)}
+                    </div>
+                    <div className="adoption-table-wrap">
+                        <Table columns={CatTableColumn} dataSource={filteredCats as unknown as Record<string, unknown>[]} loading={loading}></Table>
+                    </div>
 
                     {applications.length > 0 && (
                         <div style={{ marginTop: 24 }}>
-                            <h3 style={{ marginBottom: 12 }}>我的申请</h3>
-                            <Table columns={applicationColumns} dataSource={applications} />
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:12}}>
+                                <h3 style={{ margin: 0 }}>我的申请</h3>
+                                <Input value={applicationQuery} onChange={(e:any)=>setApplicationQuery(e.target.value)} placeholder='搜索申请' style={{maxWidth:220}} />
+                            </div>
+                            <div className="mobile-adoption-list" aria-label="我的领养申请">
+                                {filteredApplications.map((item:any) => <article className="mobile-adoption-card application" key={String(item.applicationId)}>
+                                    <div><strong>{item.catName || '猫咪信息待补充'}</strong><small>申请于 {dateText(item.applyTime)}</small></div>
+                                    {(() => { const status = statusTagMap[item.currentStatus]; return status ? <StatusTag value={status.value} label={status.label} /> : <span>{applicationStatusLabels[item.currentStatus] || item.currentStatus || '-'}</span> })()}
+                                    <small className="mobile-adoption-extra">协议号：{item.agreementNo || '尚未生成'}</small>
+                                </article>)}
+                            </div>
+                            <div className="adoption-table-wrap">
+                                <Table columns={applicationColumns} dataSource={filteredApplications} />
+                            </div>
                         </div>
                     )}
                 </div>

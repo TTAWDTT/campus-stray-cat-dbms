@@ -16,6 +16,7 @@ const navItems = [
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const profileName = user?.realName || user?.username || '用户';
@@ -79,12 +80,25 @@ export function MainLayout() {
         </main>
       </div>
 
+      {mobileMenuOpen && <>
+        <button type="button" className="mobile-menu-backdrop" aria-label="关闭更多菜单" onClick={() => setMobileMenuOpen(false)} />
+        <div className="mobile-more-menu" role="menu" aria-label="更多功能">
+          {visibleNavItems.slice(4).map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.to === '/'} role="menuitem" className={({ isActive }) => isActive ? 'mobile-more-link active' : 'mobile-more-link'} onClick={() => setMobileMenuOpen(false)}>
+              <Icon name={item.icon} size={19} /><span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </>}
       <nav className="mobile-bottom-nav" aria-label="移动端主菜单">
         {visibleNavItems.slice(0, 4).map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => isActive ? 'mobile-shell-link active' : 'mobile-shell-link'}>
+          <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => isActive ? 'mobile-shell-link active' : 'mobile-shell-link'} onClick={() => setMobileMenuOpen(false)}>
             <Icon name={item.icon} size={20} /><span>{item.label}</span>
           </NavLink>
         ))}
+        {visibleNavItems.length > 4 && <button type="button" className={mobileMenuOpen ? 'mobile-shell-link mobile-more-toggle active' : 'mobile-shell-link mobile-more-toggle'} aria-label="打开更多功能" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>
+          <Icon name="icon-design" size={20} /><span>更多</span>
+        </button>}
       </nav>
     </div>
   );

@@ -14,10 +14,12 @@ const loadApprovedApps=async ()=>{
   return await VolunteerService.getApprovedApplications()
 }
 
-export function VisitPage() {
+export function VisitPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const [data,setData]=useState<any[]>([])
   const [approvedApps,setApprovedApps]=useState<any[]>([])
+  const [appQuery,setAppQuery]=useState('')
+  const [visitQuery,setVisitQuery]=useState('')
   const [drawerOpen,setDrawerOpen]=useState(false)
   const [currentAppId,setCurrentAppId]=useState('')
   const [currentCatName,setCurrentCatName]=useState('')
@@ -156,23 +158,25 @@ export function VisitPage() {
     title:'当前状态',
     dataIndex:'currentStatus'
   }]
+  const filteredApprovedApps=approvedApps.filter((item:any)=>`${item.applicationId??''} ${item.catName??''} ${item.applicantName??''}`.toLowerCase().includes(appQuery.trim().toLowerCase()))
+  const filteredVisits=data.filter((item:any)=>`${item.visitId??''} ${item.applicationId??''} ${item.catId??''} ${item.visitType??''} ${item.conclusion??''}`.toLowerCase().includes(visitQuery.trim().toLowerCase()))
   return (
     <>
       <div className='visit-page'>
-        <div className='visit-page-header'>
+        {!embedded && <div className='visit-page-header'>
           <PageHeader kicker='Visit Records' title="回访记录" description='查看已完成领养的回访记录，并对已通过申请新建回访' icon='icon-design'
             actions={<Button type="text" size="small" onClick={() => navigate('/volunteer')}><Icon name="icon-miles" size={15} />返回</Button>} />
-        </div>
+        </div>}
         <div className='visit-page-section'>
-          <h3 style={{margin:'0 0 12px 0'}}>已通过领养申请</h3>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:12}}><h3 style={{margin:0}}>已通过领养申请</h3><Input value={appQuery} onChange={(e:any)=>setAppQuery(e.target.value)} placeholder='搜索申请或猫咪' style={{maxWidth:240}} /></div>
           <div className='visit-page-table'>
-            <Table columns={appColumns} dataSource={approvedApps} />
+            <Table columns={appColumns} dataSource={filteredApprovedApps} />
           </div>
         </div>
         <div className='visit-page-section' style={{marginTop:24}}>
-          <h3 style={{margin:'0 0 12px 0'}}>回访记录列表</h3>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:12}}><h3 style={{margin:0}}>回访记录列表</h3><Input value={visitQuery} onChange={(e:any)=>setVisitQuery(e.target.value)} placeholder='搜索回访记录' style={{maxWidth:240}} /></div>
           <div className='visit-page-table'>
-            <Table columns={visitColumns} dataSource={data} />
+            <Table columns={visitColumns} dataSource={filteredVisits} />
           </div>
         </div>
         <Drawer open={drawerOpen} onClose={closeDrawer} title={`新建回访记录${currentCatName?' — '+currentCatName:''}`}>

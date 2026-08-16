@@ -14,7 +14,19 @@ const fmt = (code: string, val: number | null): string => {
     return `¥${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-export function StatisticsPage() {
+const exportSnapshotsToExcel = (snapshots: SnapshotRecord[]) => {
+    const escape = (value: unknown) => String(value ?? '—').replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] || char)
+    const rows = snapshots.map((item) => `<tr><td>${escape(item.SnapshotID)}</td><td>${escape(item.SnapshotDate?.slice(0, 10))}</td><td>${escape(metricLabels[item.MetricCode] || item.MetricCode)}</td><td>${escape(fmt(item.MetricCode, item.MetricValue))}</td><td>${escape(dimensionLabels[item.DimensionType || ''] || item.DimensionType)}</td><td>${escape(item.DimensionValue)}</td></tr>`).join('')
+    const html = `<table><thead><tr><th>快照 ID</th><th>日期</th><th>指标</th><th>数值</th><th>维度</th><th>维度值</th></tr></thead><tbody>${rows}</tbody></table>`
+    const url = URL.createObjectURL(new Blob([`<html><meta charset="utf-8">${html}</html>`], { type: 'application/vnd.ms-excel' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = '财务统计报表.xls'
+    anchor.click()
+    URL.revokeObjectURL(url)
+}
+
+export function StatisticsPage({ embedded = false }: { embedded?: boolean }) {
     const navigate = useNavigate()
     const user = useAuthStore((s) => s.user)
     const isAdmin = user?.roleName?.toUpperCase() === 'ADMIN'
@@ -149,8 +161,8 @@ export function StatisticsPage() {
     ]
 
     return (
-        <section className="feature-page finance-statistics-page">
-            <div className="feature-page-header">
+        <section className={`feature-page finance-statistics-page${embedded ? ' finance-embedded-page' : ''}`}>
+            {embedded ? <div className="finance-embedded-toolbar"><div><strong>统计报表</strong><small>按项目、月份和猫咪维度汇总</small></div><div><Button type="default" size="small" onClick={() => window.print()}>导出 PDF</Button><Button type="default" size="small" onClick={() => exportSnapshotsToExcel(snapshots)}>导出 Excel</Button></div></div> : <div className="feature-page-header">
                 <div className="feature-page-heading">
                     <Button type="text" size="small" onClick={() => navigate('/finance')}>
                         <Icon name="icon-miles" size={15} />
@@ -165,7 +177,7 @@ export function StatisticsPage() {
                     <h1>统计报表</h1>
                     <p>基于预生成快照的财务指标存档，可按项目、月份、猫咪维度查看历史趋势。</p>
                 </div>
-            </div>
+            </div>}
 
             {error && (
                 <div className="cats-alert" role="alert">

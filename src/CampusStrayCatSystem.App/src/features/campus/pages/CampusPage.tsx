@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button, Card, Icon, Input, Modal, Select, Table, Tag } from 'animal-island-ui';
@@ -56,6 +57,7 @@ const initialForm: SightingWritePayload = { catID: '', areaID: '', sightingTime:
 const SIGHTING_PAGE_SIZE = 5;
 
 export function CampusPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const canManage = ['ADMIN', 'VOLUNTEER'].includes((user?.roleName || '').toUpperCase());
   const [areas, setAreas] = useState<CampusArea[]>([]);
@@ -188,6 +190,13 @@ export function CampusPage() {
   }, [areas, areaId]);
 
   const openModal = () => { setEditingSighting(null); setForm({ ...initialForm, areaID: areaId }); setError(''); setModalClosing(false); setModalOpen(true); };
+
+  useEffect(() => {
+    if (searchParams.get('record') === '1' && !loading) {
+      openModal();
+      setSearchParams({}, { replace: true });
+    }
+  }, [loading, searchParams, setSearchParams]);
   const openEdit = (sighting: CatSighting) => {
     setEditingSighting(sighting);
     setForm({ catID: sighting.catID || '', areaID: sighting.areaID || '', sightingTime: sighting.sightingTime || '', photoUrl: sighting.photoUrl || '', remark: sighting.remark || '' });

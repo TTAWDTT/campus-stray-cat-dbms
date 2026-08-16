@@ -16,11 +16,14 @@ export function ActivityPage() {
   const [data,setData]=useState<any[]>([])
   const isAdmin =( useAuthStore.getState().user?.roleName?.toUpperCase() === 'ADMIN')
   const [activeKey,setActiveKey]=useState(isAdmin ? 'all' : 'mine')
+  const [query,setQuery]=useState('')
 
   const userId = useAuthStore.getState().user?.userId
   const shiftPriority: Record<string, number> = { IN_PROGRESS: 0, PLANNED: 1, ASSIGNED: 2, COMPLETED: 3, MISSED: 4 }
   const myShifts = (userId ? data.filter((item: any) => item.userId === userId) : data)
     .sort((a: any, b: any) => (shiftPriority[a.shiftStatus] ?? 99) - (shiftPriority[b.shiftStatus] ?? 99))
+  const filteredData = data.filter((item:any) => `${item.shiftId ?? ''} ${item.userName ?? ''} ${item.shiftStatus ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()))
+  const filteredMyShifts = myShifts.filter((item:any) => `${item.shiftId ?? ''} ${item.userName ?? ''} ${item.shiftStatus ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()))
   const [DrawerOpen, setDrawerOpen] = useState(false)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [currentShiftId, setCurrentShiftId] = useState('')
@@ -197,6 +200,7 @@ export function ActivityPage() {
             actions={<Button type="text" size="small" onClick={() => navigate('/volunteer')}><Icon name="icon-miles" size={15} />返回</Button>} />
         </div>
         <div className='activity-page-table'>
+          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}><Input value={query} onChange={(e:any)=>setQuery(e.target.value)} placeholder='搜索排班编号、志愿者或状态' style={{maxWidth:280}} /></div>
           <Tabs
             activeKey={activeKey}
             onChange={setActiveKey}
@@ -206,14 +210,14 @@ export function ActivityPage() {
                     {
                       key: 'mine',
                       label: '我的排班',
-                      children: <Table columns={activityColumns} dataSource={myShifts} />,
+                      children: <Table columns={activityColumns} dataSource={filteredMyShifts} />,
                     },
                   ]
                 : []),
               {
                 key: 'all',
                 label: '全部排班',
-                children: <Table columns={baseColumns} dataSource={data} />,
+                children: <Table columns={baseColumns} dataSource={filteredData} />,
               },
             ]}
           />
